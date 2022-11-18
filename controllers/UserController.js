@@ -1,21 +1,20 @@
 const db = require("../db");
-const bcrypt = require("bcrypt");
+const fetch = require("node-fetch");
+// const bcrypt = require("bcrypt");
 
 const UserController = {
-  getAllUsers(req, res) {
-    axios
-      .get(
-        "http://142.93.36.1/api/v1/fetch_data?Action=listCompetitions&EventTypeID=1"
-      )
-      .then(function (response) {
-        // handle success
-        console.log(response);
-        res.send({ res: response });
+  async getAllUsers(req, res) {
+    fetch("https://api.publicapis.org/entries")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        res.send(data);
       })
-      .catch(function (error) {
-        // handle error
-        console.log(error);
-      });
+      .catch((err) => console.log(err));
+    // const response = await axios.get("https://api.publicapis.org/entries");
+    // const json = response.data;
+    // console.log(response);
+    // res.send(json);
   },
 
   getUserFromUserId(req, res) {
@@ -38,18 +37,7 @@ end;`;
       return res.send(result);
     });
   },
-  async updateUser(req, res) {
-    if (req.body.password) {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10);
-      req.body.password = hashedPassword;
-    }
-    const user = req.body;
-    const sql = `UPDATE user SET ? WHERE id = '${req.params.userId}'`;
-    db.query(sql, user, (err, result) => {
-      if (err) throw err;
-      return res.send(result);
-    });
-  },
+  async updateUser(req, res) {},
 };
 
 module.exports = UserController;
