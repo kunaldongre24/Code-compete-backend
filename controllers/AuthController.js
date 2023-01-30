@@ -1,113 +1,143 @@
-const db = require("../db");
-// const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-
+const { fs, db, FieldValue } = require("../db");
+const { v4: uuidv4 } = require('uuid');
 const AuthController = {
+  async getUserById(req, res) {
+    const { id } = req.params;
+    const userRef = db.collection('users').doc(id);
+    await userRef.get().then(value => {
+      const data = value.data()
+      res.send(data);
+    })
+
+  },
+  async getUserByUsername(req, res) {
+    const { username } = req.params;
+    const userRef = db.collection('users').where("username", "==", username);
+    await userRef.get().then(value => {
+      const data = value.docs[0].data()
+      res.send(data);
+    })
+  },
+  async deleteUser(req, res) {
+    const { id } = req.params;
+    fs.auth()
+      .deleteUser(id)
+      .then(() => {
+        const userRef = db.collection('users').doc(id).delete();
+        res.send({ deleted: true })
+      })
+      .catch((error) => {
+        res.send({ err: error })
+      });
+  },
+  async getPlayerCount(req, res) {
+    const countRef = db.collection("count").doc("player");
+    await countRef.update({
+      count: FieldValue.increment(1),
+    });
+    await countRef.get().then(value => {
+      const data = value.data();
+      res.send(data);
+    })
+  },
+  async getAgentCount(req, res) {
+    const countRef = db.collection("count").doc("agent");
+    await countRef.update({
+      count: FieldValue.increment(1),
+    });
+    await countRef.get().then(value => {
+      const data = value.data();
+      res.send(data);
+    })
+  },
+  async getStockistCount(req, res) {
+    const countRef = db.collection("count").doc("stockist");
+    await countRef.update({
+      count: FieldValue.increment(1),
+    });
+    await countRef.get().then(value => {
+      const data = value.data();
+      res.send(data);
+    })
+  },
+  async getScCount(req, res) {
+    const countRef = db.collection("count").doc("sc");
+    await countRef.update({
+      count: FieldValue.increment(1),
+    });
+    await countRef.get().then(value => {
+      const data = value.data();
+      res.send(data);
+    })
+  },
+  async getSuperStockistCount(req, res) {
+    const countRef = db.collection("count").doc("superStockist");
+    await countRef.update({
+      count: FieldValue.increment(1),
+    });
+    await countRef.get().then(value => {
+      const data = value.data();
+      res.send(data);
+    });
+  }
+  ,
   signup(req, res) {
-    // const user = req.body;
-    // const { username, email, password } = req.body;
-    // const userData = { email };
-    // if (!email || !username || !password) {
-    //   return res.send({
-    //     status: 0,
-    //     err: "Input field cannot be empty",
-    //   });
-    // } else {
-    //   const checkUser = `SELECT * FROM user WHERE email=? or username=?`;
-    //   db.query(checkUser, [email, username], async (err, result) => {
-    //     try {
-    //       if (err) return res.sendStatus(400);
-    //       if (result[0] && result[0].email === email) {
-    //         return res.send({
-    //           status: 0,
-    //           err: "An account already exists with this email or username",
-    //         });
-    //       } else {
-    //         const hashedPassword = await bcrypt.hash(password, 10);
-    //         req.body.password = hashedPassword;
-    //         const sql = `INSERT INTO user SET ?`;
-    //         db.query(sql, user, (err, result) => {
-    //           if (err) throw err;
-    //           // Create token
-    //           const token = jwt.sign(
-    //             { user_id: result._id, email },
-    //             "this is secret, change it when in production"
-    //           );
-    //           // save user token
-    //           userData.id = result.id;
-    //           userData.token = token;
-    //           userData.status = 1;
-    //           res.send(userData);
-    //         });
-    //       }
-    //     } catch {
-    //       return res.sendStatus(500).send();
-    //     }
-    //   });
-    // }
-  },
+    const { username, password, level, name, companyId, matchShare, fixedLimit, AgentMatchcommision, AgentSessioncommision } = req.body;
 
-  login(req, res) {
-    const { email, password } = req.body;
-    //checking if input field is not empty
-    if (!email || !password) {
-      return res.send({
-        status: 0,
-        err: "Input field cannot be empty",
-      });
-    } else {
-      const sql = `SELECT * FROM user WHERE email=? or username=?`;
-      db.query(sql, [email, email], (err, result) => {
-        if (err) throw err;
-        //checking if username exists
-        if (!result[0]) {
-          return res.send({
-            status: 0,
-            err: "The credentials don't match!",
-          });
-        } else {
-          //comparing the password
-          bcrypt.compare(password, result[0].password, function (err, value) {
-            if (err) {
-              throw err;
-            }
-            if (value) {
-              const { id, email, username, name } = result[0];
-              // Create token
-              const token = jwt.sign(
-                { id, email },
-                "this is secret, change it when in production"
-              );
-
-              // save user token
-              const userData = {
-                id,
-                email,
-                username,
-                name,
-                token,
-              };
-              // user
-              res.send(userData);
-            } else {
-              return res.send({
-                status: 0,
-                err: "Email or password is incorrect",
-              });
-            }
-          });
-        }
-      });
+    if (!username.length || !password.length || !name.length || !companyId.length || !matchShare.toString().length || !level || !fixedLimit.toString().length, !AgentMatchcommision.toString().length || !AgentSessioncommision.toString().length) {
+      return res.send({ err: "Missing Information" })
     }
-  },
+    const email = `${username}@fly247.in`;
+    fs.auth()
+      .createUser({
+        email,
+        password: "sa@#!$#@@$%2" + password,
+        displayName: name,
 
-  logout(req, res) {
-    try {
-      res.send({ message: "logged out successfully!" });
-    } catch (err) {
-      res.send(err);
-    }
-  },
+      })
+      .then(async (userRecord) => {
+        const userRef = db.collection('users').where("username", "==", companyId);
+        await userRef.get().then(async (value) => {
+          const data = value.docs[0].data();
+          const share = data.matchShare - matchShare;
+          const msg = `Opening Balance By ${data.username} ( ${data.name} ) To ${username} ( ${name} )`;
+          const commisionDb = db.collection('commisionMap').doc(uuidv4());
+          await commisionDb.set({
+            setter: companyId,
+            getter: username,
+            matchShare: matchShare,
+            matchCommission: AgentMatchcommision,
+            sessionCommission: AgentSessioncommision,
+            createdOn: Date.now()
+          });
+          const coinDb = db.collection('coinMap').doc(uuidv4());
+          await coinDb.set({
+            value: parseInt(fixedLimit),
+            msg: msg,
+            getter: username,
+            setter: data.username,
+            createdOn: Date.now()
+          });
+          const userJson = {
+            uid: userRecord.uid,
+            username,
+            name,
+            email,
+            level,
+            companyId,
+            matchShare: share,
+            matchCommission: AgentMatchcommision,
+            sessionCommission: AgentSessioncommision,
+          };
+          const usersDb = db.collection('users');
+          await usersDb.doc(userRecord.uid).set(userJson);
+          res.send({ userCreated: true });
+        })
+          .catch((error) => {
+            console.log('Error creating new user:', error);
+          });
+      })
+  }
 };
 
 module.exports = AuthController;
