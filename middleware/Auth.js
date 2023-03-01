@@ -1,24 +1,20 @@
-const jwt = require("jsonwebtoken");
-
-const config = process.env;
-
-const verifyToken = (req, res, next) => {
-  const token =
-    req.body.token || req.query.token || req.headers["x-access-token"];
-
-  if (!token) {
-    return res.status(403).send("A token is required for authentication");
+const fs = require('firebase-admin');
+const checkAuth = (req, res, next) => {
+  if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
+    res.status(403).send({ error: 'Unauthorized' });
+    return;
   }
-  try {
-    const decoded = jwt.verify(
-      token,
-      "this is secret, change it when in production"
-    );
-    req.user = decoded;
-  } catch (err) {
-    return res.status(401).send("Invalid Token");
-  }
-  return next();
-};
 
-module.exports = verifyToken;
+  const idToken = req.headers.authorization.split('Bearer ')[1];
+
+  fs.auth().verifyIdToken(idToken)
+    .then((decodedIdToken) => {
+      req.user = decodedIdToken;
+      next();
+    })
+    .catch((error) => {
+      res.status(403).send({ error: 'Unauthorized' });
+    });
+}
+
+module.exports = checkAuth;

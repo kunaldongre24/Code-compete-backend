@@ -1,5 +1,6 @@
 const { fs, db, FieldValue } = require("../db");
 const { v4: uuidv4 } = require('uuid');
+const CoinController = require("./CoinController");
 const AuthController = {
   async getUserById(req, res) {
     const { id } = req.params;
@@ -10,13 +11,19 @@ const AuthController = {
     })
 
   },
+  async getUserInformation(username) {
+    const userRef = db.collection('users').where("username", "==", username);
+    const value = await userRef.get();
+    if (value.docs.length) {
+      const data = value.docs[0].data();
+      return data;
+    }
+    return;
+  },
   async getUserByUsername(req, res) {
     const { username } = req.params;
-    const userRef = db.collection('users').where("username", "==", username);
-    await userRef.get().then(value => {
-      const data = value.docs[0].data()
-      res.send(data);
-    })
+    const info = await AuthController.getUserInformation(username.toLowerCase());
+    res.send(info);
   },
   async deleteUser(req, res) {
     const { id } = req.params;
@@ -42,6 +49,15 @@ const AuthController = {
   },
   async getAgentCount(req, res) {
     const countRef = db.collection("count").doc("agent");
+    await countRef.update({
+      count: FieldValue.increment(1),
+    });
+    await countRef.get().then(value => {
+      const data = value.data();
+      res.send(data);
+    })
+  }, async getManagerCount(req, res) {
+    const countRef = db.collection("count").doc("manager");
     await countRef.update({
       count: FieldValue.increment(1),
     });
@@ -81,11 +97,53 @@ const AuthController = {
     });
   }
   ,
-  signup(req, res) {
-    const { username, password, level, name, companyId, matchShare, fixedLimit, AgentMatchcommision, AgentSessioncommision } = req.body;
-
-    if (!username.length || !password.length || !name.length || !companyId.length || !matchShare.toString().length || !level || !fixedLimit.toString().length, !AgentMatchcommision.toString().length || !AgentSessioncommision.toString().length) {
+  createManager(req, res) {
+    const companyId = req.user.email.split("@")[0];
+    const { username, password, level, name } = req.body;
+    if (username === undefined || password === undefined || name === undefined || companyId === undefined || level === undefined) {
       return res.send({ err: "Missing Information" })
+    }
+    const email = `${username}@fly247.in`;
+    fs.auth()
+      .createUser({
+        email,
+        password: "sa@#!$#@@$%2" + password,
+        displayName: name,
+      })
+      .then(async (userRecord) => {
+        const userRef = db.collection('users').where("username", "==", companyId);
+        await userRef.get().then(async (value) => {
+          const userJson = {
+            uid: userRecord.uid,
+            username,
+            name,
+            email,
+            level,
+            companyId,
+          };
+          const usersDb = db.collection('users');
+          await usersDb.doc(userRecord.uid).set(userJson);
+          res.send({ userCreated: true });
+        })
+          .catch((error) => {
+            console.log('Error creating new user:', error);
+          });
+      })
+  }
+  ,
+  async signup(req, res) {
+    const companyId = req.user.email.split("@")[0];
+    var { username, password, level, name, matchShare, fixedLimit, AgentMatchcommision, AgentSessioncommision } = req.body;
+
+    if (username === undefined || password === undefined || name === undefined || companyId === undefined || matchShare === undefined || level === undefined || fixedLimit === undefined || AgentMatchcommision === undefined || AgentSessioncommision === undefined) {
+      return res.send({ err: "Missing Information" });
+    }
+    username = username.toLowerCase()
+    const userInfo = await AuthController.getUserInformation(companyId);
+
+    const totalCoins = await CoinController.countCoin(companyId.toLowerCase());
+    if (userInfo.level !== 1 && totalCoins < fixedLimit) {
+      return res.send({ msg: "Insufficient Balance" });
     }
     const email = `${username}@fly247.in`;
     fs.auth()
@@ -114,8 +172,8 @@ const AuthController = {
           await coinDb.set({
             value: parseInt(fixedLimit),
             msg: msg,
-            getter: username,
-            setter: data.username,
+            getter: username.toLowerCase(),
+            setter: data.username.toLowerCase(),
             createdOn: Date.now()
           });
           const userJson = {
@@ -131,10 +189,10 @@ const AuthController = {
           };
           const usersDb = db.collection('users');
           await usersDb.doc(userRecord.uid).set(userJson);
-          res.send({ userCreated: true });
+          res.send({ userCreated: true, msg: "User has been created Successfully" });
         })
           .catch((error) => {
-            console.log('Error creating new user:', error);
+            res.send({ userCreated: false, msg: "Some error occurred" })
           });
       })
   }

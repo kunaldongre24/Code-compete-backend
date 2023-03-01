@@ -1,11 +1,9 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const createError = require("http-errors");
 const indexRouter = require("./routes/index");
 const compression = require("compression");
 const logger = require("morgan");
-const db = require("./db");
 var cors = require("cors");
 
 const { PORT } = process.env;
@@ -14,7 +12,7 @@ app.disable("etag");
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "https://fly247.in", "https://ma.fly247.in", "https://ng.fly247.in"],
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   })

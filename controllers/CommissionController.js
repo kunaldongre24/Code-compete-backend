@@ -5,7 +5,7 @@ const CommissionController = {
     async companyShare(req, res) {
         const { username } = req.params;
         var sum = 0;
-        id = username.toUpperCase()
+        id = username
         if (!username) {
             res.send({ err: "Missing Information" })
         }
@@ -39,16 +39,34 @@ const CommissionController = {
         else arr.filter(el => el.id === id)[0].matchCommission -= value;
         return arr;
     },
-    async distributeCoin(req, res) {
-        const { username, amount } = req.body;
-        if (!username) {
-            res.send({ err: "Missing Information" })
+    async betWinning(id, dAmount, playerId, fancyName) {
+
+        const val = {
+            value: dAmount,
+            msg: "",
+            fancyName,
+            bet: true,
+            createdOn: Date.now()
         }
-        id = username.toUpperCase()
+        if (dAmount > 0) {
+            val.getter = id;
+            if (playerId !== id) {
+                val.setter = playerId;
+            }
+        } else {
+            val.setter = id
+            if (playerId !== id) {
+                val.getter = playerId;
+            }
+        }
+        const coinDb = db.collection('coinMap').doc(uuidv4());
+        await coinDb.set(val);
+    },
+    async disburseCoin(id, amount) {
         let sum = 0;
         const arr = [];
         let prevMatchCom = 0;
-        while (sum < 100 && id !== "CC0001") {
+        while (sum < 100 && id !== "cc0001") {
             const ref = db.collection('commisionMap').where("getter", "==", id);
             await ref.get().then(async value => {
                 if (value.empty) { res.send({ msg: "No data found" }) }
@@ -56,7 +74,7 @@ const CommissionController = {
                 const sharedComm = amount * 3 / 100;
                 const am = amount;
                 const myComm = sharedComm * data.matchShare / 100;
-                const getter = data.getter, setter = data.setter;
+                const getter = data.getter.toLowerCase(), setter = data.setter.toLowerCase();
                 let dis = am * data.matchShare / 100;
                 const mc = parseInt(data.matchCommission);
                 const currentCommission = mc - prevMatchCom;
@@ -64,16 +82,15 @@ const CommissionController = {
                 // if (currentCommission > 0) {
 
                 // }
-                if (arr.filter(x => x.id === setter).length) {
-                    arr.filter(x => x.id === setter)[0].commission = dis - Math.abs(myComm);
+                if (arr.filter(x => x.id === setter.toLowerCase).length) {
+                    arr.filter(x => x.id === setter.toLowerCase())[0].commission = dis - Math.abs(myComm);
                 }
                 else {
-                    const inf = { id: setter, commission: dis - Math.abs(myComm) }
+                    const inf = { id: setter.toLowerCase(), commission: dis - Math.abs(myComm) }
                     arr.push(inf);
                 }
                 if (arr.filter(x => x.id === getter).length) {
                     arr.filter(x => x.id === getter)[0].commission += Math.abs(comDis);
-
                 }
                 else {
                     const inf = { id: getter, commission: Math.abs(comDis) }
@@ -86,7 +103,16 @@ const CommissionController = {
                 id = setter;
             })
         }
-        res.send(arr)
+        return arr;
+    },
+    async distributeCoin(req, res) {
+        const { username, amount } = req.body;
+        if (username === undefined, amount === undefined) {
+            res.send({ err: "Missing Information" })
+        }
+        const id = username.toLowerCase();
+        const arr = await CommissionController.disburseCoin(id, amount);
+        res.send(arr);
     }
 
 
