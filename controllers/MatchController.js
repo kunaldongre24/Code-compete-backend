@@ -71,19 +71,19 @@ const MatchController = {
   },
   async getMatchScore(req, res) {
     const { eventId } = req.params;
-    const url = `http://172.105.35.224:3000/getbm2?eventId=${eventId}`;
+    const url = `https://betfairoddsapi.com:3443/api/bm_fancy/${eventId}`;
     const response = await axios.get(url);
     res.send(response.data);
   },
   async getMatchOdds(req, res) {
     const { eventId } = req.params;
-    const url = `http://172.105.35.224:3000/getbm2?eventId=${eventId}`;
+    const url = `https://betfairoddsapi.com:3443/api/bm_fancy/${eventId}`;
     const response = await axios.get(url);
     res.send(response.data);
   },
   async oddsResult(req, res) {
     const { eventId, fancyName } = req.params;
-    const url = `https://betfairoddsapi.com:3456/api/fancy_result/${eventId}/${fancyName}`;
+    const url = `https://betfairoddsapi.com:3443/api/fancy_result/${eventId}/${fancyName}`;
     const response = await axios.get(url);
     res.send(response.data);
   },

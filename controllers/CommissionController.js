@@ -139,6 +139,7 @@ const CommissionController = {
             id: setter.toLowerCase(),
             commission: dis - Math.abs(myComm),
             percent: sum - prevSum,
+            commissionAmount: Math.abs(comDis),
           };
           arr.push(inf);
         }
@@ -153,8 +154,6 @@ const CommissionController = {
           };
           arr.push(inf);
         }
-
-        // console.log(setter, dis, currentCommission)
         prevMatchCom = mc;
         id = setter;
       });
@@ -196,6 +195,7 @@ const CommissionController = {
             id: setter.toLowerCase(),
             commission: dis - Math.abs(myComm),
             percent: sum - prevSum,
+            commissionAmount: Math.abs(comDis),
           };
           arr.push(inf);
         }

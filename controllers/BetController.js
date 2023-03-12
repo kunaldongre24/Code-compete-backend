@@ -4,6 +4,7 @@ const axios = require("axios");
 const CoinController = require("./CoinController");
 const CommissionController = require("./CommissionController");
 const { countAndUpdateCoin } = require("./CoinController");
+const { getMyAgents, getMyClients } = require("./AuthController");
 
 const BetController = {
   async agentReport(req, res) {},
@@ -132,7 +133,6 @@ const BetController = {
     userRef.get().then((value) => {
       const data = value.docs.map((doc) => doc.data());
       const unique = [...new Set(data.map((item) => item.fancyName))];
-      console.log(unique);
       res.send(unique);
     });
   },
@@ -173,18 +173,39 @@ const BetController = {
       res.send(data);
     });
   },
-  async getMyPlayerBets(req, res) {
+  async getBetUsingUserId(req, res) {
     const { matchId } = req.params;
     const userId = req.user.email.split("@")[0];
+    const data = await BetController.getMyPlayerBets(matchId, userId);
+    res.send(data);
+  },
+  async getMyPlayerBets(matchId, userId) {
     const userRef = db
       .collection("betUserMap")
       .where("matchId", "==", matchId)
       .where("company", "==", userId)
       .where("name", "==", "sessionbet");
-    userRef.get().then((value) => {
+    try {
+      const value = await userRef.get();
       const data = value.docs.map((doc) => doc.data());
-      res.send(data);
-    });
+      return data;
+    } catch (error) {
+      return;
+    }
+  },
+  async getMyPlayerAllBets(matchId, userId) {
+    const userRef = db
+      .collection("betUserMap")
+      .where("matchId", "==", matchId)
+      .where("company", "==", userId)
+      .where("settled", "==", true);
+    try {
+      const value = await userRef.get();
+      const data = value.docs.map((doc) => doc.data());
+      return data;
+    } catch (error) {
+      return;
+    }
   },
   async getDetailedMatchBets(req, res) {
     const { matchId } = req.params;
@@ -207,7 +228,157 @@ const BetController = {
       res.send(arr);
     });
   },
-  async myAgentBets(req, res) {},
+  async myAgentBets(req, res) {
+    const { matchId } = req.params;
+    const username = req.user.email.split("@")[0];
+    const arr = await getMyAgents(username);
+    const dataArr = [];
+    for (var i = 0; i < arr.length; i++) {
+      const arrData = arr[i];
+      const data = await BetController.getMyPlayerAllBets(
+        matchId,
+        arrData.username
+      );
+      var matchSum = 0;
+      var sessionSum = 0;
+      var adminShare = 0;
+      for (var j = 0; j < data.length; j++) {
+        const val = data[j];
+        adminShare = val.adminShare;
+        if (val !== undefined && val.settled) {
+          if (val.name === "sessionbet") {
+            if (val.won && val.won === true) {
+              sessionSum -= val.lossAmount;
+            } else {
+              sessionSum += val.profitAmount;
+            }
+          } else if (val.name === "matchbet") {
+            if (val.won && val.won === true) {
+              matchSum += val.lossAmount;
+            } else {
+              matchSum -= val.profitAmount;
+            }
+          }
+        }
+      }
+      var totalMSum = (matchSum * 10000) / (103 * adminShare);
+      var totalSSum = (sessionSum * 10000) / (103 * adminShare);
+      var sCom = Math.abs((totalSSum * 3) / 100);
+      var mCom = Math.abs((totalMSum * 3) / 100);
+
+      const net = totalSSum + totalMSum - mCom - sCom;
+      const agentShare = (net * adminShare) / 100;
+      const final = (agentShare - net) * -1;
+      const inf = {
+        name: arrData.name,
+        username: arrData.username,
+        matchSum: totalMSum,
+        sessionSum: totalSSum,
+        total: totalMSum + totalSSum,
+        matchCommission: mCom,
+        sessionCommission: sCom,
+        totalCommission: mCom + sCom,
+        net,
+        agentShare,
+        others: 0,
+        final,
+      };
+      dataArr.push(inf);
+    }
+    res.send(dataArr);
+  },
+
+  async myAgentCollection(req, res) {
+    const { matchId } = req.params;
+    const username = req.user.email.split("@")[0];
+    const arr = await getMyAgents(username);
+    const dataArr = [];
+    for (var i = 0; i < arr.length; i++) {
+      const arrData = arr[i];
+      const data = await BetController.getMyPlayerAllBets(
+        matchId,
+        arrData.username
+      );
+      var matchSum = 0;
+      var sessionSum = 0;
+      var adminShare = 0;
+      for (var j = 0; j < data.length; j++) {
+        const val = data[j];
+        adminShare = val.adminShare;
+        if (val !== undefined && val.settled) {
+          if (val.name === "sessionbet") {
+            if (val.won && val.won === true) {
+              sessionSum -= val.lossAmount;
+            } else {
+              sessionSum += val.profitAmount;
+            }
+          } else if (val.name === "matchbet") {
+            if (val.won && val.won === true) {
+              matchSum += val.lossAmount;
+            } else {
+              matchSum -= val.profitAmount;
+            }
+          }
+        }
+      }
+      var totalMSum = (matchSum * 10000) / (103 * adminShare);
+      var totalSSum = (sessionSum * 10000) / (103 * adminShare);
+      var sCom = Math.abs((totalSSum * 3) / 100);
+      var mCom = Math.abs((totalMSum * 3) / 100);
+
+      const net = totalSSum + totalMSum - mCom - sCom;
+      const agentShare = (net * adminShare) / 100;
+      const final = (agentShare - net) * -1;
+      const inf = {
+        name: arrData.name,
+        username: arrData.username,
+        final,
+      };
+      dataArr.push(inf);
+    }
+    res.send(dataArr);
+  },
+
+  async myClientCollection(req, res) {
+    const { matchId } = req.params;
+    const username = req.user.email.split("@")[0];
+
+    const dataArr = [];
+    const userRef = db
+      .collection("betUserMap")
+      .where("company", "==", username)
+      .where("settled", "==", true);
+    userRef.get().then((value) => {
+      const data = value.docs.map((doc) => doc.data());
+      const arr = [];
+      for (var i = 0; i < data.length; i++) {
+        const row = data[i];
+        if (arr.filter((x) => x.matchname === row.matchname).length) {
+          if (row.won && row.won === true) {
+            arr.filter((x) => x.matchname === row.matchname)[0].sum +=
+              row.profitAmount;
+          } else {
+            arr.filter((x) => x.matchname === row.matchname)[0].sum -=
+              row.lossAmount;
+          }
+        } else {
+          const sum =
+            row.won && row.won === true
+              ? row.profitAmount
+              : -1 * row.lossAmount;
+          arr.push({
+            matchId: row.matchId,
+            matchname: row.matchname,
+            sum: sum,
+            createdOn: row.createdOn,
+          });
+        }
+      }
+      res.send(arr);
+    });
+
+    res.send(dataArr);
+  },
   async getLiveBets(req, res) {
     const { matchId } = req.params;
     const username = req.user.email.split("@")[0];
@@ -252,7 +423,6 @@ const BetController = {
       sportId === undefined ||
       type === undefined
     ) {
-      console.log(req.body);
       return res.send({ msg: "Insufficient data recieved!" });
     }
     if (stake < 100) {
@@ -272,11 +442,11 @@ const BetController = {
     if (totalCoins < amount) {
       return res.send({ msg: "Insufficient Balance" });
     } else {
-      const url = `http://172.105.35.224:3000/getbm2?eventId=${matchId}`;
+      const url = `https://betfairoddsapi.com:3443/api/bm_fancy/${matchId}`;
       const response = await axios.get(url);
       if (response.data) {
-        if (response.data.t2 && response.data.t2.length) {
-          const resp = response.data.t2[0].bm1;
+        if (response.data.data.t2 && response.data.data.t2.length) {
+          const resp = response.data.data.t2[0].bm1;
           const runnerArray = [];
           for (var i = 0; i < resp.length; i++) {
             const object = {
@@ -286,7 +456,7 @@ const BetController = {
             };
             runnerArray.push(object);
           }
-          const currentData = response.data.t2[0].bm1.filter(
+          const currentData = response.data.data.t2[0].bm1.filter(
             (x) => x.nat === selectionName
           );
           const filteredOdds = currentData.filter(
@@ -329,7 +499,7 @@ const BetController = {
 
               const value = await userRef.get();
               const matchBetData = value.docs.map((doc) => doc.data());
-              let resp = response.data.t2[0].bm1;
+              let resp = response.data.data.t2[0].bm1;
               for (var i = 0; i < resp.length; i++) {
                 const teamOdds = resp[i];
                 for (var j = 0; j < matchBetData.length; j++) {
@@ -420,7 +590,8 @@ const BetController = {
               loss
             );
             for (var i = 0; i < profitList.length; i++) {
-              const { id, commission, percent } = profitList[i];
+              const { id, commission, percent, commissionAmount } =
+                profitList[i];
               const profitAmount = Math.abs(
                 lossList.filter((x) => x.id === id)[0].commission
               );
@@ -430,6 +601,7 @@ const BetController = {
                   name: "matchbet",
                   company: id,
                   player: username,
+                  matchCommission: commissionAmount,
                   lossAmount: Math.abs(commission),
                   profitAmount,
                   stake: stake,
@@ -483,7 +655,6 @@ const BetController = {
       matchId === undefined ||
       sportId === undefined
     ) {
-      console.log(req.body);
       return res.send({ msg: "Insufficient data recieved!" });
     }
     const priceVal = parseFloat(priceValue).toFixed(2);
@@ -500,11 +671,11 @@ const BetController = {
     if (totalCoins < stake) {
       return res.send({ msg: "Insufficient Balance" });
     } else {
-      const url = `http://172.105.35.224:3000/getbm2?eventId=${matchId}`;
+      const url = `https://betfairoddsapi.com:3443/api/bm_fancy/${matchId}`;
       const response = await axios.get(url);
       if (response.data) {
-        if (response.data.t3) {
-          const currentData = response.data.t3.filter(
+        if (response.data.data.t3) {
+          const currentData = response.data.data.t3.filter(
             (x) => x.nat === fancyName
           );
           const filteredOdds = currentData.filter(
@@ -563,7 +734,8 @@ const BetController = {
               loss
             );
             for (var i = 0; i < profitList.length; i++) {
-              const { id, commission, percent } = profitList[i];
+              const { id, commission, percent, commissionAmount } =
+                profitList[i];
               const profitAmount = Math.abs(
                 lossList.filter((x) => x.id === id)[0].commission
               );
@@ -572,6 +744,7 @@ const BetController = {
                 await betUserMap.set({
                   name: "sessionbet",
                   company: id,
+                  sessionCommission: commissionAmount,
                   player: username,
                   lossAmount: Math.abs(commission),
                   profitAmount,

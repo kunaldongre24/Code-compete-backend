@@ -14,6 +14,27 @@ const AuthController = {
     }
     return;
   },
+  async getMyAgents(username) {
+    const userRef = db.collection("users").where("companyId", "==", username);
+    const value = await userRef.get();
+    const arr = [];
+    value.forEach((doc) => {
+      arr.push(doc.data());
+    });
+    return arr;
+  },
+  async getMyClients(username) {
+    const userRef = db
+      .collection("users")
+      .where("companyId", "==", username)
+      .where("level", "==", 6);
+    const value = await userRef.get();
+    const arr = [];
+    value.forEach((doc) => {
+      arr.push(doc.data());
+    });
+    return arr;
+  },
   async getUserById(req, res) {
     const { id } = req.params;
     const response = await AuthController.getUserByUid(id);

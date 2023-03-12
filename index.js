@@ -37,12 +37,11 @@ async function myFunction() {
     return document;
   });
   for (var i = 0; i < data.length; i++) {
-    const url = `https://betfairoddsapi.com:3456/api/fancy_result/${data[i].matchId}/${data[i].fancyName}`;
+    const url = `https://betfairoddsapi.com:3443/api/fancy_result/${data[i].matchId}/${data[i].fancyName}`;
     uri = encodeURI(url);
     uri = uri.replace("(", "%28");
     uri = uri.replace(")", "%29");
     const res = await axios.get(uri);
-    console.log(res.data);
     if (res.data.result) {
       resolveBet(data[i].fancyName, res.data.result);
     }

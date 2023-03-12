@@ -183,7 +183,7 @@ const CoinController = {
         doc.ref.delete();
       });
     });
-    await CoinController.countAndUpdateCoin(id.toLowerCase());
+    await CoinController.countAndUpdateCoin(id);
     res.send({ msg: "Deleted coins" });
   },
 };
