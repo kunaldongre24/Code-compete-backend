@@ -103,11 +103,18 @@ const CommissionController = {
       { merge: true }
     );
   },
+  async checkDistribution(req, res) {
+    const { id, amount } = req.body;
+    const response = await CommissionController.disburseSessionCoin(id, amount);
+    console.log(response);
+    res.send(response);
+  },
   async disburseSessionCoin(id, amount) {
     let sum = 0;
     let prevSum = 0;
     const arr = [{ id, commission: amount * -1, sum: sum - prevSum }];
     let prevMatchCom = 0;
+    var comSum = 0;
     while (sum < 100 && id !== "cc0001") {
       const ref = db.collection("commisionMap").where("getter", "==", id);
       await ref.get().then(async (value) => {
@@ -125,10 +132,11 @@ const CommissionController = {
         let dis = (am * data.matchShare) / 100;
         const mc = parseFloat(data.sessionCommission);
         const currentCommission = mc - prevMatchCom;
-        const comDis = (amount * currentCommission) / 100;
-        // if (currentCommission > 0) {
-
-        // }
+        comSum += currentCommission;
+        var comDis = (amount * currentCommission) / 100;
+        if (setter.toLowerCase() === "cc0001") {
+          comDis = (amount * (3 - comSum)) / 100;
+        }
         if (arr.filter((x) => x.id === setter.toLowerCase()).length) {
           arr.filter((x) => x.id === setter.toLowerCase())[0].commission =
             dis - Math.abs(myComm);
@@ -166,6 +174,8 @@ const CommissionController = {
     let prevSum = 0;
     const arr = [{ id, commission: amount * -1, sum: sum - prevSum }];
     let prevMatchCom = 0;
+    const comSum = 0;
+
     while (sum < 100 && id !== "cc0001") {
       const ref = db.collection("commisionMap").where("getter", "==", id);
       await ref.get().then(async (value) => {
@@ -183,8 +193,12 @@ const CommissionController = {
         let dis = (am * data.matchShare) / 100;
         const mc = parseFloat(data.matchCommission);
         const currentCommission = mc - prevMatchCom;
-        const comDis = (amount * currentCommission) / 100;
+        comSum += currentCommission;
 
+        const comDis = (amount * currentCommission) / 100;
+        if (setter.toLowerCase() === "cc0001") {
+          comDis = (amount * (3 - comSum)) / 100;
+        }
         if (arr.filter((x) => x.id === setter.toLowerCase()).length) {
           arr.filter((x) => x.id === setter.toLowerCase())[0].commission =
             dis - Math.abs(myComm);

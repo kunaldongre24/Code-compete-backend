@@ -15,6 +15,7 @@ const CoinController = {
     await CoinController.countAndUpdateCoin(getter.toLowerCase());
     await CoinController.countAndUpdateCoin(setter.toLowerCase());
   },
+
   async countAndUpdateCoin(username) {
     const totalCoins = await CoinController.countCoin(username);
     const userRef = db.collection("users").where("username", "==", username);
@@ -43,6 +44,9 @@ const CoinController = {
       const userInfo = value.docs[0].data();
       const coinDb = db.collection("coinMap").doc(uuidv4());
       const userDisplayName = userInfo.name;
+      const p1Coins = await CoinController.countCoin(user);
+      const p2Coins = await CoinController.countCoin(username);
+
       if (parseInt(type) === 1) {
         const msg = `Limit increased of ${userDisplayName}(${username}) by ${req.user.name}(${user})`;
         await coinDb.set({
@@ -50,6 +54,8 @@ const CoinController = {
           msg,
           getter: username,
           setter: user,
+          getterPreviousLimit: p2Coins,
+          setterPreviousLimit: p1Coins,
           createdOn: Date.now(),
           type: "Limit",
         });
@@ -60,6 +66,8 @@ const CoinController = {
           msg,
           getter: user,
           setter: username,
+          getterPreviousLimit: p1Coins,
+          setterPreviousLimit: p2Coins,
           type: "Limit",
           createdOn: Date.now(),
         });

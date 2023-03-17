@@ -10,7 +10,7 @@ router.get("/getMatchBets/:matchId", Auth, BetController.getBetsByMatchId);
 router.get("/getBetPosition/:matchId", Auth, BetController.getMatchBetPosition);
 router.get("/getMyPlayerBets/:matchId", Auth, BetController.getBetUsingUserId);
 router.get("/getUserAllBets/", Auth, BetController.getUserBets);
-router.get("/getAllMatchBets/:matchId", Auth, BetController.getAllMatchBets);
+router.get("/getAllMatchBets/:matchId", Auth, BetController.getMatchAllBets);
 router.get(
   "/getDetailedMatchBets/:matchId",
   Auth,
@@ -23,6 +23,12 @@ router.get(
   Auth,
   BetController.myAgentCollection
 );
+router.get(
+  "/myPlayerCollection/:matchId",
+  Auth,
+  BetController.myAgentCollection
+);
+router.get("/myClientBets/:matchId", Auth, BetController.myPlayerBets);
 router.get(
   "/myClientCollection/:matchId",
   Auth,
