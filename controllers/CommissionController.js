@@ -26,14 +26,13 @@ const CommissionController = {
       getter = userId;
       setter = company;
     }
-    const type = 3;
     const coinDb = db.collection("coinMap").doc(uuidv4());
     await coinDb.set({
       value: amount,
       type: 3,
       msg: "Bet coin distribution",
-      getter: getter,
-      setter: setter,
+      getter,
+      setter,
       createdOn: Date.now(),
     });
     const betRef = db.collection("betUserMap").doc(id);
@@ -106,7 +105,6 @@ const CommissionController = {
   async checkDistribution(req, res) {
     const { id, amount } = req.body;
     const response = await CommissionController.disburseSessionCoin(id, amount);
-    console.log(response);
     res.send(response);
   },
   async disburseSessionCoin(id, amount) {
@@ -115,6 +113,8 @@ const CommissionController = {
     const arr = [{ id, commission: amount * -1, sum: sum - prevSum }];
     let prevMatchCom = 0;
     var comSum = 0;
+    var ccComPerc = 0;
+    var ccComAmount = 0;
     while (sum < 100 && id !== "cc0001") {
       const ref = db.collection("commisionMap").where("getter", "==", id);
       await ref.get().then(async (value) => {
@@ -135,8 +135,10 @@ const CommissionController = {
         comSum += currentCommission;
         var comDis = (amount * currentCommission) / 100;
         if (setter.toLowerCase() === "cc0001") {
-          comDis = (amount * (3 - comSum)) / 100;
+          ccComAmount = (amount * (3 - comSum)) / 100;
+          ccComPerc = 3 - comSum;
         }
+
         if (arr.filter((x) => x.id === setter.toLowerCase()).length) {
           arr.filter((x) => x.id === setter.toLowerCase())[0].commission =
             dis - Math.abs(myComm);
@@ -146,19 +148,24 @@ const CommissionController = {
           const inf = {
             id: setter.toLowerCase(),
             commission: dis - Math.abs(myComm),
+            myComm,
             percent: sum - prevSum,
-            commissionAmount: Math.abs(comDis),
           };
           arr.push(inf);
         }
+
         if (arr.filter((x) => x.id === getter).length) {
           arr.filter((x) => x.id === getter)[0].commission += Math.abs(comDis);
+          arr.filter((x) => x.id === getter)[0].commissionAmount =
+            Math.abs(comDis);
+          arr.filter((x) => x.id === getter)[0].commissionPercentage =
+            currentCommission;
         } else {
           const inf = {
             id: getter,
             commission: Math.abs(comDis),
+            myComm,
             percent: sum - prevSum,
-            commissionAmount: Math.abs(comDis),
           };
           arr.push(inf);
         }
@@ -166,6 +173,11 @@ const CommissionController = {
         id = setter;
       });
     }
+    arr.filter((x) => x.id === "cc0001")[0].commission += Math.abs(ccComAmount);
+    arr.filter((x) => x.id === "cc0001")[0].commissionAmount =
+      Math.abs(ccComAmount);
+    arr.filter((x) => x.id === "cc0001")[0].commissionPercentage =
+      Math.abs(ccComPerc);
     return arr;
   },
 
@@ -174,8 +186,9 @@ const CommissionController = {
     let prevSum = 0;
     const arr = [{ id, commission: amount * -1, sum: sum - prevSum }];
     let prevMatchCom = 0;
-    const comSum = 0;
-
+    var comSum = 0;
+    var ccComPerc = 0;
+    var ccComAmount = 0;
     while (sum < 100 && id !== "cc0001") {
       const ref = db.collection("commisionMap").where("getter", "==", id);
       await ref.get().then(async (value) => {
@@ -194,11 +207,12 @@ const CommissionController = {
         const mc = parseFloat(data.matchCommission);
         const currentCommission = mc - prevMatchCom;
         comSum += currentCommission;
-
-        const comDis = (amount * currentCommission) / 100;
+        var comDis = (amount * currentCommission) / 100;
         if (setter.toLowerCase() === "cc0001") {
-          comDis = (amount * (3 - comSum)) / 100;
+          ccComAmount = (amount * (3 - comSum)) / 100;
+          ccComPerc = 3 - comSum;
         }
+
         if (arr.filter((x) => x.id === setter.toLowerCase()).length) {
           arr.filter((x) => x.id === setter.toLowerCase())[0].commission =
             dis - Math.abs(myComm);
@@ -209,37 +223,43 @@ const CommissionController = {
             id: setter.toLowerCase(),
             commission: dis - Math.abs(myComm),
             percent: sum - prevSum,
-            commissionAmount: Math.abs(comDis),
           };
           arr.push(inf);
         }
+
         if (arr.filter((x) => x.id === getter).length) {
           arr.filter((x) => x.id === getter)[0].commission += Math.abs(comDis);
+          arr.filter((x) => x.id === getter)[0].commissionAmount =
+            Math.abs(comDis);
+          arr.filter((x) => x.id === getter)[0].commissionPercentage =
+            currentCommission;
         } else {
           const inf = {
             id: getter,
             commission: Math.abs(comDis),
             percent: sum - prevSum,
-            commissionAmount: Math.abs(comDis),
           };
           arr.push(inf);
         }
-
-        // console.log(setter, dis, currentCommission)
         prevMatchCom = mc;
         id = setter;
       });
     }
+    arr.filter((x) => x.id === "cc0001")[0].commission += Math.abs(ccComAmount);
+    arr.filter((x) => x.id === "cc0001")[0].commissionAmount =
+      Math.abs(ccComAmount);
+    arr.filter((x) => x.id === "cc0001")[0].commissionPercentage =
+      Math.abs(ccComPerc);
     return arr;
   },
   async distributeCoin(req, res) {
-    // const { username, amount } = req.body;
-    // if ((username === undefined, amount === undefined)) {
-    //   res.send({ err: "Missing Information" });
-    // }
-    // const id = username.toLowerCase();
-    // const arr = await CommissionController.disburseCoin(id, amount);
-    res.send({ msg: "error" });
+    const { username, amount } = req.body;
+    if ((username === undefined, amount === undefined)) {
+      res.send({ err: "Missing Information" });
+    }
+    const id = username.toLowerCase();
+    const arr = await CommissionController.disburseSessionCoin(id, amount);
+    res.send(arr);
   },
 };
 

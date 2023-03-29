@@ -14,7 +14,7 @@
       "visible": false,
       "pid": 0,
       "gscode": 1,
-      "maxb": 1,
+      "maxb": 50000,
       "sno": 1,
       "dtype": 4,
       "ocnt": 6,
@@ -47,56 +47,56 @@
             {
               "sid": 886250,
               "psid": 0,
-              "odds": 1.74,
+              "odds": 1.63,
               "otype": "back",
               "oname": "back3",
               "tno": 2,
-              "size": 3569.3
+              "size": 1000
             },
             {
               "sid": 886250,
               "psid": 0,
-              "odds": 1.75,
+              "odds": 1.64,
               "otype": "back",
               "oname": "back2",
               "tno": 1,
-              "size": 4036.21
+              "size": 455.39
             },
             {
               "sid": 886250,
               "psid": 0,
-              "odds": 1.76,
+              "odds": 1.65,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 999.64
+              "size": 1799.83
             },
             {
               "sid": 886250,
               "psid": 0,
-              "odds": 1.77,
+              "odds": 1.66,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 189.4
+              "size": 3800.48
             },
             {
               "sid": 886250,
               "psid": 0,
-              "odds": 1.78,
+              "odds": 1.67,
               "otype": "lay",
               "oname": "lay2",
               "tno": 1,
-              "size": 21.27
+              "size": 3215.28
             },
             {
               "sid": 886250,
               "psid": 0,
-              "odds": 1.79,
+              "odds": 1.68,
               "otype": "lay",
               "oname": "lay3",
               "tno": 2,
-              "size": 497.42
+              "size": 1181.77
             }
           ]
         },
@@ -121,56 +121,56 @@
             {
               "sid": 544141,
               "psid": 0,
-              "odds": 2.24,
+              "odds": 2.46,
               "otype": "back",
               "oname": "back3",
               "tno": 2,
-              "size": 908.94
+              "size": 807.06
             },
             {
               "sid": 544141,
               "psid": 0,
-              "odds": 2.26,
+              "odds": 2.48,
               "otype": "back",
               "oname": "back2",
               "tno": 1,
-              "size": 625.48
+              "size": 2165.13
             },
             {
               "sid": 544141,
               "psid": 0,
-              "odds": 2.28,
+              "odds": 2.5,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 372.24
+              "size": 2523.52
             },
             {
               "sid": 544141,
               "psid": 0,
-              "odds": 2.3,
+              "odds": 2.52,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 3.68
+              "size": 22.32
             },
             {
               "sid": 544141,
               "psid": 0,
-              "odds": 2.32,
+              "odds": 2.54,
               "otype": "lay",
               "oname": "lay2",
               "tno": 1,
-              "size": 1916.19
+              "size": 1147.04
             },
             {
               "sid": 544141,
               "psid": 0,
-              "odds": 2.34,
+              "odds": 2.56,
               "otype": "lay",
               "oname": "lay3",
               "tno": 2,
-              "size": 2532.95
+              "size": 50
             }
           ]
         }
@@ -192,7 +192,7 @@
       "dtype": 4,
       "ocnt": 6,
       "m": 0,
-      "max": 200000,
+      "max": 500000,
       "min": 100,
       "biplay": true,
       "umaxbof": 0,
@@ -205,9 +205,9 @@
           "psid": 0,
           "sno": 1,
           "psrno": 1,
-          "gstatus": "SUSPENDED",
+          "gstatus": "ACTIVE",
           "nat": "Mumbai Indians Women",
-          "gscode": 0,
+          "gscode": 1,
           "max": 0,
           "min": 0,
           "rem": "",
@@ -238,20 +238,20 @@
             {
               "sid": 1,
               "psid": 0,
-              "odds": 0,
+              "odds": 65,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 0
+              "size": 500000
             },
             {
               "sid": 1,
               "psid": 0,
-              "odds": 0,
+              "odds": 68,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 0
+              "size": 500000
             },
             {
               "sid": 1,
@@ -381,7 +381,7 @@
           "gstatus": "",
           "nat": "6 over runs MIW(MIW vs UPW)adv",
           "gscode": 1,
-          "max": 100000,
+          "max": 200000,
           "min": 100,
           "rem": "",
           "br": true,
@@ -393,7 +393,7 @@
             {
               "sid": 1,
               "psid": 0,
-              "odds": 45,
+              "odds": 46,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -402,7 +402,45 @@
             {
               "sid": 1,
               "psid": 0,
-              "odds": 43,
+              "odds": 45,
+              "otype": "lay",
+              "oname": "lay1",
+              "tno": 0,
+              "size": 100
+            }
+          ]
+        },
+        {
+          "mid": 972576882787,
+          "sid": 72,
+          "psid": 0,
+          "sno": 1,
+          "psrno": 1,
+          "gstatus": "",
+          "nat": "6 over run MIW 2",
+          "gscode": 1,
+          "max": 50000,
+          "min": 100,
+          "rem": "",
+          "br": false,
+          "gid": 732259705,
+          "secid": 1,
+          "marid": 535667553043,
+          "vval": 0,
+          "odds": [
+            {
+              "sid": 72,
+              "psid": 0,
+              "odds": 46,
+              "otype": "back",
+              "oname": "back1",
+              "tno": 0,
+              "size": 100
+            },
+            {
+              "sid": 72,
+              "psid": 0,
+              "odds": 45,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -419,7 +457,7 @@
           "gstatus": "",
           "nat": "Match 1st over run(MIW vs UPW)adv",
           "gscode": 1,
-          "max": 100000,
+          "max": 200000,
           "min": 100,
           "rem": "",
           "br": true,
@@ -431,7 +469,7 @@
             {
               "sid": 7,
               "psid": 0,
-              "odds": 6,
+              "odds": 9,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -440,7 +478,7 @@
             {
               "sid": 7,
               "psid": 0,
-              "odds": 5,
+              "odds": 8,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -469,7 +507,7 @@
             {
               "sid": 36,
               "psid": 0,
-              "odds": 10,
+              "odds": 13,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -478,7 +516,7 @@
             {
               "sid": 36,
               "psid": 0,
-              "odds": 9,
+              "odds": 12,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -507,7 +545,7 @@
             {
               "sid": 48,
               "psid": 0,
-              "odds": 22,
+              "odds": 24,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -516,7 +554,7 @@
             {
               "sid": 48,
               "psid": 0,
-              "odds": 20,
+              "odds": 23,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -530,10 +568,10 @@
           "psid": 0,
           "sno": 2,
           "psrno": 2,
-          "gstatus": "",
+          "gstatus": "SUSPENDED",
           "nat": "4 over run MIW",
-          "gscode": 1,
-          "max": 50000,
+          "gscode": 0,
+          "max": 100000,
           "min": 100,
           "rem": "",
           "br": true,
@@ -545,20 +583,20 @@
             {
               "sid": 53,
               "psid": 0,
-              "odds": 29,
+              "odds": 0,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 100
+              "size": 0
             },
             {
               "sid": 53,
               "psid": 0,
-              "odds": 27,
+              "odds": 0,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 100
+              "size": 0
             }
           ]
         },
@@ -583,7 +621,25 @@
             {
               "sid": 8,
               "psid": 0,
-              "odds": 158,
+              "odds": 161,
+              "otype": "back",
+              "oname": "back3",
+              "tno": 2,
+              "size": 100
+            },
+            {
+              "sid": 8,
+              "psid": 0,
+              "odds": 160,
+              "otype": "back",
+              "oname": "back2",
+              "tno": 1,
+              "size": 90
+            },
+            {
+              "sid": 8,
+              "psid": 0,
+              "odds": 161,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -592,11 +648,141 @@
             {
               "sid": 8,
               "psid": 0,
-              "odds": 155,
+              "odds": 159,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
               "size": 100
+            },
+            {
+              "sid": 8,
+              "psid": 0,
+              "odds": 160,
+              "otype": "lay",
+              "oname": "lay2",
+              "tno": 1,
+              "size": 110
+            },
+            {
+              "sid": 8,
+              "psid": 0,
+              "odds": 161,
+              "otype": "lay",
+              "oname": "lay3",
+              "tno": 2,
+              "size": 125
+            }
+          ]
+        },
+        {
+          "mid": 972576882787,
+          "sid": 86,
+          "psid": 0,
+          "sno": 4,
+          "psrno": 4,
+          "gstatus": "",
+          "nat": "20 over run MIW 2",
+          "gscode": 1,
+          "max": 25000,
+          "min": 10,
+          "rem": "",
+          "br": false,
+          "gid": 732259705,
+          "secid": 1,
+          "marid": 535667553043,
+          "vval": 0,
+          "odds": [
+            {
+              "sid": 86,
+              "psid": 0,
+              "odds": 159,
+              "otype": "back",
+              "oname": "back3",
+              "tno": 2,
+              "size": 100
+            },
+            {
+              "sid": 86,
+              "psid": 0,
+              "odds": 158,
+              "otype": "back",
+              "oname": "back2",
+              "tno": 1,
+              "size": 80
+            },
+            {
+              "sid": 86,
+              "psid": 0,
+              "odds": 159,
+              "otype": "back",
+              "oname": "back1",
+              "tno": 0,
+              "size": 100
+            },
+            {
+              "sid": 86,
+              "psid": 0,
+              "odds": 158,
+              "otype": "lay",
+              "oname": "lay1",
+              "tno": 0,
+              "size": 100
+            },
+            {
+              "sid": 86,
+              "psid": 0,
+              "odds": 158,
+              "otype": "lay",
+              "oname": "lay2",
+              "tno": 1,
+              "size": 100
+            },
+            {
+              "sid": 86,
+              "psid": 0,
+              "odds": 159,
+              "otype": "lay",
+              "oname": "lay3",
+              "tno": 2,
+              "size": 120
+            }
+          ]
+        },
+        {
+          "mid": 972576882787,
+          "sid": 91,
+          "psid": 0,
+          "sno": 4,
+          "psrno": 4,
+          "gstatus": "SUSPENDED",
+          "nat": "20 over run bhav MIW",
+          "gscode": 0,
+          "max": 100000,
+          "min": 100,
+          "rem": "",
+          "br": true,
+          "gid": 732259705,
+          "secid": 1,
+          "marid": 535667553043,
+          "vval": 0,
+          "odds": [
+            {
+              "sid": 91,
+              "psid": 0,
+              "odds": 0,
+              "otype": "back",
+              "oname": "back1",
+              "tno": 0,
+              "size": 0
+            },
+            {
+              "sid": 91,
+              "psid": 0,
+              "odds": 0,
+              "otype": "lay",
+              "oname": "lay1",
+              "tno": 0,
+              "size": 0
             }
           ]
         },
@@ -621,20 +807,20 @@
             {
               "sid": 10,
               "psid": 0,
-              "odds": 21,
+              "odds": 27,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 100
+              "size": 90
             },
             {
               "sid": 10,
               "psid": 0,
-              "odds": 21,
+              "odds": 27,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 120
+              "size": 110
             }
           ]
         },
@@ -659,7 +845,7 @@
             {
               "sid": 29,
               "psid": 0,
-              "odds": 48,
+              "odds": 54,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -668,7 +854,7 @@
             {
               "sid": 29,
               "psid": 0,
-              "odds": 48,
+              "odds": 54,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -697,20 +883,20 @@
             {
               "sid": 30,
               "psid": 0,
-              "odds": 77,
+              "odds": 83,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 80
+              "size": 90
             },
             {
               "sid": 30,
               "psid": 0,
-              "odds": 77,
+              "odds": 83,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 100
+              "size": 110
             }
           ]
         },
@@ -735,20 +921,20 @@
             {
               "sid": 33,
               "psid": 0,
-              "odds": 106,
+              "odds": 112,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 80
+              "size": 90
             },
             {
               "sid": 33,
               "psid": 0,
-              "odds": 106,
+              "odds": 112,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 100
+              "size": 110
             }
           ]
         },
@@ -758,9 +944,9 @@
           "psid": 0,
           "sno": 5,
           "psrno": 5,
-          "gstatus": "SUSPENDED",
+          "gstatus": "",
           "nat": "Fall of 1st wkt run bhav MIW.",
-          "gscode": 0,
+          "gscode": 1,
           "max": 200000,
           "min": 100,
           "rem": "",
@@ -773,20 +959,20 @@
             {
               "sid": 106,
               "psid": 0,
-              "odds": 0,
+              "odds": 7,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 0
+              "size": 5
             },
             {
               "sid": 106,
               "psid": 0,
-              "odds": 0,
+              "odds": 7,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 0
+              "size": 8
             }
           ]
         },
@@ -811,7 +997,7 @@
             {
               "sid": 12,
               "psid": 0,
-              "odds": 22,
+              "odds": 23,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -820,7 +1006,7 @@
             {
               "sid": 12,
               "psid": 0,
-              "odds": 22,
+              "odds": 23,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -849,7 +1035,7 @@
             {
               "sid": 13,
               "psid": 0,
-              "odds": 19,
+              "odds": 24,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -858,7 +1044,7 @@
             {
               "sid": 13,
               "psid": 0,
-              "odds": 19,
+              "odds": 24,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -925,20 +1111,20 @@
             {
               "sid": 142,
               "psid": 0,
-              "odds": 1,
+              "odds": 6,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 6
+              "size": 5
             },
             {
               "sid": 142,
               "psid": 0,
-              "odds": 1,
+              "odds": 6,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 9
+              "size": 8
             }
           ]
         },
@@ -948,9 +1134,9 @@
           "psid": 0,
           "sno": 7,
           "psrno": 7,
-          "gstatus": "",
+          "gstatus": "SUSPENDED",
           "nat": "1st wkt pship Boundaries MIW(MIW vs UPW)adv",
-          "gscode": 1,
+          "gscode": 0,
           "max": 10000,
           "min": 100,
           "rem": "",
@@ -963,20 +1149,20 @@
             {
               "sid": 16,
               "psid": 0,
-              "odds": 3,
+              "odds": 0,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 100
+              "size": 0
             },
             {
               "sid": 16,
               "psid": 0,
-              "odds": 2,
+              "odds": 0,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 100
+              "size": 0
             }
           ]
         },
@@ -1024,9 +1210,9 @@
           "psid": 0,
           "sno": 8,
           "psrno": 8,
-          "gstatus": "",
+          "gstatus": "SUSPENDED",
           "nat": "Y Bhatia Boundaries(MIW vs UPW)adv",
-          "gscode": 1,
+          "gscode": 0,
           "max": 10000,
           "min": 100,
           "rem": "",
@@ -1039,20 +1225,20 @@
             {
               "sid": 19,
               "psid": 0,
-              "odds": 3,
+              "odds": 0,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 100
+              "size": 0
             },
             {
               "sid": 19,
               "psid": 0,
-              "odds": 2,
+              "odds": 0,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 100
+              "size": 0
             }
           ]
         },
@@ -1077,7 +1263,7 @@
             {
               "sid": 22,
               "psid": 0,
-              "odds": 18,
+              "odds": 21,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -1086,7 +1272,7 @@
             {
               "sid": 22,
               "psid": 0,
-              "odds": 18,
+              "odds": 21,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -1115,7 +1301,7 @@
             {
               "sid": 24,
               "psid": 0,
-              "odds": 19,
+              "odds": 20,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
@@ -1124,7 +1310,7 @@
             {
               "sid": 24,
               "psid": 0,
-              "odds": 19,
+              "odds": 20,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
@@ -1138,9 +1324,9 @@
           "psid": 0,
           "sno": 10,
           "psrno": 10,
-          "gstatus": "",
+          "gstatus": "SUSPENDED",
           "nat": "How many balls face by Y Bhatia(MIW vs UPW)adv",
-          "gscode": 1,
+          "gscode": 0,
           "max": 10000,
           "min": 100,
           "rem": "",
@@ -1153,20 +1339,20 @@
             {
               "sid": 25,
               "psid": 0,
-              "odds": 16,
+              "odds": 0,
               "otype": "back",
               "oname": "back1",
               "tno": 0,
-              "size": 90
+              "size": 0
             },
             {
               "sid": 25,
               "psid": 0,
-              "odds": 16,
+              "odds": 0,
               "otype": "lay",
               "oname": "lay1",
               "tno": 0,
-              "size": 110
+              "size": 0
             }
           ]
         }

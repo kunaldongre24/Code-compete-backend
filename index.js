@@ -29,24 +29,38 @@ app.use(
   })
 ); // Use this after the variable declaration
 async function myFunction() {
-  const betRef = db.collection("betDataMap").where("settled", "!=", true);
-  const response = await betRef.get();
-  const data = response.docs.map((doc) => {
-    const document = doc.data();
-    document.id = doc.id;
-    return document;
-  });
-  for (var i = 0; i < data.length; i++) {
-    const url = `https://betfairoddsapi.com:3443/api/fancy_result/${data[i].matchId}/${data[i].fancyName}`;
-    uri = encodeURI(url);
-    uri = uri.replace("(", "%28");
-    uri = uri.replace(")", "%29");
-    const res = await axios.get(uri);
-    if (res.data.result) {
-      resolveBet(data[i].fancyName, res.data.result);
+  try {
+    const betRef = db.collection("betDataMap").where("settled", "!=", true);
+    const response = await betRef.get();
+    const data = response.docs.map((doc) => {
+      const document = doc.data();
+      document.id = doc.id;
+      return document;
+    });
+    var resultData = [];
+    const unique = [...new Set(data.map((item) => item.matchId))];
+    const uniqueFancy = [...new Set(data.map((item) => item.fancyName))];
+    for (var i = 0; i < unique.length; i++) {
+      const url =
+        "http://172.105.49.104:8000/resultbygameid?eventId=" + unique[i];
+      const res = await axios.get(url);
+      if (!res.data.status) {
+        resultData = [...resultData, ...res.data];
+      }
     }
+    for (var i = 0; i < uniqueFancy.length; i++) {
+      if (resultData.filter((x) => x.nat === uniqueFancy[i]).length > 0) {
+        const result = resultData.filter((x) => x.nat === uniqueFancy[i])[0]
+          .result;
+        if (result >= 0) {
+          resolveBet(uniqueFancy[i], result);
+        }
+      }
+    }
+    console.log("Bet Resolved");
+  } catch (error) {
+    console.log(error);
   }
-  console.log("Bet Resolved");
 }
 cron.schedule("*/30 * * * * *", myFunction);
 app.use("/static", express.static("static"));

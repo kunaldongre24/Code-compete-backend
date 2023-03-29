@@ -70,20 +70,44 @@ const MatchController = {
     res.send(response.data);
   },
   async getMatchScore(req, res) {
-    const { eventId } = req.params;
-    const url = `https://betfairoddsapi.com:3443/api/bm_fancy/${eventId}`;
-    const response = await axios.get(url);
-    res.send(response.data);
+    try {
+      const { eventId } = req.params;
+      // const url = `http://143.244.136.57/getbm2?eventId=${eventId}`;
+      const url = `http://139.144.12.137/getbm2?eventId=${eventId}`;
+      const response = await axios.get(url);
+      res.send(response.data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal server error");
+    }
   },
   async getMatchOdds(req, res) {
-    const { eventId } = req.params;
-    const url = `https://betfairoddsapi.com:3443/api/bm_fancy/${eventId}`;
-    const response = await axios.get(url);
-    res.send(response.data);
+    try {
+      const { eventId } = req.params;
+      // const url = `http://143.244.136.57/getbm2?eventId=${eventId}`;
+      const url = `http://139.144.12.137/getbm2?eventId=${eventId}`;
+      const response = await axios.get(url);
+      res.send(response.data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal server error");
+    }
   },
-  async oddsResult(req, res) {
-    const { eventId, fancyName } = req.params;
-    const url = `https://betfairoddsapi.com:3443/api/fancy_result/${eventId}/${fancyName}`;
+  async fancyResult(req, res) {
+    const { eventId, fancyName } = req.body;
+    const result = await MatchController.oddsResult(eventId, fancyName);
+    res.send({ result });
+  },
+  async oddsResult(eventId, fancyName) {
+    const url = "http://172.105.49.104:8000/resultbygameid?eventId=" + eventId;
+    const response = await axios.get(url);
+    const data = response.data;
+    const result = data.filter((x) => x.nat === fancyName)[0].result;
+    return result;
+  },
+  async matchResult(req, res) {
+    const { eventId } = req.params;
+    const url = "http://172.105.49.104:8000/resultbygameid?eventId=" + eventId;
     const response = await axios.get(url);
     res.send(response.data);
   },

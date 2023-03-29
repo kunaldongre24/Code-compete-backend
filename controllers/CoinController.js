@@ -15,9 +15,32 @@ const CoinController = {
     await CoinController.countAndUpdateCoin(getter.toLowerCase());
     await CoinController.countAndUpdateCoin(setter.toLowerCase());
   },
-
+  removeNum(text) {
+    return text.replace(/[0-9]/g, "");
+  },
   async countAndUpdateCoin(username) {
+    const valid = ["sc", "cc", "sst", "sa", "ss"];
+    const id = CoinController.removeNum(username);
+    if (valid.includes(id)) {
+      return CoinController.updateAgentCoin(username);
+    }
     const totalCoins = await CoinController.countCoin(username);
+    const userRef = db.collection("users").where("username", "==", username);
+    const resp = await userRef.get();
+
+    if (resp.empty) {
+      console.log("No matching documents.");
+      return;
+    }
+    resp.forEach((doc) => {
+      doc.ref.set(
+        { totalCoins: Math.round(parseFloat(totalCoins) * 100) / 100 },
+        { merge: true }
+      );
+    });
+  },
+  async updateAgentCoin(username) {
+    const totalCoins = await CoinController.countAgentLimit(username);
     const userRef = db.collection("users").where("username", "==", username);
     const resp = await userRef.get();
 
@@ -109,6 +132,33 @@ const CoinController = {
     });
     return sum;
   },
+  async countAgentLimit(username) {
+    let sum = 0;
+    const id = username;
+    if (!username) {
+      res.send({ err: "Missing Information" });
+    }
+    const query1 = db.collection("coinMap").where("getter", "==", id);
+    const query2 = db.collection("coinMap").where("setter", "==", id);
+
+    const snapshot1 = await query1.get();
+    snapshot1.forEach((doc) => {
+      if (doc.data().getter === id) {
+        if (!doc.data().type || (doc.data().type && doc.data().type !== 3)) {
+          const val = parseFloat(doc.data().value);
+          sum += val ? val : 0;
+        }
+      }
+    });
+    const snapshot2 = await query2.get();
+    snapshot2.forEach((doc) => {
+      if (doc.data().setter === id) {
+        const val = parseFloat(doc.data().value);
+        sum -= val ? val : 0;
+      }
+    });
+    return sum;
+  },
   async getLimit(username) {
     const id = username;
     if (!username) {
@@ -146,6 +196,11 @@ const CoinController = {
     const { username } = req.params;
     const response = await CoinController.getLimit(username);
     res.send(response);
+  },
+  async getAgentLimit(req, res) {
+    const { username } = req.params;
+    const sum = await CoinController.countAgentLimit(username);
+    res.send({ totalCoins: Math.round(sum * 100) / 100 });
   },
   async deleteBetCoins(req, res) {
     const { id } = req.params;

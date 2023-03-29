@@ -271,6 +271,7 @@ const AuthController = {
             const usersDb = db.collection("users");
             await usersDb.doc(userRecord.uid).set(userJson);
 
+            await countAndUpdateCoin(username.toLowerCase());
             res.send({
               userCreated: true,
               msg: "User has been created Successfully",
