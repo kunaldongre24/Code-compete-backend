@@ -286,22 +286,18 @@ const BetController = {
         selectionId,
         matchId,
       } = data[i];
-      if (selectionId) {
-        if (isBack) {
-          if (winnerSid === parseInt(selectionId)) {
-            won = true;
-          } else {
-            won = false;
-          }
+      if (isBack) {
+        if (winnerSid === parseInt(selectionId)) {
+          won = true;
         } else {
-          if (winnerSid === parseInt(selectionId)) {
-            won = false;
-          } else {
-            won = true;
-          }
+          won = false;
         }
       } else {
-        return;
+        if (winnerSid === parseInt(selectionId)) {
+          won = false;
+        } else {
+          won = true;
+        }
       }
       if (won) {
         await CommissionController.coinDistribution(
@@ -354,34 +350,53 @@ const BetController = {
         await countAndUpdateCoin(userId);
       }
       var isWon = false;
-      if (selectionId) {
-        if (isBack) {
-          if (winnerSid === parseInt(selectionId)) {
-            isWon = true;
-          } else {
-            isWon = false;
-          }
+      if (isBack) {
+        if (winnerSid === parseInt(selectionId)) {
+          isWon = true;
         } else {
-          if (winnerSid === parseInt(selectionId)) {
-            isWon = false;
-          } else {
-            isWon = true;
-          }
+          isWon = false;
         }
       } else {
-        return;
+        if (winnerSid === parseInt(selectionId)) {
+          isWon = false;
+        } else {
+          isWon = true;
+        }
       }
       await doc.ref.set(
-        { settled: true, won: isWon, winner: value },
+        { settled: true, won: isWon, winner: winnerSid },
+        { merge: true }
+      );
+    });
+    response.forEach(async (doc) => {
+      const { selectionId, isBack } = doc.data();
+
+      var isWon = false;
+      if (isBack) {
+        if (winnerSid === parseInt(selectionId)) {
+          isWon = true;
+        } else {
+          isWon = false;
+        }
+      } else {
+        if (winnerSid === parseInt(selectionId)) {
+          isWon = false;
+        } else {
+          isWon = true;
+        }
+      }
+      await doc.ref.set(
+        { settled: true, won: isWon, winner: winnerSid },
         { merge: true }
       );
     });
     const resultRef = db.collection("matchBetList").doc(uuidv4());
     await resultRef.set({
       sid,
-      value,
+      winnerSid,
       createdOn: Date.now(),
     });
+
     return;
   },
   async settleBet(req, res) {
@@ -1217,24 +1232,34 @@ const BetController = {
     } else {
       const url = `http://139.144.12.137/getbm2?eventId=${matchId}`;
       const response = await axios.get(url);
+      const runnerArray = [];
       var selectionId;
       if (response.data) {
         if (response.data.t1 && response.data.t1.length) {
           selectionId = response.data.t1[0].filter(
             (x) => x.nat === selectionName
           )[0].sid;
-        }
-        if (response.data.t2 && response.data.t2.length) {
-          const resp = response.data.t2[0].bm1;
-          const runnerArray = [];
+          const resp = response.data.t1[0];
           for (var i = 0; i < resp.length; i++) {
             const object = {
               runner: resp[i].nat,
-              back: resp[i].b1,
-              lay: resp[i].l1,
+              sid: resp[i].sid,
             };
             runnerArray.push(object);
           }
+        }
+
+        if (response.data.t2 && response.data.t2.length) {
+          const resp = response.data.t2[0].bm1;
+          for (var i = 0; i < runnerArray.length; i++) {
+            runnerArray[i].back = resp.filter(
+              (x) => x.nat === runnerArray[i].runner
+            )[0].l1;
+            runnerArray[i].lay = resp.filter(
+              (x) => x.nat === runnerArray[i].runner
+            )[0].l1;
+          }
+          console.log(runnerArray);
           const currentData = response.data.t2[0].bm1.filter(
             (x) => x.nat === selectionName
           );
@@ -1270,6 +1295,7 @@ const BetController = {
                 matchname: matchname,
                 matchId,
                 sportId,
+                runnerArray,
                 settled: false,
                 pname: req.user.name,
                 createdOn: Date.now(),
@@ -1354,6 +1380,7 @@ const BetController = {
                 marketId: resp[0].mid,
                 odds: odds,
                 selectionId,
+                runnerArray,
                 selectionName: selectionName,
                 ipDetail: ipDetail,
                 matchname: matchname,

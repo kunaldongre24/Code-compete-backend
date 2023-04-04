@@ -80,7 +80,6 @@ async function myFunction() {
             : 0
           : 0;
       if (winnerSid > 0) {
-        console.log(winnerSid);
         resolveMatchBet(matchUnique[i], winnerSid);
       }
     }

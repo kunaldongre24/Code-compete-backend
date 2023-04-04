@@ -44,21 +44,30 @@ const MatchController = {
 
     for (var i = 0; i < value.length; i++) {
       let sum = 0;
+      const arr = data.filter((x) => x.matchId === value[i].id);
+      var runnerArray = [];
+      var winner = [];
       let sessionSum = 0;
       let myShareCom = 0;
-      const arr = data.filter((x) => x.matchId === value[i].id);
+      let settled = false;
       for (var j = 0; j < arr.length; j++) {
+        runnerArray = arr[j].runnerArray;
         sessionSum += arr[j].sessionCommission;
         myShareCom += arr[j].myCom;
+        winner = arr[j].winner;
+        settled = arr[j].settled;
         if (arr[j].won) {
           sum -= arr[j].lossAmount;
         } else {
           sum += arr[j].profitAmount;
         }
       }
+      value[i].runnerArray = runnerArray;
+      value[i].winner = winner;
       value[i].winning = sum;
       value[i].totalCom = sessionSum;
       value[i].myShareCom = myShareCom;
+      value[i].settled = settled;
     }
     res.send(value);
   },
