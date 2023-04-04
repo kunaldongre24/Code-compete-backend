@@ -19,7 +19,7 @@ const CommissionController = {
       res.send(data);
     });
   },
-  async coinDistribution(won, userId, company, amount, id) {
+  async coinDistribution(won, userId, company, amount, id, matchId) {
     let getter = company;
     let setter = userId;
     if (won) {
@@ -31,6 +31,7 @@ const CommissionController = {
       value: amount,
       type: 3,
       msg: "Bet coin distribution",
+      matchId,
       getter,
       setter,
       createdOn: Date.now(),
@@ -69,11 +70,12 @@ const CommissionController = {
     else arr.filter((el) => el.id === id)[0].matchCommission -= value;
     return arr;
   },
-  async betWinning(id, dAmount, playerId, fancyName, key, won) {
+  async betWinning(id, dAmount, playerId, fancyName, key, won, matchId) {
     const val = {
       value: Math.abs(Math.round(dAmount * 100) / 100),
       msg: "",
       fancyName,
+      matchId,
       bet: true,
       createdOn: Date.now(),
     };
@@ -222,6 +224,7 @@ const CommissionController = {
           const inf = {
             id: setter.toLowerCase(),
             commission: dis - Math.abs(myComm),
+            myComm,
             percent: sum - prevSum,
           };
           arr.push(inf);
@@ -237,6 +240,7 @@ const CommissionController = {
           const inf = {
             id: getter,
             commission: Math.abs(comDis),
+            myComm,
             percent: sum - prevSum,
           };
           arr.push(inf);
@@ -258,7 +262,7 @@ const CommissionController = {
       res.send({ err: "Missing Information" });
     }
     const id = username.toLowerCase();
-    const arr = await CommissionController.disburseSessionCoin(id, amount);
+    const arr = await CommissionController.disburseMatchCoin(id, amount);
     res.send(arr);
   },
 };

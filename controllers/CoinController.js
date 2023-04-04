@@ -207,10 +207,11 @@ const CoinController = {
     var coinDelete = db.collection("coinMap").where("setter", "==", id);
     var betDelete = db.collection("matchBetMap").where("userId", "==", id);
     var sbetDelete = db.collection("betDataMap").where("userId", "==", id);
+    var tbetDelete = db.collection("tossBetMap").where("userId", "==", id);
     var gbetDelete = db
       .collection("coinMap")
       .where("getter", "==", id)
-      .where("value", "<", 10000);
+      .where("value", "<=", 10000);
     var nbetDelete = db
       .collection("coinMap")
       .where("getter", "==", id)
@@ -231,6 +232,11 @@ const CoinController = {
         doc.ref.delete();
       });
     });
+    tbetDelete.get().then(function (querySnapshot) {
+      querySnapshot.forEach(function (doc) {
+        doc.ref.delete();
+      });
+    });
     gbetDelete.get().then(function (querySnapshot) {
       querySnapshot.forEach(function (doc) {
         doc.ref.delete();
@@ -246,6 +252,7 @@ const CoinController = {
         doc.ref.delete();
       });
     });
+
     await CoinController.countAndUpdateCoin(id);
     res.send({ msg: "Deleted coins" });
   },

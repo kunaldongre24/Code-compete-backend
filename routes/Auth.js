@@ -9,6 +9,7 @@ router.get(
   Auth,
   AuthController.getUserByUsername
 );
+router.get("/liveTime", Auth, AuthController.getLiveTime);
 router.get("/getPlayerCount", Auth, AuthController.getPlayerCount);
 router.get("/getAgentCount", Auth, AuthController.getAgentCount);
 router.get("/getManagerCount", Auth, AuthController.getManagerCount);

@@ -1,6 +1,5 @@
 const axios = require("axios");
 const { db } = require("../db");
-const { v4: uuidv4 } = require("uuid");
 
 const MatchController = {
   async setMatchInfo(req, res) {
@@ -15,8 +14,8 @@ const MatchController = {
     if (gameSnapshot.exists) {
       return res.send({ status: false });
     }
-
     try {
+      singleMatch[0].createdOn = Date.now();
       await gameRef.set(singleMatch[0]);
       res.send({ status: true });
     } catch (error) {
@@ -42,10 +41,15 @@ const MatchController = {
       document.id = doc.id;
       return document;
     });
+
     for (var i = 0; i < value.length; i++) {
       let sum = 0;
+      let sessionSum = 0;
+      let myShareCom = 0;
       const arr = data.filter((x) => x.matchId === value[i].id);
       for (var j = 0; j < arr.length; j++) {
+        sessionSum += arr[j].sessionCommission;
+        myShareCom += arr[j].myCom;
         if (arr[j].won) {
           sum -= arr[j].lossAmount;
         } else {
@@ -53,6 +57,8 @@ const MatchController = {
         }
       }
       value[i].winning = sum;
+      value[i].totalCom = sessionSum;
+      value[i].myShareCom = myShareCom;
     }
     res.send(value);
   },
@@ -69,22 +75,10 @@ const MatchController = {
     const response = await axios.get(url);
     res.send(response.data);
   },
-  async getMatchScore(req, res) {
-    try {
-      const { eventId } = req.params;
-      // const url = `http://143.244.136.57/getbm2?eventId=${eventId}`;
-      const url = `http://139.144.12.137/getbm2?eventId=${eventId}`;
-      const response = await axios.get(url);
-      res.send(response.data);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Internal server error");
-    }
-  },
   async getMatchOdds(req, res) {
     try {
       const { eventId } = req.params;
-      // const url = `http://143.244.136.57/getbm2?eventId=${eventId}`;
+      // const url = `http://139.144.12.137/getbm2?eventId=y${eventId}`;
       const url = `http://139.144.12.137/getbm2?eventId=${eventId}`;
       const response = await axios.get(url);
       res.send(response.data);
@@ -99,7 +93,7 @@ const MatchController = {
     res.send({ result });
   },
   async oddsResult(eventId, fancyName) {
-    const url = "http://172.105.49.104:8000/resultbygameid?eventId=" + eventId;
+    const url = "http://172.105.49.104:3000/resultbygameid?eventId=" + eventId;
     const response = await axios.get(url);
     const data = response.data;
     const result = data.filter((x) => x.nat === fancyName)[0].result;
@@ -107,7 +101,13 @@ const MatchController = {
   },
   async matchResult(req, res) {
     const { eventId } = req.params;
-    const url = "http://172.105.49.104:8000/resultbygameid?eventId=" + eventId;
+    const url = "http://172.105.49.104:3000/resultbygameid?eventId=" + eventId;
+    const response = await axios.get(url);
+    res.send(response.data);
+  },
+  async getMatchScore(req, res) {
+    const { eventId } = req.params;
+    const url = "http://172.105.61.186:3000/getscore2?marketId=" + eventId;
     const response = await axios.get(url);
     res.send(response.data);
   },

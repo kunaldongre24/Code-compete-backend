@@ -73,13 +73,14 @@ const LedgerController = {
     res.send(response);
   },
   async getLedger(username) {
+    let arr = [];
     const id = username;
     if (!username) {
       res.send({ err: "Missing Information" });
     }
-    const query1 = db.collection("legder").where("getter", "==", id);
+    const query1 = db.collection("ledger").where("getter", "==", id);
     const query2 = db.collection("ledger").where("setter", "==", id);
-    const arr = [];
+
     const snapshot1 = await query1.get();
     snapshot1.forEach((doc) => {
       if (doc.data().getter === id) {

@@ -1,7 +1,7 @@
 const { fs, db, FieldValue } = require("../db");
 const { v4: uuidv4 } = require("uuid");
 const CoinController = require("./CoinController");
-const { countCoin, countAndUpdateCoin } = require("./CoinController");
+const { countAndUpdateCoin } = require("./CoinController");
 const AuthController = {
   async getUserByUid(uid) {
     try {
@@ -13,6 +13,10 @@ const AuthController = {
       console.log(error);
     }
     return;
+  },
+  async getLiveTime(req, res) {
+    const time = Date.now();
+    res.send({ time });
   },
   async getMyAgents(username) {
     const userRef = db.collection("users").where("companyId", "==", username);
