@@ -10,7 +10,6 @@ const MatchController = {
     const singleMatch = data.filter((x) => x.gameId === matchId);
     const gameRef = db.collection("matchList").doc(matchId);
     const gameSnapshot = await gameRef.get();
-
     if (gameSnapshot.exists) {
       return res.send({ status: false });
     }
@@ -23,7 +22,7 @@ const MatchController = {
     }
   },
   async getAllMatchList(req, res) {
-    const userId = req.user.email.split("@")[0];
+    const { userId } = req.params;
     const betRef = db
       .collection("betUserMap")
       .where("company", "==", userId)
@@ -48,11 +47,16 @@ const MatchController = {
       var runnerArray = [];
       var winner = [];
       let sessionSum = 0;
+      let matchCommission = 0;
       let myShareCom = 0;
       let settled = false;
       for (var j = 0; j < arr.length; j++) {
+        const matchCom = arr[j].won
+          ? arr[j].lossComAmount - arr[j].lossCom
+          : arr[j].profitComAmount - arr[j].profitCom;
         runnerArray = arr[j].runnerArray;
-        sessionSum += arr[j].sessionCommission;
+        sessionSum += arr[j].sessionCommission ? arr[j].sessionCommission : 0;
+        matchCommission += matchCom ? matchCom : 0;
         myShareCom += arr[j].myCom;
         winner = arr[j].winner;
         settled = arr[j].settled;
@@ -65,7 +69,7 @@ const MatchController = {
       value[i].runnerArray = runnerArray;
       value[i].winner = winner;
       value[i].winning = sum;
-      value[i].totalCom = sessionSum;
+      value[i].totalCom = sessionSum + matchCommission;
       value[i].myShareCom = myShareCom;
       value[i].settled = settled;
     }
@@ -84,18 +88,7 @@ const MatchController = {
     const response = await axios.get(url);
     res.send(response.data);
   },
-  async getMatchOdds(req, res) {
-    try {
-      const { eventId } = req.params;
-      // const url = `http://139.144.12.137/getbm2?eventId=y${eventId}`;
-      const url = `http://139.144.12.137/getbm2?eventId=${eventId}`;
-      const response = await axios.get(url);
-      res.send(response.data);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Internal server error");
-    }
-  },
+
   async fancyResult(req, res) {
     const { eventId, fancyName } = req.body;
     const result = await MatchController.oddsResult(eventId, fancyName);
@@ -111,12 +104,6 @@ const MatchController = {
   async matchResult(req, res) {
     const { eventId } = req.params;
     const url = "http://172.105.49.104:3000/resultbygameid?eventId=" + eventId;
-    const response = await axios.get(url);
-    res.send(response.data);
-  },
-  async getMatchScore(req, res) {
-    const { eventId } = req.params;
-    const url = "http://172.105.61.186:3000/getscore2?marketId=" + eventId;
     const response = await axios.get(url);
     res.send(response.data);
   },

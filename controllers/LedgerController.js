@@ -31,6 +31,25 @@ const LedgerController = {
         setterPreviousLimit: p2Cash,
         createdOn: Date.now(),
       });
+      let totalSum = 0;
+      const sumRef = db
+        .collection("matchUserMap")
+        .where("company", "==", username);
+      const querySnapshot = await sumRef.get();
+      querySnapshot.forEach((doc) => {
+        const sum = doc.data().sum;
+        totalSum += parseFloat(sum);
+      });
+      const resultRef = db.collection("matchUserMap").doc(uuidv4());
+      resultRef.set({
+        company: username,
+        sum: parseFloat(ledger) * -1,
+        total: totalSum - parseFloat(ledger),
+        createdOn: Date.now(),
+        matchname: "Cash Paid",
+        type: "cash",
+        note,
+      });
       res.send({ status: 1, msg: "Cash Received Successfully!" });
     } catch (err) {
       console.error(err);
@@ -110,6 +129,25 @@ const LedgerController = {
         getterPreviousLimit: p1Cash,
         setterPreviousLimit: p2Cash,
         createdOn: Date.now(),
+      });
+      let totalSum = 0;
+      const sumRef = db
+        .collection("matchUserMap")
+        .where("company", "==", username);
+      const querySnapshot = await sumRef.get();
+      querySnapshot.forEach((doc) => {
+        const sum = doc.data().sum;
+        totalSum += parseFloat(sum);
+      });
+      const resultRef = db.collection("matchUserMap").doc(uuidv4());
+      resultRef.set({
+        company: username,
+        sum: parseFloat(ledger),
+        total: totalSum + parseFloat(ledger),
+        createdOn: Date.now(),
+        matchname: "Cash Received",
+        type: "cash",
+        note,
       });
       res.send({ status: 1, msg: "Cash Paid Successfully!" });
     } catch (err) {

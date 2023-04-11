@@ -54,8 +54,8 @@ const CommissionController = {
       setter: setter,
       createdOn: Date.now(),
     });
-    await countAndUpdateCoin(getter.toLowerCase());
-    await countAndUpdateCoin(setter.toLowerCase());
+    getter.toLowerCase();
+    setter.toLowerCase();
   },
 
   async add(arr, id, value) {
@@ -92,8 +92,8 @@ const CommissionController = {
     }
     const coinDb = db.collection("coinMap").doc(uuidv4());
     await coinDb.set(val);
-    await countAndUpdateCoin(playerId.toLowerCase());
-    await countAndUpdateCoin(id.toLowerCase());
+    playerId.toLowerCase();
+    id.toLowerCase();
 
     const betRef = db.collection("betDataMap").doc(key);
     await betRef.set(

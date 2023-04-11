@@ -69,7 +69,6 @@ const CoinController = {
       const userDisplayName = userInfo.name;
       const p1Coins = await CoinController.countCoin(user);
       const p2Coins = await CoinController.countCoin(username);
-
       if (parseInt(type) === 1) {
         const msg = `Limit increased of ${userDisplayName}(${username}) by ${req.user.name}(${user})`;
         await coinDb.set({
@@ -172,6 +171,14 @@ const CoinController = {
       .collection("coinMap")
       .where("setter", "==", id)
       .where("type", "==", "Limit");
+    const query3 = db
+      .collection("coinMap")
+      .where("getter", "==", id)
+      .where("type", "==", 1);
+    const query4 = db
+      .collection("coinMap")
+      .where("setter", "==", id)
+      .where("type", "==", 1);
     const arr = [];
     const snapshot1 = await query1.get();
     snapshot1.forEach((doc) => {
@@ -181,6 +188,18 @@ const CoinController = {
     });
     const snapshot2 = await query2.get();
     snapshot2.forEach((doc) => {
+      if (doc.data().setter === id) {
+        arr.push(doc.data());
+      }
+    });
+    const snapshot3 = await query3.get();
+    snapshot3.forEach((doc) => {
+      if (doc.data().getter === id) {
+        arr.push(doc.data());
+      }
+    });
+    const snapshot4 = await query4.get();
+    snapshot4.forEach((doc) => {
       if (doc.data().setter === id) {
         arr.push(doc.data());
       }
@@ -217,6 +236,7 @@ const CoinController = {
       .where("getter", "==", id)
       .where("type", "==", "Limit");
     var ubetDelete = db.collection("betUserMap").where("player", "==", id);
+    var matchUserMap = db.collection("matchUserMap").where("company", "==", id);
     coinDelete.get().then(function (querySnapshot) {
       querySnapshot.forEach(function (doc) {
         doc.ref.delete();
@@ -248,6 +268,11 @@ const CoinController = {
       });
     });
     ubetDelete.get().then(function (querySnapshot) {
+      querySnapshot.forEach(function (doc) {
+        doc.ref.delete();
+      });
+    });
+    matchUserMap.get().then(function (querySnapshot) {
       querySnapshot.forEach(function (doc) {
         doc.ref.delete();
       });

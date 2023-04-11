@@ -240,12 +240,16 @@ const AuthController = {
             const data = value.docs[0].data();
             const share = data.matchShare - matchShare;
             const type = 1;
+            const p1Coins = await CoinController.countCoin(user);
+            const p2Coins = await CoinController.countCoin(username);
             const msg = `Opening Balance By ${data.username} ( ${data.name} ) To ${username} ( ${name} )`;
             const commisionDb = db.collection("commisionMap").doc(uuidv4());
             await commisionDb.set({
               setter: companyId,
               getter: username,
               matchShare: matchShare,
+              getterPreviousLimit: p2Coins ? p2Coins : 0,
+              setterPreviousLimit: p1Coins ? p1Coins : 0,
               matchCommission: AgentMatchcommision,
               sessionCommission: AgentSessioncommision,
               createdOn: Date.now(),
@@ -257,9 +261,11 @@ const AuthController = {
               type,
               getter: username.toLowerCase(),
               setter: data.username.toLowerCase(),
+              setterPreviousLimit: p2Coins ? p2Coins : 0,
+              getterPreviousLimit: p1Coins ? p1Coins : 0,
               createdOn: Date.now(),
             });
-            await countAndUpdateCoin(data.username.toLowerCase());
+            data.username.toLowerCase();
 
             const userJson = {
               uid: userRecord.uid,
@@ -269,13 +275,15 @@ const AuthController = {
               level,
               companyId,
               matchShare: share,
-              matchCommission: AgentMatchcommision,
-              sessionCommission: AgentSessioncommision,
+              matchCommission: AgentMatchcommision ? AgentMatchcommision : 0,
+              sessionCommission: AgentSessioncommision
+                ? AgentSessioncommision
+                : 0,
             };
             const usersDb = db.collection("users");
             await usersDb.doc(userRecord.uid).set(userJson);
 
-            await countAndUpdateCoin(username.toLowerCase());
+            username.toLowerCase();
             res.send({
               userCreated: true,
               msg: "User has been created Successfully",
