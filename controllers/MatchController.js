@@ -52,7 +52,7 @@ const MatchController = {
       let settled = false;
       for (var j = 0; j < arr.length; j++) {
         const matchCom = arr[j].won
-          ? arr[j].lossComAmount - arr[j].lossCom
+          ? arr[j].lossCommAmount - arr[j].lossCom
           : arr[j].profitComAmount - arr[j].profitCom;
         runnerArray = arr[j].runnerArray;
         sessionSum += arr[j].sessionCommission ? arr[j].sessionCommission : 0;
