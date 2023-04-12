@@ -192,107 +192,108 @@ const AuthController = {
     });
   },
   async signup(req, res) {
-    const companyId = req.user.email.split("@")[0];
-    var {
-      username,
-      password,
-      level,
-      name,
-      matchShare,
-      fixedLimit,
-      AgentMatchcommision,
-      AgentSessioncommision,
-    } = req.body;
+    try {
+      const companyId = req.user.email.split("@")[0];
+      var {
+        username,
+        password,
+        level,
+        name,
+        matchShare,
+        fixedLimit,
+        AgentMatchcommision,
+        AgentSessioncommision,
+      } = req.body;
 
-    if (
-      username === undefined ||
-      password === undefined ||
-      name === undefined ||
-      companyId === undefined ||
-      matchShare === undefined ||
-      level === undefined ||
-      fixedLimit === undefined ||
-      AgentMatchcommision === undefined ||
-      AgentSessioncommision === undefined
-    ) {
-      return res.send({ err: "Missing Information" });
-    }
-    username = username.toLowerCase();
-    const userInfo = await AuthController.getUserInformation(companyId);
-    const totalCoins = await CoinController.countCoin(companyId.toLowerCase());
-    if (userInfo.level !== 1 && totalCoins < fixedLimit) {
-      return res.send({ msg: "Insufficient Balance" });
-    }
-    const email = `${username}@fly247.in`;
-    fs.auth()
-      .createUser({
+      if (
+        username === undefined ||
+        password === undefined ||
+        name === undefined ||
+        companyId === undefined ||
+        matchShare === undefined ||
+        level === undefined ||
+        fixedLimit === undefined ||
+        AgentMatchcommision === undefined ||
+        AgentSessioncommision === undefined
+      ) {
+        return res.send({ userCreated: false, msg: "Missing Information" });
+      }
+      username = username.toLowerCase();
+      const userInfo = await AuthController.getUserInformation(companyId);
+      const totalCoins = await CoinController.countCoin(
+        companyId.toLowerCase()
+      );
+
+      if (userInfo.level !== 1 && totalCoins < fixedLimit) {
+        return res.send({ msg: "Insufficient Balance" });
+      }
+
+      const email = `${username}@fly247.in`;
+
+      const userRecord = await fs.auth().createUser({
         email,
         password: "sa@#!$#@@$%2" + password,
         displayName: name,
-      })
-      .then(async (userRecord) => {
-        const userRef = db
-          .collection("users")
-          .where("username", "==", companyId);
-        await userRef
-          .get()
-          .then(async (value) => {
-            const data = value.docs[0].data();
-            const share = data.matchShare - matchShare;
-            const type = 1;
-            const p1Coins = await CoinController.countCoin(user);
-            const p2Coins = await CoinController.countCoin(username);
-            const msg = `Opening Balance By ${data.username} ( ${data.name} ) To ${username} ( ${name} )`;
-            const commisionDb = db.collection("commisionMap").doc(uuidv4());
-            await commisionDb.set({
-              setter: companyId,
-              getter: username,
-              matchShare: matchShare,
-              getterPreviousLimit: p2Coins ? p2Coins : 0,
-              setterPreviousLimit: p1Coins ? p1Coins : 0,
-              matchCommission: AgentMatchcommision,
-              sessionCommission: AgentSessioncommision,
-              createdOn: Date.now(),
-            });
-            const coinDb = db.collection("coinMap").doc(uuidv4());
-            await coinDb.set({
-              value: parseFloat(fixedLimit),
-              msg: msg,
-              type,
-              getter: username.toLowerCase(),
-              setter: data.username.toLowerCase(),
-              setterPreviousLimit: p2Coins ? p2Coins : 0,
-              getterPreviousLimit: p1Coins ? p1Coins : 0,
-              createdOn: Date.now(),
-            });
-            data.username.toLowerCase();
-
-            const userJson = {
-              uid: userRecord.uid,
-              username,
-              name,
-              email,
-              level,
-              companyId,
-              matchShare: share,
-              matchCommission: AgentMatchcommision ? AgentMatchcommision : 0,
-              sessionCommission: AgentSessioncommision
-                ? AgentSessioncommision
-                : 0,
-            };
-            const usersDb = db.collection("users");
-            await usersDb.doc(userRecord.uid).set(userJson);
-
-            username.toLowerCase();
-            res.send({
-              userCreated: true,
-              msg: "User has been created Successfully",
-            });
-          })
-          .catch((error) => {
-            res.send({ userCreated: false, msg: "Some error occurred" });
-          });
       });
+
+      const userRef = db.collection("users").where("username", "==", companyId);
+      const value = await userRef.get();
+
+      const data = value.docs[0].data();
+      const share = data.matchShare - matchShare;
+      const type = 1;
+      const p1Coins = await CoinController.countCoin(data.username);
+      const p2Coins = await CoinController.countCoin(username);
+      const msg = `Opening Balance By ${data.username} ( ${data.name} ) To ${username} ( ${name} )`;
+      const commisionDb = db.collection("commisionMap").doc(uuidv4());
+      await commisionDb.set({
+        setter: companyId,
+        getter: username,
+        matchShare: matchShare,
+        getterPreviousLimit: p2Coins ? p2Coins : 0,
+        setterPreviousLimit: p1Coins ? p1Coins : 0,
+        matchCommission: AgentMatchcommision,
+        sessionCommission: AgentSessioncommision,
+        createdOn: Date.now(),
+      });
+
+      const coinDb = db.collection("coinMap").doc(uuidv4());
+      await coinDb.set({
+        value: parseFloat(fixedLimit),
+        msg: msg,
+        type,
+        getter: username.toLowerCase(),
+        setter: data.username.toLowerCase(),
+        setterPreviousLimit: p2Coins ? p2Coins : 0,
+        getterPreviousLimit: p1Coins ? p1Coins : 0,
+        createdOn: Date.now(),
+      });
+
+      data.username.toLowerCase();
+
+      const userJson = {
+        uid: userRecord.uid,
+        username,
+        name,
+        email,
+        level,
+        companyId,
+        matchShare: share,
+        matchCommission: AgentMatchcommision ? AgentMatchcommision : 0,
+        sessionCommission: AgentSessioncommision ? AgentSessioncommision : 0,
+      };
+      const usersDb = db.collection("users");
+      await usersDb.doc(userRecord.uid).set(userJson);
+
+      username.toLowerCase();
+      res.send({
+        userCreated: true,
+        msg: "User has been created Successfully",
+      });
+    } catch (error) {
+      console.error(error);
+      res.send({ userCreated: false, msg: "Some error occurred" });
+    }
   },
 };
 

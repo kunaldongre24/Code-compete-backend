@@ -5,7 +5,6 @@ const CoinController = require("./CoinController");
 const CommissionController = require("./CommissionController");
 const { countAndUpdateCoin, removeNum } = require("./CoinController");
 const { getMyAgents, getUserInformation } = require("./AuthController");
-const AuthController = require("./AuthController");
 const clientCollection = require("../helper/clientCollection");
 const countCash = require("../helper/countCash");
 
@@ -113,7 +112,6 @@ const BetController = {
           getter: userId,
           createdOn: Date.now(),
         });
-        userId;
       }
 
       const isWon = BetController.didWon(isBack, value, odds);
@@ -261,7 +259,6 @@ const BetController = {
     if (sid === undefined || winnerSid === undefined) {
       return;
     }
-
     var won = false;
     const betRef = db
       .collection("betUserMap")
@@ -320,12 +317,10 @@ const BetController = {
           matchId
         );
       }
-
       countAndUpdateCoin(player.toLowerCase());
       countAndUpdateCoin(company.toLowerCase());
     }
     const resp = await betRef2.get();
-
     if (resp.empty) {
       console.log("No matching documents.");
       return;
@@ -1360,7 +1355,6 @@ const BetController = {
                   }
                 }
               }
-
               let negativeSum = 0;
               for (let i = 0; i < resp.length; i++) {
                 if (resp[i].position && resp[i].position < 0) {
@@ -1369,14 +1363,12 @@ const BetController = {
                   }
                 }
               }
-
-              const newArr = arr.map(({ mid, nat, position }) => ({
+              const newArr = resp.map(({ mid, nat, position }) => ({
                 mid,
                 nat,
                 position,
               }));
               console.log(newArr);
-
               const changeAmount = Math.abs(
                 negativeSum !== null ? negativeSum : 0
               );
