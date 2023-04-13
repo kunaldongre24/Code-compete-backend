@@ -157,7 +157,6 @@ const CommissionController = {
         }
 
         if (arr.filter((x) => x.id === getter).length) {
-          arr.filter((x) => x.id === getter)[0].commission += Math.abs(comDis);
           arr.filter((x) => x.id === getter)[0].commissionAmount =
             Math.abs(comDis);
           arr.filter((x) => x.id === getter)[0].commissionPercentage =
@@ -200,47 +199,38 @@ const CommissionController = {
         const data = value.docs[0].data();
         prevSum = sum;
         sum += parseFloat(data.matchShare);
-        const sharedComm = (amount * 3) / 100;
         const am = amount;
-        const myComm = (sharedComm * data.matchShare) / 100;
         const getter = data.getter.toLowerCase(),
           setter = data.setter.toLowerCase();
         let dis = (am * data.matchShare) / 100;
         const mc = parseFloat(data.matchCommission);
         const currentCommission = mc - prevMatchCom;
         comSum += currentCommission;
-        var comDis = (amount * currentCommission) / 100;
         if (setter.toLowerCase() === "cc0001") {
           ccComAmount = (amount * (3 - comSum)) / 100;
           ccComPerc = 3 - comSum;
         }
 
         if (arr.filter((x) => x.id === setter.toLowerCase()).length) {
-          arr.filter((x) => x.id === setter.toLowerCase())[0].commission =
-            dis - Math.abs(myComm);
+          arr.filter((x) => x.id === setter.toLowerCase())[0].commission = dis;
           arr.filter((x) => x.id === setter.toLowerCase())[0].percent =
             sum - prevSum;
         } else {
           const inf = {
             id: setter.toLowerCase(),
-            commission: dis - Math.abs(myComm),
-            myComm,
+            commission: dis,
             percent: sum - prevSum,
           };
           arr.push(inf);
         }
 
         if (arr.filter((x) => x.id === getter).length) {
-          arr.filter((x) => x.id === getter)[0].commission += Math.abs(comDis);
-          arr.filter((x) => x.id === getter)[0].commissionAmount =
-            Math.abs(comDis);
           arr.filter((x) => x.id === getter)[0].commissionPercentage =
             currentCommission;
         } else {
           const inf = {
             id: getter,
-            commission: Math.abs(comDis),
-            myComm,
+            commission: 0,
             percent: sum - prevSum,
           };
           arr.push(inf);
@@ -249,9 +239,6 @@ const CommissionController = {
         id = setter;
       });
     }
-    arr.filter((x) => x.id === "cc0001")[0].commission += Math.abs(ccComAmount);
-    arr.filter((x) => x.id === "cc0001")[0].commissionAmount =
-      Math.abs(ccComAmount);
     arr.filter((x) => x.id === "cc0001")[0].commissionPercentage =
       Math.abs(ccComPerc);
     return arr;

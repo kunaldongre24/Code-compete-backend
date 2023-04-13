@@ -274,6 +274,24 @@ const BetController = {
       .collection("matchBetMap")
       .where("marketId", "==", sid)
       .where("settled", "!=", true);
+    const response3 = await betRef2.get();
+    const matchInfo = response3.docs.map((doc) => {
+      const document = doc.data();
+      document.id = doc.id;
+      return document;
+    });
+    if (matchInfo.length === 0) {
+      console.log("No bets found");
+      return;
+    }
+    const coinRef = db.collection("coinMap").doc(matchInfo[0].transactionId);
+    const val = await coinRef.get();
+    const transactionData = val.data();
+    let position = transactionData.newArr.filter((x) => x.sid === winnerSid)[0]
+      .position;
+    let playerId,
+      playerComPercentage = 3;
+    let pMatchId;
     for (i = 0; i < data.length; i++) {
       const {
         lossAmount,
@@ -284,7 +302,11 @@ const BetController = {
         company,
         selectionId,
         matchId,
+        commissionPercentage,
       } = data[i];
+      playerId = player;
+      playerComPercentage -= commissionPercentage;
+      pMatchId = matchId;
       if (isBack) {
         if (parseInt(winnerSid) === parseInt(selectionId)) {
           won = true;
@@ -297,6 +319,21 @@ const BetController = {
         } else {
           won = true;
         }
+      }
+      const comAmount = (position * commissionPercentage) / 100;
+
+      if (position > 0 && comAmount > 0) {
+        const coinDb = db.collection("coinMap").doc(uuidv4());
+        const type = 3;
+        await coinDb.set({
+          value: Math.abs(comAmount),
+          msg: "Commission Distribution",
+          matchId,
+          type,
+          getter: company,
+          createdOn: Date.now(),
+        });
+        countAndUpdateCoin(company);
       }
       if (won) {
         CommissionController.coinDistribution(
@@ -319,6 +356,20 @@ const BetController = {
       }
       countAndUpdateCoin(player.toLowerCase());
       countAndUpdateCoin(company.toLowerCase());
+    }
+    if (position > 0) {
+      const comAmount = (position * playerComPercentage) / 100;
+      const coinDb = db.collection("coinMap").doc(uuidv4());
+      const type = 3;
+      await coinDb.set({
+        value: Math.abs(comAmount),
+        msg: "Commission Distribution",
+        matchId: pMatchId,
+        type,
+        getter: playerId,
+        createdOn: Date.now(),
+      });
+      countAndUpdateCoin(playerId);
     }
     const resp = await betRef2.get();
     if (resp.empty) {
@@ -403,42 +454,42 @@ const BetController = {
       winnerSid,
       createdOn: Date.now(),
     });
-    console.log(agentArr);
-    for (var i = 0; i < agentArr.length; i++) {
-      const { matchId, company, matchname } = agentArr[i];
-      let final;
-      if (removeNum(company) === "sp") {
-        const exposure = await BetController.getPlayerExposure(
-          matchId,
-          company
-        );
-        final = exposure.final;
-      } else {
-        const exposure = await BetController.getAgentExposure(matchId, company);
-        final = exposure.final;
-      }
-      let totalSum = 0;
-      const sumRef = db
-        .collection("matchUserMap")
-        .where("company", "==", company);
-      const querySnapshot = await sumRef.get();
-      querySnapshot.forEach((doc) => {
-        const sum = doc.data().sum;
-        totalSum += parseFloat(sum);
-      });
-      const resultRef = db.collection("matchUserMap").doc(uuidv4());
-      resultRef.set({
-        company,
-        matchId,
-        matchname,
-        sum: final,
-        type: "match",
-        total: totalSum + final,
-        sid,
-        winnerSid,
-        createdOn: Date.now(),
-      });
-    }
+    // console.log(agentArr);
+    // for (var i = 0; i < agentArr.length; i++) {
+    //   const { matchId, company, matchname } = agentArr[i];
+    //   let final;
+    //   if (removeNum(company) === "sp") {
+    //     const exposure = await BetController.getPlayerExposure(
+    //       matchId,
+    //       company
+    //     );
+    //     final = exposure.final;
+    //   } else {
+    //     const exposure = await BetController.getAgentExposure(matchId, company);
+    //     final = exposure.final;
+    //   }
+    //   let totalSum = 0;
+    //   const sumRef = db
+    //     .collection("matchUserMap")
+    //     .where("company", "==", company);
+    //   const querySnapshot = await sumRef.get();
+    //   querySnapshot.forEach((doc) => {
+    //     const sum = doc.data().sum;
+    //     totalSum += parseFloat(sum);
+    //   });
+    //   const resultRef = db.collection("matchUserMap").doc(uuidv4());
+    //   resultRef.set({
+    //     company,
+    //     matchId,
+    //     matchname,
+    //     sum: final,
+    //     type: "match",
+    //     total: totalSum + final,
+    //     sid,
+    //     winnerSid,
+    //     createdOn: Date.now(),
+    //   });
+    // }
     return;
   },
   async settleBet(req, res) {
@@ -808,7 +859,6 @@ const BetController = {
         }
       } else if (val.name === "matchbet") {
         if (val.won) {
-          console.log(val.lossAmount, val.lossCommAmount, val.lossCom);
           const totalMSum =
             ((val.lossAmount - val.lossCommAmount - val.lossCom) * 100) /
             val.adminShare;
@@ -816,8 +866,6 @@ const BetController = {
           matchSum -= totalMSum;
           mCom += Math.abs((totalMSum * 3) / 100);
         } else {
-          console.log(val.lossAmount, val.lossCommAmount, val.lossCom);
-
           const totalMSum =
             ((val.profitAmount - val.profitComAmount + val.profitCom) * 100) /
             val.adminShare;
@@ -1219,16 +1267,16 @@ const BetController = {
       type === undefined
     ) {
       console.log(
-        stake,
-        isBack,
-        isLay,
-        priceValue,
-        odds,
-        selectionName,
-        matchname,
-        matchId,
-        sportId,
-        type
+        `${stake}=${stake === undefined}\n${isBack}=${
+          isBack === undefined
+        }\n${isLay}=${isLay === undefined}\n${priceValue}=${
+          priceValue === undefined
+        }\n${odds}=${odds === undefined}\n${selectionName}=${
+          selectionName === undefined
+        }\n${matchname}=${matchname === undefined}\n${matchId}=${
+          matchId === undefined
+        }\n${sportId}=${sportId === undefined}\n${type}=${type === undefined}\n
+       `
       );
       return res.send({ msg: "Insufficient data recieved!" });
     }
@@ -1369,7 +1417,6 @@ const BetController = {
                 nat,
                 position,
               }));
-
               for (let i = 0; i < newArr.length; i++) {
                 const sid = runnerArray.filter(
                   (x) => x.runner === newArr[i].nat
@@ -1384,22 +1431,11 @@ const BetController = {
                 .doc(betData[0].transactionId);
               await coinDb.update({
                 value: parseFloat(changeAmount),
+                newArr,
                 lastUpdated: Date.now(),
               });
             } else {
-              const amount = isBack ? stake : (priceValue * stake) / 100;
-              const type = 2;
-              const msg = `Bet placed of ${stake} coins on ${selectionName}`;
               docId = uuidv4();
-              const coinDb = db.collection("coinMap").doc(docId);
-              await coinDb.set({
-                value: parseFloat(amount),
-                msg: msg,
-                type,
-                matchId,
-                setter: username.toLowerCase(),
-                createdOn: Date.now(),
-              });
               const betDb = db.collection("matchBetMap").doc(uuidv4());
               await betDb.set({
                 userId: username,
@@ -1428,10 +1464,8 @@ const BetController = {
 
               const value = await userRef.get();
               const matchBetData = value.docs.map((doc) => doc.data());
-
               for (var i = 0; i < resp.length; i++) {
                 const teamOdds = resp[i];
-
                 for (var j = 0; j < matchBetData.length; j++) {
                   const pos = matchBetData[j];
                   const { isBack, stake, odds } = pos;
@@ -1465,8 +1499,26 @@ const BetController = {
                 nat,
                 position,
               }));
+              for (let i = 0; i < newArr.length; i++) {
+                const sid = runnerArray.filter(
+                  (x) => x.runner === newArr[i].nat
+                )[0].sid;
+                newArr[i].sid = sid;
+              }
+              const amount = isBack ? stake : (priceValue * stake) / 100;
+              const type = 2;
+              const msg = `Bet placed of ${stake} coins on ${selectionName}`;
+              const coinDb = db.collection("coinMap").doc(docId);
+              await coinDb.set({
+                value: parseFloat(amount),
+                msg: msg,
+                type,
+                newArr,
+                matchId,
+                setter: username.toLowerCase(),
+                createdOn: Date.now(),
+              });
             }
-            console.log(newArr);
             const loss = isBack ? stake : Math.round(stake * odds) / 100;
             const profit = isBack ? Math.round(stake * odds) / 100 : stake;
             const profitList = await CommissionController.disburseMatchCoin(
@@ -1478,27 +1530,18 @@ const BetController = {
               loss
             );
             for (var i = 0; i < profitList.length; i++) {
-              const { id, commission, percent, commissionAmount, myComm } =
+              const { id, commission, percent, commissionPercentage } =
                 profitList[i];
               const profitAmount = Math.abs(
                 lossList.filter((x) => x.id === id)[0].commission
-              );
-              const profitCom = Math.abs(
-                lossList.filter((x) => x.id === id)[0].myComm
-              );
-              const profitComAmount = Math.abs(
-                lossList.filter((x) => x.id === id)[0].commissionAmount
               );
               if (id !== username) {
                 const betUserMap = db.collection("betUserMap").doc(uuidv4());
                 await betUserMap.set({
                   name: "matchbet",
                   company: id,
+                  commissionPercentage,
                   player: username,
-                  profitCom: Math.abs(profitCom),
-                  lossCom: Math.abs(myComm),
-                  lossCommAmount: commissionAmount,
-                  profitComAmount,
                   lossAmount: Math.abs(commission),
                   profitAmount,
                   selectionId,
@@ -1521,6 +1564,7 @@ const BetController = {
                 });
               }
             }
+            countAndUpdateCoin(username);
             res.send({ msg: "Bet Placed Successfully!", status: 1 });
           } else {
             res.send({ msg: "Bhav Changed.", status: 0 });
