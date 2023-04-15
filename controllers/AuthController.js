@@ -269,8 +269,11 @@ const AuthController = {
         createdOn: Date.now(),
       });
 
+<<<<<<< HEAD
       data.username.toLowerCase();
 
+=======
+>>>>>>> e13bd01 (update)
       const userJson = {
         uid: userRecord.uid,
         username,
@@ -285,7 +288,12 @@ const AuthController = {
       const usersDb = db.collection("users");
       await usersDb.doc(userRecord.uid).set(userJson);
 
+<<<<<<< HEAD
       username.toLowerCase();
+=======
+      await countAndUpdateCoin(username)
+      await countAndUpdateCoin(data.username)
+>>>>>>> e13bd01 (update)
       res.send({
         userCreated: true,
         msg: "User has been created Successfully",

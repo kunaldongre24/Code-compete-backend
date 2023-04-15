@@ -1,6 +1,5 @@
 const { db } = require("../db");
 const { v4: uuidv4 } = require("uuid");
-const { countAndUpdateCoin } = require("./CoinController");
 
 const CommissionController = {
   async companyShare(req, res) {
