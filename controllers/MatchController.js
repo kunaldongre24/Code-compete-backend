@@ -2,6 +2,9 @@ const axios = require("axios");
 const { db } = require("../db");
 
 const MatchController = {
+  async getLiveTime(req, res) {
+    res.send({ time: Date.now() });
+  },
   async setMatchInfo(req, res) {
     const { matchId } = req.params;
     const url = "http://marketsarket.in:3000/getcricketmatches";
@@ -40,7 +43,6 @@ const MatchController = {
       document.id = doc.id;
       return document;
     });
-
     for (var i = 0; i < value.length; i++) {
       let sum = 0;
       const arr = data.filter((x) => x.matchId === value[i].id);
@@ -48,16 +50,16 @@ const MatchController = {
       var winner = [];
       let sessionSum = 0;
       let matchCommission = 0;
-      let myShareCom = 0;
       let settled = false;
+      let myComm = 0;
       for (var j = 0; j < arr.length; j++) {
         const matchCom = arr[j].won
           ? arr[j].lossCommAmount - arr[j].lossCom
           : arr[j].profitComAmount - arr[j].profitCom;
         runnerArray = arr[j].runnerArray;
+        myComm = arr[j].comAmount;
         sessionSum += arr[j].sessionCommission ? arr[j].sessionCommission : 0;
         matchCommission += matchCom ? matchCom : 0;
-        myShareCom += arr[j].myCom;
         winner = arr[j].winner;
         settled = arr[j].settled;
         if (arr[j].won) {
@@ -70,8 +72,8 @@ const MatchController = {
       value[i].winner = winner;
       value[i].winning = sum;
       value[i].totalCom = sessionSum + matchCommission;
-      value[i].myShareCom = myShareCom;
       value[i].settled = settled;
+      value[i].myComm = myComm;
     }
     res.send(value);
   },

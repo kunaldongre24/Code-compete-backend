@@ -269,7 +269,6 @@ const AuthController = {
         createdOn: Date.now(),
       });
 
-
       const userJson = {
         uid: userRecord.uid,
         username,
@@ -280,13 +279,13 @@ const AuthController = {
         matchShare: share,
         matchCommission: AgentMatchcommision ? AgentMatchcommision : 0,
         sessionCommission: AgentSessioncommision ? AgentSessioncommision : 0,
+        createdOn: Date.now(),
       };
       const usersDb = db.collection("users");
       await usersDb.doc(userRecord.uid).set(userJson);
 
-
-      await countAndUpdateCoin(username)
-      await countAndUpdateCoin(data.username)
+      countAndUpdateCoin(username);
+      countAndUpdateCoin(data.username);
 
       res.send({
         userCreated: true,

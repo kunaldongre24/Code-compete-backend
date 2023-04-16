@@ -1,5 +1,6 @@
 const { db } = require("../db");
 const { v4: uuidv4 } = require("uuid");
+const { countAndUpdateCoin } = require("./CoinController");
 
 const CommissionController = {
   async companyShare(req, res) {
@@ -53,8 +54,8 @@ const CommissionController = {
       setter: setter,
       createdOn: Date.now(),
     });
-    getter.toLowerCase();
-    setter.toLowerCase();
+    countAndUpdateCoin(getter.toLowerCase());
+    countAndUpdateCoin(setter.toLowerCase());
   },
 
   async add(arr, id, value) {
@@ -91,9 +92,8 @@ const CommissionController = {
     }
     const coinDb = db.collection("coinMap").doc(uuidv4());
     await coinDb.set(val);
-    playerId.toLowerCase();
-    id.toLowerCase();
-
+    countAndUpdateCoin(playerId.toLowerCase());
+    countAndUpdateCoin(id.toLowerCase());
     const betRef = db.collection("betDataMap").doc(key);
     await betRef.set(
       {
@@ -116,7 +116,7 @@ const CommissionController = {
     var comSum = 0;
     var ccComPerc = 0;
     var ccComAmount = 0;
-    while (sum < 100 && id !== "cc0001") {
+    while (id !== "cc0001") {
       const ref = db.collection("commisionMap").where("getter", "==", id);
       await ref.get().then(async (value) => {
         if (value.empty) {
@@ -141,14 +141,13 @@ const CommissionController = {
         }
 
         if (arr.filter((x) => x.id === setter.toLowerCase()).length) {
-          arr.filter((x) => x.id === setter.toLowerCase())[0].commission =
-            dis - Math.abs(myComm);
+          arr.filter((x) => x.id === setter.toLowerCase())[0].commission = dis;
           arr.filter((x) => x.id === setter.toLowerCase())[0].percent =
             sum - prevSum;
         } else {
           const inf = {
             id: setter.toLowerCase(),
-            commission: dis - Math.abs(myComm),
+            commission: dis,
             myComm,
             percent: sum - prevSum,
           };
@@ -163,7 +162,7 @@ const CommissionController = {
         } else {
           const inf = {
             id: getter,
-            commission: Math.abs(comDis),
+            commission: 0,
             myComm,
             percent: sum - prevSum,
           };
@@ -189,7 +188,7 @@ const CommissionController = {
     var comSum = 0;
     var ccComPerc = 0;
     var ccComAmount = 0;
-    while (sum < 100 && id !== "cc0001") {
+    while (id !== "cc0001") {
       const ref = db.collection("commisionMap").where("getter", "==", id);
       await ref.get().then(async (value) => {
         if (value.empty) {

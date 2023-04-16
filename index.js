@@ -36,11 +36,6 @@ io.on("connection", (socket) => {
       await getMatchScore(matchId, socket);
     }, 1000);
   });
-  socket.on("getLiveTime", () => {
-    intervalId = setInterval(async () => {
-      socket.emit("liveTime", Date.now());
-    }, 1000);
-  });
   socket.on("getMyPlayerBets", (data) => {
     intervalId = setInterval(async () => {
       await getMyPlayerBets(data, socket);
