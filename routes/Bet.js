@@ -6,7 +6,7 @@ const BetController = require("../controllers/BetController");
 router.post("/placebet", Auth, BetController.placeBet);
 router.post("/placeMatchBet", Auth, BetController.placeMatchBet);
 router.post("/placeTossBet", Auth, BetController.placeTossBet);
-router.post("/settleBet", Auth, BetController.settleBet);
+router.post("/settleBet", BetController.settleBet);
 router.post("/settleMatchBet", BetController.settleMatchBet);
 router.post("/getCompanyReport", BetController.getCompanyReport);
 router.post("/settleTossBet", Auth, BetController.settleTossBet);

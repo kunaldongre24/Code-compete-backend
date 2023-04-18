@@ -26,16 +26,18 @@ const CommissionController = {
       getter = userId;
       setter = company;
     }
-    const coinDb = db.collection("coinMap").doc(uuidv4());
-    await coinDb.set({
-      value: amount,
-      type: 3,
-      msg: "Bet coin distribution",
-      matchId,
-      getter,
-      setter,
-      createdOn: Date.now(),
-    });
+    if (Math.abs(amount) > 0) {
+      const coinDb = db.collection("coinMap").doc(uuidv4());
+      await coinDb.set({
+        value: amount,
+        type: 3,
+        msg: "Bet coin distribution",
+        matchId,
+        getter,
+        setter,
+        createdOn: Date.now(),
+      });
+    }
     const betRef = db.collection("betUserMap").doc(id);
     await betRef.set(
       {

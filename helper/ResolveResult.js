@@ -10,11 +10,9 @@ const ResolveResult = async () => {
       document.id = doc.id;
       return document;
     });
-    const matchBetRef = db
-      .collection("matchBetMap")
-      .where("settled", "!=", true);
+    const matchBetRef = db.collection("matchList").where("settled", "!=", true);
     const matchResponse = await matchBetRef.get();
-    const matchBetData = matchResponse.docs.map((doc) => {
+    const matchList = matchResponse.docs.map((doc) => {
       const document = doc.data();
       document.id = doc.id;
       return document;
@@ -22,7 +20,6 @@ const ResolveResult = async () => {
     var resultData = [];
     const unique = [...new Set(data.map((item) => item.matchId))];
     const uniqueFancy = [...new Set(data.map((item) => item.fancyName))];
-    const matchUnique = [...new Set(matchBetData.map((item) => item.marketId))];
 
     for (var i = 0; i < unique.length; i++) {
       const url =
@@ -41,8 +38,9 @@ const ResolveResult = async () => {
         }
       }
     }
-    for (var i = 0; i < matchUnique.length; i++) {
-      const url = "http://178.79.149.218:4000/listmarketbook/" + matchUnique[i];
+    for (var i = 0; i < matchList.length; i++) {
+      const url =
+        "http://178.79.149.218:4000/listmarketbook/" + matchList[i].marketId;
       const res = await axios.get(url);
       const runnerList = res.data.length > 0 && res.data[0];
       const winnerSid =
@@ -53,7 +51,7 @@ const ResolveResult = async () => {
             : 0
           : 0;
       if (winnerSid > 0) {
-        resolveMatchBet(matchUnique[i], winnerSid);
+        resolveMatchBet(matchList[i].marketId, winnerSid, matchList[i].id);
       }
     }
 

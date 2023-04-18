@@ -244,7 +244,7 @@ const AuthController = {
       const type = 1;
       const p1Coins = await CoinController.countCoin(data.username);
       const p2Coins = await CoinController.countCoin(username);
-      const msg = `Opening Balance By ${data.username} ( ${data.name} ) To ${username} ( ${name} )`;
+      const msg = `Opening Balance By ${data.username} (${data.name}) To ${username} (${name})`;
       const commisionDb = db.collection("commisionMap").doc(uuidv4());
       await commisionDb.set({
         setter: companyId,
@@ -265,7 +265,7 @@ const AuthController = {
         getter: username.toLowerCase(),
         setter: data.username.toLowerCase(),
         setterPreviousLimit: p2Coins ? p2Coins : 0,
-        getterPreviousLimit: p1Coins ? p1Coins : 0,
+        getterPreviousLimit: parseFloat(fixedLimit),
         createdOn: Date.now(),
       });
 

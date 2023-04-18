@@ -6,76 +6,93 @@ const MatchController = {
     res.send({ time: Date.now() });
   },
   async setMatchInfo(req, res) {
-    const { matchId } = req.params;
-    const url = "http://marketsarket.in:3000/getcricketmatches";
-    const response = await axios.get(url);
-    const data = response.data;
-    const singleMatch = data.filter((x) => x.gameId === matchId);
-    const gameRef = db.collection("matchList").doc(matchId);
-    const gameSnapshot = await gameRef.get();
-    if (gameSnapshot.exists) {
-      return res.send({ status: false });
-    }
     try {
-      singleMatch[0].createdOn = Date.now();
-      await gameRef.set(singleMatch[0]);
-      res.send({ status: true });
+      const { matchId } = req.params;
+      const url = "http://marketsarket.in:3000/getcricketmatches";
+      const response = await axios.get(url);
+      const data = response.data;
+      const url2 = `http://139.144.12.137/getbm2?eventId=${matchId}`;
+      const response2 = await axios.get(url2);
+
+      const singleMatch = data.filter((x) => x.gameId === matchId);
+      const gameRef = db.collection("matchList").doc(matchId);
+      const gameSnapshot = await gameRef.get();
+      if (
+        response2.data.t1 &&
+        response2.data.t1.length &&
+        !gameSnapshot.exists
+      ) {
+        const t1 = response2.data.t1[0];
+        singleMatch[0].createdOn = Date.now();
+        const runnerArray = [];
+        for (var i = 0; i < t1.length; i++) {
+          const elem = { sid: t1[i].sid, name: t1[i].nat };
+          runnerArray.push(elem);
+        }
+        singleMatch[0].runnerArray = runnerArray;
+        singleMatch[0].settled = false;
+        await gameRef.set(singleMatch[0]);
+        res.send({ status: true });
+      } else {
+        return res.send({ status: false });
+      }
     } catch (error) {
-      res.send({ err: error });
+      console.error(error);
+      res.status(500).send({
+        status: false,
+        message: "An error occurred while processing the request",
+      });
     }
   },
   async getAllMatchList(req, res) {
-    const { userId } = req.params;
-    const betRef = db
-      .collection("betUserMap")
-      .where("company", "==", userId)
-      .where("settled", "==", true);
-    const response = await betRef.get();
-    const data = response.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
-      return document;
-    });
-    const matchRef = db.collection("matchList");
-    const resp = await matchRef.get();
-    const value = resp.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
-      return document;
-    });
-    for (var i = 0; i < value.length; i++) {
-      let sum = 0;
-      const arr = data.filter((x) => x.matchId === value[i].id);
-      var runnerArray = [];
-      var winner = [];
-      let sessionSum = 0;
-      let matchCommission = 0;
-      let settled = false;
-      let myComm = 0;
-      for (var j = 0; j < arr.length; j++) {
-        const matchCom = arr[j].won
-          ? arr[j].lossCommAmount - arr[j].lossCom
-          : arr[j].profitComAmount - arr[j].profitCom;
-        runnerArray = arr[j].runnerArray;
-        myComm = arr[j].comAmount;
-        sessionSum += arr[j].sessionCommission ? arr[j].sessionCommission : 0;
-        matchCommission += matchCom ? matchCom : 0;
-        winner = arr[j].winner;
-        settled = arr[j].settled;
-        if (arr[j].won) {
-          sum -= arr[j].lossAmount;
-        } else {
-          sum += arr[j].profitAmount;
+    try {
+      const { userId } = req.params;
+      const betRef = db
+        .collection("betUserMap")
+        .where("company", "==", userId)
+        .where("settled", "==", true);
+      const response = await betRef.get();
+      const data = response.docs.map((doc) => {
+        const document = doc.data();
+        document.id = doc.id;
+        return document;
+      });
+      const matchRef = db.collection("matchList");
+      const resp = await matchRef.get();
+      const value = resp.docs.map((doc) => {
+        const document = doc.data();
+        document.id = doc.id;
+        return document;
+      });
+      for (var i = 0; i < value.length; i++) {
+        let sum = 0;
+        const arr = data.filter((x) => x.matchId === value[i].id);
+        let myComm = 0;
+        for (var j = 0; j < arr.length; j++) {
+          if (arr[j].name === "matchbet") {
+            myComm -= arr[j].comAmount;
+            if (arr[j].won) {
+              sum -= arr[j].lossAmount;
+            } else {
+              sum += arr[j].profitAmount;
+            }
+          } else if (arr[j].name === "sessionbet") {
+            myComm -= arr[j].myCom - arr[j].sessionCommission;
+            if (arr[j].won) {
+              sum -= arr[j].lossAmount;
+            } else {
+              sum += arr[j].profitAmount;
+            }
+          }
         }
+        value[i].winning = sum;
+        value[i].myComm = myComm;
       }
-      value[i].runnerArray = runnerArray;
-      value[i].winner = winner;
-      value[i].winning = sum;
-      value[i].totalCom = sessionSum + matchCommission;
-      value[i].settled = settled;
-      value[i].myComm = myComm;
+      res.send(value);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal server error");
     }
-    res.send(value);
   },
   async getSingleMatch(req, res) {
     const { matchId } = req.params;

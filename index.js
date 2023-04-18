@@ -42,7 +42,7 @@ io.on("connection", (socket) => {
     }, 1000);
   });
   socket.on("disconnect", () => {
-    console.log("Client Disconnected");
+    console.log("Client Disconnected", socket.id);
     clearInterval(intervalId);
   });
 });
