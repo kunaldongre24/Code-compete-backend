@@ -1,20 +1,21 @@
 const { resolveBet, resolveMatchBet } = require("../controllers/BetController");
-const { db } = require("../db");
 const axios = require("axios");
+const BetDataMap = require("../models/BetDataMap");
+const MatchList = require("../models/MatchList");
 const ResolveResult = async () => {
   try {
-    const betRef = db.collection("betDataMap").where("settled", "!=", true);
-    const response = await betRef.get();
-    const data = response.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
+    const betRef = BetDataMap.find({ settled: { $ne: true } }).exec();
+    const response = await betRef;
+    const data = response.map((doc) => {
+      const document = doc.toObject();
+      document.id = doc._id;
       return document;
     });
-    const matchBetRef = db.collection("matchList").where("settled", "!=", true);
-    const matchResponse = await matchBetRef.get();
-    const matchList = matchResponse.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
+    const matchBetRef = MatchList.find({ settled: { $ne: true } }).exec();
+    const matchResponse = await matchBetRef;
+    const matchList = matchResponse.map((doc) => {
+      const document = doc.toObject();
+      document.id = doc._id;
       return document;
     });
     var resultData = [];

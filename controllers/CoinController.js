@@ -1,11 +1,14 @@
-const { db } = require("../db");
-const { v4: uuidv4 } = require("uuid");
+const Coin = require("../models/Coins");
+const BetUserMap = require("../models/BetUserMap");
+const MatchBetMap = require("../models/MatchBetMap");
+const MatchUserMap = require("../models/MatchUserMap");
+const BetDataMap = require("../models/BetDataMap");
+const UserModel = require("../models/User");
 
 const CoinController = {
   async addCoins(data) {
     const { coins, msg, setter, getter } = data;
-    const coinDb = db.collection("coinMap").doc(uuidv4());
-    await coinDb.set({
+    await Coin.create({
       value: coins,
       msg,
       getter,
@@ -25,107 +28,108 @@ const CoinController = {
       return CoinController.updateAgentCoin(username);
     }
     const totalCoins = await CoinController.countCoin(username);
-    const userRef = db.collection("users").where("username", "==", username);
-    const resp = await userRef.get();
-
-    if (resp.empty) {
-      console.log("No matching documents.");
+    const user = await UserModel.findOne({ username: username });
+    if (!user) {
+      console.log("No matching user.");
       return;
     }
-    resp.forEach((doc) => {
-      doc.ref.set(
-        { totalCoins: Math.round(parseFloat(totalCoins) * 100) / 100 },
-        { merge: true }
-      );
-    });
+    user.totalCoins = Math.round(parseFloat(totalCoins) * 100) / 100;
+    await user.save();
   },
   async updateAgentCoin(username) {
     const totalCoins = await CoinController.countAgentLimit(username);
-    const userRef = db.collection("users").where("username", "==", username);
-    const resp = await userRef.get();
-
-    if (resp.empty) {
-      console.log("No matching documents.");
+    const user = await UserModel.findOne({ username: username });
+    if (!user) {
+      console.log("User not found");
       return;
     }
-    resp.forEach((doc) => {
-      doc.ref.set(
-        { totalCoins: Math.round(parseFloat(totalCoins) * 100) / 100 },
-        { merge: true }
-      );
-    });
+    user.totalCoins = Math.round(parseFloat(totalCoins) * 100) / 100;
+    await user.save();
   },
   async limitControl(req, res) {
     const { type, username, amount } = req.body;
     if (type === undefined || username === undefined || amount === undefined) {
-      res.send({ status: 0, msg: "Missing Information" });
+      return res.status(400).json({ error: "Missing Information" });
     }
-    const user = req.user.email.split("@")[0];
-    const userRef = db.collection("users").where("username", "==", username);
-    const value = await userRef.get();
-    if (value.docs.length) {
-      const userInfo = value.docs[0].data();
-      const coinDb = db.collection("coinMap").doc(uuidv4());
-      const userDisplayName = userInfo.name;
-      const p1Coins = await CoinController.countCoin(user);
-      const p2Coins = await CoinController.countCoin(username);
-      if (parseInt(type) === 1) {
-        const msg = `Limit increased of ${userDisplayName}(${username}) by ${req.user.name}(${user})`;
-        await coinDb.set({
-          value: Math.abs(parseFloat(amount)),
-          msg,
-          getter: username,
-          setter: user,
-          getterPreviousLimit: p2Coins,
-          setterPreviousLimit: p1Coins,
-          createdOn: Date.now(),
-          type: "Limit",
-        });
-      } else if (parseInt(type) === 0) {
-        const msg = `Limit decreased of ${userDisplayName}(${username}) by ${req.user.name}(${user})`;
-        await coinDb.set({
-          value: Math.abs(parseFloat(amount)),
-          msg,
-          getter: user,
-          setter: username,
-          getterPreviousLimit: p1Coins,
-          setterPreviousLimit: p2Coins,
-          type: "Limit",
-          createdOn: Date.now(),
-        });
-      } else {
-        res.send({ status: 0, msg: "Unknown Error Occured" });
-      }
+    const userEmail = req.user.email;
+    const user = userEmail.split("@")[0];
+    const userQuery = UserModel.findOne({ username: username });
+    const userInfo = await userQuery.exec();
+    if (!userInfo) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const userDisplayName = userInfo.name;
+    const p1Coins = await CoinController.countCoin(user);
+    const p2Coins = await CoinController.countCoin(username);
+    if (parseInt(type) === 1) {
+      const msg = `Limit increased of ${userDisplayName}(${username}) by ${req.user.name}(${user})`;
+      await CoinController.createCoinRecord({
+        value: Math.abs(parseFloat(amount)),
+        msg,
+        getter: username,
+        setter: user,
+        getterPreviousLimit: p2Coins,
+        setterPreviousLimit: p1Coins,
+        createdOn: new Date(),
+        type: 8,
+      });
+    } else if (parseInt(type) === 0) {
+      const msg = `Limit decreased of ${userDisplayName}(${username}) by ${req.user.name}(${user})`;
+      await CoinController.createCoinRecord({
+        value: Math.abs(parseFloat(amount)),
+        msg,
+        getter: user,
+        setter: username,
+        getterPreviousLimit: p1Coins,
+        setterPreviousLimit: p2Coins,
+        createdOn: new Date(),
+        type: 8,
+      });
     } else {
-      res.send({ status: 0, msg: "User not found" });
+      return res.status(400).json({ error: "Unknown Error Occurred" });
     }
+
     await CoinController.countAndUpdateCoin(username.toLowerCase());
     await CoinController.countAndUpdateCoin(user.toLowerCase());
-    res.send({
-      status: 1,
-      msg: parseInt(type) === 1 ? "Limit Increased" : "Limit Decreased",
+
+    res.json({
+      message: parseInt(type) === 1 ? "Limit Increased" : "Limit Decreased",
     });
+  },
+  async createCoinRecord(getter, setter, value, type, msg) {
+    const coin = new Coin({
+      getter,
+      setter,
+      value,
+      type,
+      msg,
+      createdOn: Date.now(),
+    });
+
+    try {
+      const savedCoin = await coin.save();
+      console.log("Coin saved:", savedCoin);
+      return savedCoin;
+    } catch (error) {
+      console.error("Error saving coin:", error);
+      return { err: error };
+    }
   },
   async countCoin(username) {
     let sum = 0;
     const id = username;
     if (!username) {
-      res.send({ err: "Missing Information" });
+      return { err: "Missing Information" };
     }
-    const query1 = db.collection("coinMap").where("getter", "==", id);
-    const query2 = db.collection("coinMap").where("setter", "==", id);
+    const query = Coin.find({ $or: [{ getter: id }, { setter: id }] });
 
-    const snapshot1 = await query1.get();
-    snapshot1.forEach((doc) => {
-      if (doc.data().getter === id) {
-        const val = parseFloat(doc.data().value);
+    const snapshot = await query.lean().exec();
+    snapshot.forEach((doc) => {
+      if (doc.getter === id) {
+        const val = parseFloat(doc.value);
         sum += val ? val : 0;
-      }
-    });
-    const snapshot2 = await query2.get();
-    snapshot2.forEach((doc) => {
-      if (doc.data().setter === id) {
-        const val = parseFloat(doc.data().value);
+      } else if (doc.setter === id) {
+        const val = parseFloat(doc.value);
         sum -= val ? val : 0;
       }
     });
@@ -135,24 +139,20 @@ const CoinController = {
     let sum = 0;
     const id = username;
     if (!username) {
-      res.send({ err: "Missing Information" });
+      return { err: "Missing Information" };
     }
-    const query1 = db.collection("coinMap").where("getter", "==", id);
-    const query2 = db.collection("coinMap").where("setter", "==", id);
-
-    const snapshot1 = await query1.get();
-    snapshot1.forEach((doc) => {
-      if (doc.data().getter === id) {
-        if (!doc.data().type || (doc.data().type && doc.data().type !== 3)) {
-          const val = parseFloat(doc.data().value);
-          sum += val ? val : 0;
-        }
-      }
+    const query = Coin.find({
+      $or: [{ getter: id }, { setter: id }],
+      type: { $ne: 3 },
     });
-    const snapshot2 = await query2.get();
-    snapshot2.forEach((doc) => {
-      if (doc.data().setter === id) {
-        const val = parseFloat(doc.data().value);
+
+    const snapshot = await query.lean().exec();
+    snapshot.forEach((doc) => {
+      if (doc.getter === id) {
+        const val = parseFloat(doc.value);
+        sum += val ? val : 0;
+      } else if (doc.setter === id) {
+        const val = parseFloat(doc.value);
         sum -= val ? val : 0;
       }
     });
@@ -160,51 +160,25 @@ const CoinController = {
   },
   async getLimit(username) {
     const id = username;
-    if (!username) {
-      res.send({ err: "Missing Information" });
+    if (!id) {
+      return { err: "Missing Information" };
     }
-    const query1 = db
-      .collection("coinMap")
-      .where("getter", "==", id)
-      .where("type", "==", "Limit");
-    const query2 = db
-      .collection("coinMap")
-      .where("setter", "==", id)
-      .where("type", "==", "Limit");
-    const query3 = db
-      .collection("coinMap")
-      .where("getter", "==", id)
-      .where("type", "==", 1);
-    const query4 = db
-      .collection("coinMap")
-      .where("setter", "==", id)
-      .where("type", "==", 1);
-    const arr = [];
-    const snapshot1 = await query1.get();
-    snapshot1.forEach((doc) => {
-      if (doc.data().getter === id) {
-        arr.push(doc.data());
-      }
-    });
-    const snapshot2 = await query2.get();
-    snapshot2.forEach((doc) => {
-      if (doc.data().setter === id) {
-        arr.push(doc.data());
-      }
-    });
-    const snapshot3 = await query3.get();
-    snapshot3.forEach((doc) => {
-      if (doc.data().getter === id) {
-        arr.push(doc.data());
-      }
-    });
-    const snapshot4 = await query4.get();
-    snapshot4.forEach((doc) => {
-      if (doc.data().setter === id) {
-        arr.push(doc.data());
-      }
-    });
-    return arr;
+
+    try {
+      const query = Coin.find({
+        $or: [
+          { getter: id, type: 8 },
+          { setter: id, type: 8 },
+          { getter: id, type: 1 },
+          { setter: id, type: 1 },
+        ],
+      });
+      const results = await query.lean().exec();
+      return results;
+    } catch (err) {
+      console.error(err);
+      return { err: "Failed to retrieve limit data" };
+    }
   },
   async getTotalCoins(req, res) {
     const { username } = req.params;
@@ -223,63 +197,22 @@ const CoinController = {
   },
   async deleteBetCoins(req, res) {
     const { id } = req.params;
-    var coinDelete = db.collection("coinMap").where("setter", "==", id);
-    var betDelete = db.collection("matchBetMap").where("userId", "==", id);
-    var sbetDelete = db.collection("betDataMap").where("userId", "==", id);
-    var tbetDelete = db.collection("tossBetMap").where("userId", "==", id);
-    var gbetDelete = db
-      .collection("coinMap")
-      .where("getter", "==", id)
-      .where("value", "<=", 10000);
-    var nbetDelete = db
-      .collection("coinMap")
-      .where("getter", "==", id)
-      .where("type", "==", "Limit");
-    var ubetDelete = db.collection("betUserMap").where("player", "==", id);
-    var matchUserMap = db.collection("matchUserMap").where("company", "==", id);
-    coinDelete.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
-    betDelete.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
-    sbetDelete.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
-    tbetDelete.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
-    gbetDelete.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
-    nbetDelete.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
-    ubetDelete.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
-    matchUserMap.get().then(function (querySnapshot) {
-      querySnapshot.forEach(function (doc) {
-        doc.ref.delete();
-      });
-    });
+    try {
+      await Coin.deleteMany({ setter: id });
+      await MatchBetMap.deleteMany({ userId: id });
+      await BetDataMap.deleteMany({ userId: id });
+      await Coin.deleteMany({ getter: id, value: { $lte: 10000 } });
+      await Coin.deleteMany({ getter: id, type: 8 });
+      await BetUserMap.deleteMany({ player: id });
+      await MatchUserMap.deleteMany({ company: id });
 
-    await CoinController.countAndUpdateCoin(id);
-    res.send({ msg: "Deleted coins" });
+      await CoinController.countAndUpdateCoin(id);
+
+      res.send({ msg: "Deleted coins" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({ err: "Error deleting coins" });
+    }
   },
 };
 

@@ -7,6 +7,13 @@ const { countAndUpdateCoin, removeNum } = require("./CoinController");
 const { getMyAgents, getUserInformation } = require("./AuthController");
 const clientCollection = require("../helper/clientCollection");
 const countCash = require("../helper/countCash");
+const BetList = require("../models/BetList");
+const CoinMap = require("../models/Coins");
+const BetDataMap = require("../models/BetDataMap");
+const BetUserMap = require("../models/BetUserMap");
+const MatchUserMap = require("../models/MatchUserMap");
+const MatchBetMap = require("../models/MatchBetMap");
+const MatchList = require("../models/MatchList");
 
 const BetController = {
   didWon(isBack, value, odds) {
@@ -28,34 +35,28 @@ const BetController = {
   },
   async agentReport(req, res) {},
   async resolveBet(fancyName, value) {
-    if (
-      fancyName === undefined ||
-      fancyName.trim() === "" ||
-      value === undefined ||
-      value.trim() === ""
-    ) {
+    if (!fancyName || !fancyName.trim() || !value || !value.trim()) {
       return;
     }
-    var won = false;
-    const betRef = db
-      .collection("betUserMap")
-      .where("fancyName", "==", fancyName)
-      .where("settled", "!=", true);
-    const response = await betRef.get();
-    const data = response.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
-      return document;
+
+    const wonArr = [];
+
+    const betRef = BetUserMap.find({
+      fancyName: fancyName,
+      settled: { $ne: true },
     });
-    const betRef2 = db
-      .collection("betDataMap")
-      .where("fancyName", "==", fancyName)
-      .where("settled", "!=", true);
+
+    const data = await betRef;
+
+    const betRef2 = BetDataMap.find({
+      fancyName: fancyName,
+      settled: { $ne: true },
+    });
 
     for (i = 0; i < data.length; i++) {
       const {
         lossAmount,
-        profitAmount,
+        comAmount,
         id,
         isBack,
         odds,
@@ -64,236 +65,226 @@ const BetController = {
         matchId,
       } = data[i];
 
-      won = BetController.didWon(isBack, value, odds);
-      if (won) {
-        await CommissionController.coinDistribution(
-          won,
-          player,
-          company,
-          lossAmount,
-          id,
-          matchId
-        );
-      } else {
-        await CommissionController.coinDistribution(
-          won,
-          player,
-          company,
-          profitAmount,
-          id,
-          matchId
-        );
-      }
+      const won = BetController.didWon(isBack, value, odds);
+      wonArr.push(won);
+
+      const commissionAmount = won ? lossAmount : comAmount;
+
+      await CommissionController.coinDistribution(
+        won,
+        player,
+        company,
+        commissionAmount,
+        id,
+        matchId
+      );
+
       await countAndUpdateCoin(company.toLowerCase());
       await countAndUpdateCoin(player.toLowerCase());
     }
-    const resp = await betRef2.get();
-    if (resp.empty) {
+
+    const resp = await betRef2;
+
+    if (!resp.length) {
       console.log("No matching documents.");
       return;
     }
+
     const settledArr = [];
-    resp.forEach(async (doc) => {
-      const { odds, isBack, userId, transactionId, matchId } = doc.data();
+
+    for (let i = 0; i < resp.length; i++) {
+      const { odds, isBack, userId, transactionId, matchId } = resp[i];
+
       if (!settledArr.includes(transactionId)) {
         settledArr.push(transactionId);
-        const coinRef = db.collection("coinMap").doc(transactionId);
-        const val = await coinRef.get();
-        const transactionData = val.data();
-        const coinDb = db.collection("coinMap").doc(uuidv4());
-        const type = 3;
-        await coinDb.set({
+
+        const transactionData = await CoinMap.findOne({ _id: transactionId });
+
+        const coinDb = new CoinMap({
           value: parseFloat(transactionData.value),
           msg: "Settlement",
-          type,
+          type: 3,
           matchId,
           getter: userId,
           createdOn: Date.now(),
         });
+
+        await coinDb.save();
         await countAndUpdateCoin(userId.toLowerCase());
       }
+
       const isWon = BetController.didWon(isBack, value, odds);
-      await doc.ref.set(
+      await BetDataMap.findOneAndUpdate(
+        { transactionId: transactionId },
         { settled: true, won: isWon, result: value },
         { merge: true }
       );
-    });
-    const resultRef = db.collection("betList").doc(uuidv4());
-    await resultRef.set({
+    }
+
+    const resultDb = new BetList({
       fancyName,
       value,
       createdOn: Date.now(),
     });
 
+    await resultDb.save();
+
     return;
   },
+  // async resolveTossBet(result, matchId) {
+  //   if (result === undefined || matchId === undefined) {
+  //     return;
+  //   }
 
-  async resolveTossBet(result, matchId) {
-    if (result === undefined || matchId === undefined) {
-      return;
-    }
+  //   var won = false;
+  //   const betRef = db
+  //     .collection("betUserMap")
+  //     .where("settled", "!=", true)
+  //     .where("name", "==", "tossBet");
+  //   const response = await betRef.get();
+  //   const data = response.docs.map((doc) => {
+  //     const document = doc.data();
+  //     document.id = doc.id;
+  //     return document;
+  //   });
+  //   const betRef2 = db.collection("tossBetMap").where("settled", "!=", true);
+  //   for (i = 0; i < data.length; i++) {
+  //     const {
+  //       lossAmount,
+  //       profitAmount,
+  //       id,
+  //       isBack,
+  //       player,
+  //       company,
+  //       selectionName,
+  //       matchId,
+  //     } = data[i];
+  //     if (selectionName) {
+  //       if (isBack) {
+  //         if (selectionName.trim() === result.trim()) {
+  //           won = true;
+  //         } else {
+  //           won = false;
+  //         }
+  //       } else {
+  //         if (selectionName.trim() === result.trim()) {
+  //           won = false;
+  //         } else {
+  //           won = true;
+  //         }
+  //       }
+  //     } else {
+  //       return;
+  //     }
+  //     if (won) {
+  //       await CommissionController.coinDistribution(
+  //         won,
+  //         player,
+  //         company,
+  //         lossAmount,
+  //         id,
+  //         matchId
+  //       );
+  //     } else {
+  //       await CommissionController.coinDistribution(
+  //         won,
+  //         player,
+  //         company,
+  //         profitAmount,
+  //         id,
+  //         matchId
+  //       );
+  //     }
 
-    var won = false;
-    const betRef = db
-      .collection("betUserMap")
-      .where("settled", "!=", true)
-      .where("name", "==", "tossBet");
-    const response = await betRef.get();
-    const data = response.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
-      return document;
-    });
-    const betRef2 = db.collection("tossBetMap").where("settled", "!=", true);
-    for (i = 0; i < data.length; i++) {
-      const {
-        lossAmount,
-        profitAmount,
-        id,
-        isBack,
-        player,
-        company,
-        selectionName,
-        matchId,
-      } = data[i];
-      if (selectionName) {
-        if (isBack) {
-          if (selectionName.trim() === result.trim()) {
-            won = true;
-          } else {
-            won = false;
-          }
-        } else {
-          if (selectionName.trim() === result.trim()) {
-            won = false;
-          } else {
-            won = true;
-          }
-        }
-      } else {
-        return;
-      }
-      if (won) {
-        await CommissionController.coinDistribution(
-          won,
-          player,
-          company,
-          lossAmount,
-          id,
-          matchId
-        );
-      } else {
-        await CommissionController.coinDistribution(
-          won,
-          player,
-          company,
-          profitAmount,
-          id,
-          matchId
-        );
-      }
+  //     countAndUpdateCoin(player.toLowerCase());
+  //     countAndUpdateCoin(company.toLowerCase());
+  //   }
+  //   const resp = await betRef2.get();
 
-      countAndUpdateCoin(player.toLowerCase());
-      countAndUpdateCoin(company.toLowerCase());
-    }
-    const resp = await betRef2.get();
-
-    if (resp.empty) {
-      console.log("No matching documents.");
-      return;
-    }
-    const settledArr = [];
-    resp.forEach(async (doc) => {
-      const { selectionName, isBack, userId, transactionId, matchId } =
-        doc.data();
-      if (!settledArr.includes(transactionId)) {
-        settledArr.push(transactionId);
-        const coinRef = db.collection("coinMap").doc(transactionId);
-        const val = await coinRef.get();
-        const transactionData = val.data();
-        const coinDb = db.collection("coinMap").doc(uuidv4());
-        const type = 3;
-        await coinDb.set({
-          value: parseFloat(transactionData.value),
-          msg: "Settlement",
-          type,
-          matchId,
-          getter: userId,
-          createdOn: Date.now(),
-        });
-        userId;
-      }
-      var isWon = false;
-      if (selectionName) {
-        if (isBack) {
-          if (selectionName.trim() === result.trim()) {
-            isWon = true;
-          } else {
-            isWon = false;
-          }
-        } else {
-          if (selectionName.trim() === result.trim()) {
-            isWon = false;
-          } else {
-            isWon = true;
-          }
-        }
-      } else {
-        return;
-      }
-      doc.ref.set(
-        { settled: true, won: isWon, winner: result },
-        { merge: true }
-      );
-    });
-    const resultRef = db.collection("tossBetList").doc(uuidv4());
-    resultRef.set({
-      matchId,
-      winner: result,
-      createdOn: Date.now(),
-    });
-    return;
-  },
+  //   if (resp.empty) {
+  //     console.log("No matching documents.");
+  //     return;
+  //   }
+  //   const settledArr = [];
+  //   resp.forEach(async (doc) => {
+  //     const { selectionName, isBack, userId, transactionId, matchId } =
+  //       doc.data();
+  //     if (!settledArr.includes(transactionId)) {
+  //       settledArr.push(transactionId);
+  //       const coinRef = db.collection("coinMap").doc(transactionId);
+  //       const val = await coinRef.get();
+  //       const transactionData = val.data();
+  //       const coinDb = db.collection("coinMap").doc(uuidv4());
+  //       const type = 3;
+  //       await coinDb.set({
+  //         value: parseFloat(transactionData.value),
+  //         msg: "Settlement",
+  //         type,
+  //         matchId,
+  //         getter: userId,
+  //         createdOn: Date.now(),
+  //       });
+  //       userId;
+  //     }
+  //     var isWon = false;
+  //     if (selectionName) {
+  //       if (isBack) {
+  //         if (selectionName.trim() === result.trim()) {
+  //           isWon = true;
+  //         } else {
+  //           isWon = false;
+  //         }
+  //       } else {
+  //         if (selectionName.trim() === result.trim()) {
+  //           isWon = false;
+  //         } else {
+  //           isWon = true;
+  //         }
+  //       }
+  //     } else {
+  //       return;
+  //     }
+  //     doc.ref.set(
+  //       { settled: true, won: isWon, winner: result },
+  //       { merge: true }
+  //     );
+  //   });
+  //   const resultRef = db.collection("tossBetList").doc(uuidv4());
+  //   resultRef.set({
+  //     matchId,
+  //     winner: result,
+  //     createdOn: Date.now(),
+  //   });
+  //   return;
+  // },
   async resolveMatchBet(sid, winnerSid, matchId) {
     if (sid === undefined || winnerSid === undefined || matchId === undefined) {
       return;
     }
-    const resRef = db.collection("matchList").doc(matchId);
-    await resRef.set(
-      {
-        settled: true,
-        winnerSid,
-      },
-      { merge: true }
+    await MatchList.updateOne(
+      { _id: matchId },
+      { $set: { settled: true, winnerSid } }
     );
+
     var won = false;
-    const betRef = db
-      .collection("betUserMap")
-      .where("marketId", "==", sid)
-      .where("settled", "!=", true);
-    const response = await betRef.get();
-    const data = response.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
-      return document;
+    const data = await betUserMapModel.find({
+      marketId: sid,
+      settled: { $ne: true },
     });
-    const betRef2 = db
-      .collection("matchBetMap")
-      .where("marketId", "==", sid)
-      .where("settled", "!=", true);
-    const response3 = await betRef2.get();
-    const matchInfo = response3.docs.map((doc) => {
-      const document = doc.data();
-      document.id = doc.id;
-      return document;
+    const matchInfo = await MatchBetMap.find({
+      marketId: sid,
+      settled: { $ne: true },
     });
     if (matchInfo.length === 0) {
       console.log("No bets found");
       return;
     }
-    const coinRef = db.collection("coinMap").doc(matchInfo[0].transactionId);
-    const val = await coinRef.get();
-    const transactionData = val.data();
+    const coin = await CoinModel.findOne({ _id: matchInfo[0].transactionId });
+    if (!coin) {
+      // handle case where coin document is not found
+    }
+    const transactionData = coin.toObject();
+
     let position = transactionData.newArr.filter((x) => x.sid === winnerSid)[0]
       .position;
     let playerId,
@@ -335,16 +326,16 @@ const BetController = {
         const elem = { comAmount, player: company };
         comArr.push(elem);
         if (comAmount !== 0) {
-          const coinDb = db.collection("coinMap").doc(uuidv4());
-          const type = 3;
-          await coinDb.set({
+          const coinDb = new CoinMap({
+            _id: new mongoose.Types.ObjectId(),
             value: Math.abs(comAmount),
             msg: "Commission Distribution",
             matchId,
-            type,
+            type: 3,
             getter: company,
             createdOn: Date.now(),
           });
+          await coinDb.save();
           countAndUpdateCoin(company);
         }
       } else {
@@ -379,16 +370,16 @@ const BetController = {
       const elem = { comAmount, player: playerId };
       comArr.push(elem);
       if (comAmount !== 0) {
-        const coinDb = db.collection("coinMap").doc(uuidv4());
-        const type = 3;
-        await coinDb.set({
+        const coinDb = new CoinMap({
+          _id: uuidv4(),
           value: Math.abs(comAmount),
           msg: "Commission Distribution",
           matchId: pMatchId,
-          type,
+          type: 3,
           getter: playerId,
           createdOn: Date.now(),
         });
+        await coinDb.save();
         countAndUpdateCoin(playerId);
       }
     } else {
@@ -406,19 +397,18 @@ const BetController = {
         doc.data();
       if (!settledArr.includes(transactionId)) {
         settledArr.push(transactionId);
-        const coinRef = db.collection("coinMap").doc(transactionId);
-        const val = await coinRef.get();
-        const transactionData = val.data();
-        const coinDb = db.collection("coinMap").doc(uuidv4());
-        const type = 3;
-        await coinDb.set({
+        const coinRef = await CoinMapModel.findOne({ _id: transactionId });
+        const transactionData = coinRef.toObject();
+        const coinDb = new CoinMapModel({
           value: parseFloat(transactionData.value),
           msg: "Settlement",
           matchId,
-          type,
+          type: 3,
           getter: userId,
           createdOn: Date.now(),
         });
+
+        await coinDb.save();
         countAndUpdateCoin(userId);
       }
       var isWon = false;
@@ -473,12 +463,12 @@ const BetController = {
       );
     });
     agentArr.push(client);
-    const resultRef = db.collection("matchBetList").doc(uuidv4());
-    resultRef.set({
+    const resultDoc = new MatchBetList({
       sid,
       winnerSid,
       createdOn: Date.now(),
     });
+    await resultDoc.save();
     for (var i = 0; i < agentArr.length; i++) {
       const { matchId, company, matchname } = agentArr[i];
       let final;
@@ -493,16 +483,13 @@ const BetController = {
         final = exposure.final;
       }
       let totalSum = 0;
-      const sumRef = db
-        .collection("matchUserMap")
-        .where("company", "==", company);
-      const querySnapshot = await sumRef.get();
-      querySnapshot.forEach((doc) => {
-        const sum = doc.data().sum;
+      const sumRef = await MatchUserMap.find({ company: company });
+      sumRef.forEach((doc) => {
+        const sum = doc.sum;
         totalSum += parseFloat(sum);
       });
-      const resultRef = db.collection("matchUserMap").doc(uuidv4());
-      resultRef.set({
+
+      const result = new MatchUserMap({
         company,
         matchId,
         matchname,
@@ -513,6 +500,7 @@ const BetController = {
         winnerSid,
         createdOn: Date.now(),
       });
+      await result.save();
     }
     return;
   },
@@ -526,16 +514,15 @@ const BetController = {
     BetController.resolveMatchBet(sid, winnerSid, matchId);
     res.send({ msg: "Bet Settled" });
   },
-  async settleTossBet(req, res) {
-    const { matchId, result } = req.body;
-    BetController.resolveTossBet(result, matchId);
-    res.send({ msg: "Bet Settled" });
-  },
+  // async settleTossBet(req, res) {
+  //   const { matchId, result } = req.body;
+  //   BetController.resolveTossBet(result, matchId);
+  //   res.send({ msg: "Bet Settled" });
+  // },
   async getBetsByMatchId(req, res) {
     const { matchId } = req.params;
-    const userRef = db.collection("betDataMap").where("matchId", "==", matchId);
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
+    const userRef = BetDataMap.find({ matchId });
+    userRef.exec().then((data) => {
       const unique = [...new Set(data.map((item) => item.fancyName))];
       res.send(unique);
     });
@@ -551,61 +538,47 @@ const BetController = {
     res.send(data);
   },
   async getLedgerByUserId(userId) {
-    const userRef = db
-      .collection("matchUserMap")
-      .where("company", "==", userId);
-    const querySnapshot = await userRef.get();
-    const data = querySnapshot.docs.map((doc) => doc.data());
+    const data = await MatchUserMap.find({ company: userId }).lean();
     return data;
   },
   async getMatchAllBets(req, res) {
     const { matchId } = req.params;
     const userId = req.user.email.split("@")[0];
-    const userRef = db
-      .collection("betUserMap")
-      .where("matchId", "==", matchId)
-      .where("company", "==", userId)
-      .where("name", "==", "matchbet");
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
-      res.send(data);
-    });
+    try {
+      const bets = await BetUserMap.find({
+        matchId: matchId,
+        company: userId,
+        name: "matchbet",
+      }).lean();
+
+      res.send(bets);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal server error");
+    }
   },
   async getMatchBetPosition(req, res) {
     const userId = req.user.email.split("@")[0];
     const { matchId } = req.params;
-    const betRef = db
-      .collection("matchBetMap")
-      .where("matchId", "==", matchId)
-      .where("userId", "==", userId);
-    betRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
-      res.send(data);
-    });
+    const data = await MatchBetMap.find({ matchId: matchId, userId: userId });
+    res.send(data);
   },
-  async getTossBetPosition(req, res) {
-    const userId = req.user.email.split("@")[0];
-    const { matchId } = req.params;
-    const betRef = db
-      .collection("tossBetMap")
-      .where("matchId", "==", matchId)
-      .where("userId", "==", userId);
-    betRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
-      res.send(data);
-    });
-  },
+  // async getTossBetPosition(req, res) {
+  //   const userId = req.user.email.split("@")[0];
+  //   const { matchId } = req.params;
+  //   const betData = await TossBet.find({ matchId: matchId, userId: userId });
+  //   res.send(betData);
+  // },
   async getSessionBetPosition(req, res) {
-    const userId = req.user.email.split("@")[0];
-    const { matchId } = req.params;
-    const betRef = db
-      .collection("betUserMap")
-      .where("matchId", "==", matchId)
-      .where("userId", "==", userId);
-    betRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
-      res.send(data);
-    });
+    try {
+      const userId = req.user.email.split("@")[0];
+      const { matchId } = req.params;
+      const bets = await SessionBet.find({ userId, matchId });
+      res.send(bets);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Server error");
+    }
   },
   async getBetUsingUserId(req, res) {
     const { matchId } = req.params;
@@ -614,132 +587,95 @@ const BetController = {
     res.send(data);
   },
   async getMyPlayerBets(matchId, userId) {
-    const userRef = db
-      .collection("betUserMap")
-      .where("matchId", "==", matchId)
-      .where("company", "==", userId)
-      .where("name", "==", "sessionbet");
-    try {
-      const value = await userRef.get();
-      const data = value.docs.map((doc) => doc.data());
-      return data;
-    } catch (error) {
-      return;
-    }
+    const userRef = await sessionBetSchema.find({
+      matchId: matchId,
+      company: userId,
+      name: "sessionbet",
+    });
+    return userRef;
   },
   async getAllMyClientBets(matchId, userId) {
-    var userRef;
+    let userRef;
     if (matchId === "all") {
-      userRef = db
-        .collection("betUserMap")
-        .where("player", "==", userId)
-        .where("settled", "==", true);
+      userRef = await BetUser.find({ player: userId, settled: true });
     } else {
-      userRef = db
-        .collection("betUserMap")
-        .where("matchId", "==", matchId)
-        .where("player", "==", userId)
-        .where("settled", "==", true);
+      userRef = await BetUser.find({ matchId, player: userId, settled: true });
     }
-    try {
-      const value = await userRef.get();
-      const data = value.docs.map((doc) => doc.data());
-      return data;
-    } catch (error) {
-      return;
-    }
+
+    return userRef;
   },
   async getAllMatchBets(userId) {
-    const userRef = db
-      .collection("betUserMap")
-      .where("company", "==", userId)
-      .where("settled", "==", true);
+    const userRef = BetUser.find({ company: userId, settled: true });
+
     try {
-      const value = await userRef.get();
-      const data = value.docs.map((doc) => doc.data());
+      const data = await userRef.exec();
       return data;
     } catch (error) {
       return;
     }
   },
   async getMyPlayerAllBets(matchId, userId) {
-    var userRef;
-    if (matchId === "all") {
-      userRef = db
-        .collection("betUserMap")
-        .where("company", "==", userId)
-        .where("settled", "==", true);
-    } else {
-      userRef = db
-        .collection("betUserMap")
-        .where("matchId", "==", matchId)
-        .where("company", "==", userId)
-        .where("settled", "==", true);
+    let query = { company: userId, settled: true };
+    if (matchId !== "all") {
+      query.matchId = matchId;
     }
     try {
-      const value = await userRef.get();
-      const data = value.docs.map((doc) => doc.data());
+      const data = await BetUserMap.find(query);
       return data;
     } catch (error) {
       return;
     }
   },
-
   async getDetailedMatchBets(req, res) {
     const { matchId } = req.params;
-    const userRef = db.collection("betDataMap").where("matchId", "==", matchId);
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
+    try {
+      const data = await BetDataMap.find({ matchId: matchId });
       res.send(data);
-    });
-  },
-  async getAllBets(req, res) {
-    const userRef = db.collection("betDataMap").where("settled", "!=", true);
-    var arr = [];
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
-      for (var i = 0; i < data.length; i++) {
-        if (!arr.some((e) => e.fancyName === data[i].fancyName)) {
-          arr.push({ fancyName: data[i].fancyName, matchId: data[i].matchId });
-        }
-      }
-      res.send(arr);
-    });
-  },
-  async getAllTossBets(req, res) {
-    const level = removeNum(req.user.email.split("@")[0]);
-    if (level === "cc") {
-      const userRef = db.collection("tossBetMap").where("settled", "!=", true);
-      var arr = [];
-      userRef.get().then((value) => {
-        const data = value.docs.map((doc) => doc.data());
-        for (var i = 0; i < data.length; i++) {
-          if (
-            !arr.some((e) => e.matchId === data[i].matchId)
-            // data[i].time - 5.5 * 60 * 60 * 1000 < Date.now()
-          ) {
-            arr.push({
-              runnerArray: data[i].runnerArray,
-              matchId: data[i].matchId,
-            });
-          }
-        }
-        res.send(arr);
-      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Server error");
     }
   },
+  async getAllBets(req, res) {
+    try {
+      const data = await BetDataMap.find({ settled: { $ne: true } });
+      const arr = [];
+      data.forEach((bet) => {
+        if (!arr.some((e) => e.fancyName === bet.fancyName)) {
+          arr.push({ fancyName: bet.fancyName, matchId: bet.matchId });
+        }
+      });
+      res.send(arr);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Server Error");
+    }
+  },
+  // async getAllTossBets(req, res) {
+  //   const level = removeNum(req.user.email.split("@")[0]);
+  //   if (level === "cc") {
+  //     const bets = await TossBet.find({ settled: { $ne: true } });
+  //     const arr = [];
+  //     bets.forEach((bet) => {
+  //       if (!arr.some((e) => e.matchId === bet.matchId)) {
+  //         arr.push({
+  //           runnerArray: bet.runnerArray,
+  //           matchId: bet.matchId,
+  //         });
+  //       }
+  //     });
+  //     res.send(arr);
+  //   }
+  // },
   async getAllMatchTossBets(req, res) {
     const { matchId } = req.params;
     const userId = req.user.email.split("@")[0];
-    const userRef = db
-      .collection("betUserMap")
-      .where("matchId", "==", matchId)
-      .where("company", "==", userId)
-      .where("name", "==", "tossBet");
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => doc.data());
-      res.send(data);
-    });
+    const data = await BetUserMap.find({
+      matchId: matchId,
+      company: userId,
+      name: "tossBet",
+    }).exec();
+    res.send(data);
   },
   async myAgentBets(req, res) {
     const { matchId } = req.params;
@@ -1027,24 +963,32 @@ const BetController = {
     res.send(dataArr);
   },
   async myAgentCollection(req, res) {
-    const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
-    const arr = await getMyAgents(username);
-    const dataArr = [];
-    for (var i = 0; i < arr.length; i++) {
-      const arrData = arr[i];
-      let inf;
-      if (removeNum(arrData.username) === "sp") {
-        inf = await BetController.getPlayerExposure(matchId, arrData.username);
-      } else {
-        inf = await BetController.getAgentExposure(matchId, arrData.username);
-      }
-      const cash = await countCash(arrData.username);
+    try {
+      const { matchId } = req.params;
+      const username = req.user.email.split("@")[0];
+      const arr = await getMyAgents(username);
+      const dataArr = [];
+      for (var i = 0; i < arr.length; i++) {
+        const arrData = arr[i];
+        let inf;
+        if (removeNum(arrData.username) === "sp") {
+          inf = await BetController.getPlayerExposure(
+            matchId,
+            arrData.username
+          );
+        } else {
+          inf = await BetController.getAgentExposure(matchId, arrData.username);
+        }
+        const cash = await countCash(arrData.username);
 
-      inf.final = inf.final + cash;
-      dataArr.push(inf);
+        inf.final = inf.final + cash;
+        dataArr.push(inf);
+      }
+      res.send(dataArr);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
     }
-    res.send(dataArr);
   },
   async agentSessionEarning(req, res) {
     const { matchId } = req.params;
@@ -1113,16 +1057,15 @@ const BetController = {
   async myClientCollection(req, res) {
     const { matchId } = req.params;
     const username = req.user.email.split("@")[0];
-    const userRef = db
-      .collection("betUserMap")
-      .where("matchId", "==", matchId)
-      .where("company", "==", username)
-      .where("settled", "==", true);
     try {
-      const value = await userRef.get();
+      const docs = await BetUserMap.find({
+        matchId,
+        company: username,
+        settled: true,
+      });
       const arr = [];
-      const data = value.docs.map((doc) => {
-        const row = doc.data();
+      docs.forEach((doc) => {
+        const row = doc.toObject();
         const rate = row.priceValue > 1 ? row.priceValue : 1;
         if (row.name === "sessionbet") {
           if (arr.some((x) => x.player === row.player)) {
@@ -1220,69 +1163,35 @@ const BetController = {
   async getLiveBets(req, res) {
     const { matchId } = req.params;
     const username = req.user.email.split("@")[0];
-    const userRef = db
-      .collection("betDataMap")
-      .where("matchId", "==", matchId)
-      .where("userId", "==", username);
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => {
-        const document = doc.data();
-        document.id = doc.id;
-        return document;
-      });
-      res.send(data);
-    });
+    const data = await BetDataMap.find({ matchId, userId: username });
+    res.send(data);
   },
   async getMatchLedger(req, res) {
     const { matchId } = req.params;
     const username = req.user.email.split("@")[0];
-    const userRef = db
-      .collection("matchBetMap")
-      .where("matchId", "==", matchId)
-      .where("userId", "==", username)
-      .where("settled", "==", true);
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => {
-        const document = doc.data();
-        document.id = doc.id;
-        return document;
-      });
-      res.send(data);
+    const data = await MatchBetMap.find({
+      matchId,
+      userId: username,
+      settled: true,
     });
+    res.send(data);
   },
-  async getTossLedger(req, res) {
-    const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
-    const userRef = db
-      .collection("tossBetMap")
-      .where("matchId", "==", matchId)
-      .where("userId", "==", username)
-      .where("settled", "==", true);
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => {
-        const document = doc.data();
-        document.id = doc.id;
-        return document;
-      });
-      res.send(data);
-    });
-  },
-  async getTossBets(req, res) {
-    const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
-    const userRef = db
-      .collection("tossBetMap")
-      .where("matchId", "==", matchId)
-      .where("userId", "==", username);
-    userRef.get().then((value) => {
-      const data = value.docs.map((doc) => {
-        const document = doc.data();
-        document.id = doc.id;
-        return document;
-      });
-      res.send(data);
-    });
-  },
+  // async getTossLedger(req, res) {
+  //   const { matchId } = req.params;
+  //   const username = req.user.email.split("@")[0];
+  //   const data = await TossBetMap.find({
+  //     matchId,
+  //     userId: username,
+  //     settled: true,
+  //   });
+  //   res.send(data);
+  // },
+  // async getTossBets(req, res) {
+  //   const { matchId } = req.params;
+  //   const username = req.user.email.split("@")[0];
+  //   const data = await TossBetMap.find({ matchId, userId: username });
+  //   res.send(data);
+  // },
   roundOff(data) {
     const nRate = (Math.round((data / 100) * 100) / 100).toFixed(2);
     return nRate;
@@ -1384,22 +1293,19 @@ const BetController = {
           );
           if (filteredOdds.length && odds > 0) {
             const username = req.user.email.split("@")[0];
-            const matchBetRef = db
-              .collection("matchBetMap")
-              .where("matchId", "==", matchId)
-              .where("userId", "==", username);
-
-            const value = await matchBetRef.get();
-            const betData = value.docs.map((doc) => doc.data());
+            const matchBetRef = await MatchBetMap.find({
+              matchId: matchId,
+              userId: username,
+            });
+            const betData = matchBetRef.map((doc) => doc.toObject());
             var docId;
             let newArr = [];
             if (betData.length > 0) {
-              const betDb = db.collection("matchBetMap").doc(uuidv4());
-              await betDb.set({
+              const matchBetMap = new MatchBetMap({
                 userId: username,
                 stake: stake,
                 isBack: isBack,
-                selectionId,
+                selectionId: selectionId,
                 isLay: !isBack,
                 marketId: resp[0].mid,
                 transactionId: betData[0].transactionId,
@@ -1407,21 +1313,21 @@ const BetController = {
                 odds: odds,
                 selectionName: selectionName,
                 ipDetail: ipDetail,
-                matchname: matchname,
-                matchId,
-                sportId,
-                runnerArray,
+                matchname: matchDetails.eventName.split("/")[0],
+                matchId: matchId,
+                sportId: sportId,
+                runnerArray: runnerArray,
                 settled: false,
                 pname: req.user.name,
                 createdOn: Date.now(),
               });
-              const userRef = db
-                .collection("matchBetMap")
-                .where("matchId", "==", matchId)
-                .where("userId", "==", username);
+              await matchBetMap.save();
+              const userRef = await MatchBetMap.find({
+                matchId: matchId,
+                userId: username,
+              });
 
-              const value = await userRef.get();
-              const matchBetData = value.docs.map((doc) => doc.data());
+              const matchBetData = userRef.map((doc) => doc.toObject());
               for (var i = 0; i < resp.length; i++) {
                 const teamOdds = resp[i];
 
@@ -1475,18 +1381,20 @@ const BetController = {
               const changeAmount = Math.abs(
                 negativeSum !== null ? negativeSum : 0
               );
-              const coinDb = db
-                .collection("coinMap")
-                .doc(betData[0].transactionId);
-              await coinDb.update({
-                value: parseFloat(changeAmount),
-                newArr,
-                lastUpdated: Date.now(),
+              const coin = await CoinMap.findOne({
+                transactionId: betData[0].transactionId,
               });
+              if (!coin) {
+                throw new Error("Coin not found"); // handle error appropriately
+              }
+
+              coin.value = parseFloat(changeAmount);
+              coin.newArr = newArr;
+              coin.lastUpdatd = Date.now();
+              await coin.save();
             } else {
               docId = uuidv4();
-              const betDb = db.collection("matchBetMap").doc(uuidv4());
-              await betDb.set({
+              const betData = {
                 userId: username,
                 stake: stake,
                 isBack: isBack,
@@ -1495,24 +1403,24 @@ const BetController = {
                 priceValue: priceValue,
                 marketId: resp[0].mid,
                 odds: odds,
-                selectionId,
-                runnerArray,
+                selectionId: selectionId,
+                runnerArray: runnerArray,
                 selectionName: selectionName,
                 ipDetail: ipDetail,
                 matchname: matchname,
-                matchId,
+                matchId: matchId,
                 pname: req.user.name,
-                sportId,
+                sportId: sportId,
                 settled: false,
                 createdOn: Date.now(),
-              });
-              const userRef = db
-                .collection("matchBetMap")
-                .where("matchId", "==", matchId)
-                .where("userId", "==", username);
+              };
 
-              const value = await userRef.get();
-              const matchBetData = value.docs.map((doc) => doc.data());
+              const betDb = new MatchBetMap(betData); // create a new document with the bet data
+              await betDb.save(); // save the document to the database
+              const matchBetData = await MatchBetMap.find({
+                matchId: matchId,
+                userId: username,
+              }).lean();
               for (var i = 0; i < resp.length; i++) {
                 const teamOdds = resp[i];
                 for (var j = 0; j < matchBetData.length; j++) {
@@ -1557,8 +1465,8 @@ const BetController = {
               const amount = isBack ? stake : (priceValue * stake) / 100;
               const type = 2;
               const msg = `Bet placed of ${stake} coins on ${selectionName}`;
-              const coinDb = db.collection("coinMap").doc(docId);
-              await coinDb.set({
+              const coinMap = new CoinMap({
+                _id: docId,
                 value: parseFloat(amount),
                 msg: msg,
                 type,
@@ -1567,6 +1475,7 @@ const BetController = {
                 setter: username.toLowerCase(),
                 createdOn: Date.now(),
               });
+              await coinMap.save();
             }
             const loss = isBack ? stake : Math.round(stake * odds) / 100;
             const profit = isBack ? Math.round(stake * odds) / 100 : stake;
@@ -1585,32 +1494,32 @@ const BetController = {
                 lossList.filter((x) => x.id === id)[0].commission
               );
               if (id !== username) {
-                const betUserMap = db.collection("betUserMap").doc(uuidv4());
-                await betUserMap.set({
-                  name: "matchbet",
-                  company: id,
-                  commissionPercentage,
-                  player: username,
-                  lossAmount: Math.abs(commission),
-                  profitAmount,
-                  selectionId,
-                  stake: stake,
-                  isBack: isBack,
-                  marketId: resp[0].mid,
-                  isLay: !isBack,
-                  priceValue: priceValue,
-                  odds: odds,
-                  selectionName: selectionName,
-                  ipDetail: ipDetail,
-                  matchname: matchname,
-                  matchId,
-                  sportId,
-                  settled: false,
+                const betUserMap = new BetUserMap({
                   adminShare: percent,
+                  comAmount: commissionAmount,
+                  betId: uuidv4(),
+                  commissionPercentage,
+                  company: id,
+                  lossAmount: Math.abs(commission),
+                  ipDetails: ipDetail,
+                  isBack: isBack,
+                  isLay: !isBack,
+                  matchId,
+                  matchName: matchname,
+                  odds: odds,
                   pname: req.user.name,
-                  runnerArray,
+                  priceValue: priceValue,
+                  selectionId,
+                  selectionName: selectionName,
+                  settled: false,
+                  sportId,
+                  stake: stake,
+                  player: username,
                   createdOn: Date.now(),
+                  runnerArray,
                 });
+
+                betUserMap.save();
               }
             }
             countAndUpdateCoin(username);
@@ -1700,18 +1609,13 @@ const BetController = {
         BetController.convertTimeStamp(matchDetails.eventName) > Date.now()
       ) {
         const username = req.user.email.split("@")[0];
-        const matchBetRef = db
-          .collection("tossBetMap")
-          .where("matchId", "==", matchId)
-          .where("userId", "==", username);
-
-        const value = await matchBetRef.get();
-        const betData = value.docs.map((doc) => doc.data());
+        const betData = await TossBet.find({
+          matchId: matchId,
+          userId: username,
+        }).lean();
         var docId;
-
         if (betData.length > 0) {
-          const betDb = db.collection("tossBetMap").doc(uuidv4());
-          await betDb.set({
+          const tossBetMap = new TossBetMap({
             userId: username,
             stake: stake,
             isBack: isBack,
@@ -1729,11 +1633,13 @@ const BetController = {
             pname: req.user.name,
             createdOn: Date.now(),
           });
-          const userRef = db
-            .collection("tossBetMap")
-            .where("matchId", "==", matchId)
-            .where("userId", "==", username);
-          const value = await userRef.get();
+
+          await tossBetMap.save();
+
+          const matchBetData = await TossBet.find({
+            matchId: matchId,
+            userId: username,
+          }).lean();
           const resp = [];
           if (matchDetails && matchDetails.eventName) {
             if (
@@ -1747,7 +1653,6 @@ const BetController = {
               }
             }
           }
-          const matchBetData = value.docs.map((doc) => doc.data());
           for (var i = 0; i < resp.length; i++) {
             const teamOdds = resp[i];
             for (var j = 0; j < matchBetData.length; j++) {
@@ -1787,27 +1692,37 @@ const BetController = {
             }
           }
           const changeAmount = Math.abs(negativeSum !== null ? negativeSum : 0);
-          const coinDb = db.collection("coinMap").doc(betData[0].transactionId);
-          await coinDb.update({
+          const filter = { transactionId: betData[0].transactionId };
+          const update = {
             value: parseFloat(changeAmount),
             lastUpdated: Date.now(),
-          });
+          };
+          const options = { new: true }; // to return the updated document
+          const updatedCoin = await CoinMap.findOneAndUpdate(
+            filter,
+            update,
+            options
+          );
         } else {
           const amount = isBack ? stake : (priceValue * stake) / 100;
           const type = 2;
           const msg = `Bet placed of ${stake} coins on ${selectionName}`;
           docId = uuidv4();
-          const coinDb = db.collection("coinMap").doc(docId);
-          await coinDb.set({
+          // Insert document into coinMap collection
+          const coin = new CoinMap({
+            _id: docId,
             value: parseFloat(amount),
             msg: msg,
-            type,
-            matchId,
+            type: type,
+            matchId: matchId,
             setter: username.toLowerCase(),
             createdOn: Date.now(),
           });
-          const betDb = db.collection("tossBetMap").doc(uuidv4());
-          await betDb.set({
+
+          await coin.save();
+
+          // Insert document into tossBetMap collection
+          const tossBet = new TossBet({
             userId: username,
             stake: stake,
             isBack: isBack,
@@ -1818,14 +1733,16 @@ const BetController = {
             selectionName: selectionName,
             ipDetail: ipDetail,
             matchname: matchname,
-            matchId,
+            matchId: matchId,
             time: timestamp,
-            runnerArray,
+            runnerArray: runnerArray,
             pname: req.user.name,
-            sportId,
+            sportId: sportId,
             settled: false,
             createdOn: Date.now(),
           });
+
+          await tossBet.save();
         }
         countAndUpdateCoin(username.toLowerCase());
         const loss = isBack ? stake : Math.round(stake * odds * 100) / 100;
@@ -1844,27 +1761,25 @@ const BetController = {
             lossList.filter((x) => x.id === id)[0].commission
           );
           if (id !== username) {
-            const betUserMap = db.collection("betUserMap").doc(uuidv4());
-            await betUserMap.set({
-              name: "tossBet",
+            const betUserMap = new BetUserMap({
+              adminShare: percent,
+              comAmount: commissionAmount,
               company: id,
-              player: username,
-              matchCommission: commissionAmount,
               lossAmount: Math.abs(commission),
-              profitAmount,
-              stake: stake,
+              ipDetails: ipDetail,
               isBack: isBack,
               isLay: !isBack,
-              priceValue: 0.95,
+              matchId: matchId,
+              matchName: matchDetails.eventName.split("/")[0],
               odds: 0.95,
-              selectionName: selectionName,
-              ipDetail: ipDetail,
-              matchname: matchDetails.eventName.split("/")[0],
-              matchId,
-              sportId,
-              settled: false,
-              adminShare: percent,
               pname: req.user.name,
+              priceValue: 0.95,
+              selectionName: selectionName,
+              settled: false,
+              sportId: sportId,
+              stake: stake,
+              player: username,
+              won: false,
               createdOn: Date.now(),
             });
           }
@@ -1938,18 +1853,11 @@ const BetController = {
           var sum = 0;
           var coinDb;
           if (filterValue.length) {
-            const betRef = db
-              .collection("betDataMap")
-              .where("matchId", "==", matchId)
-              .where("fancyName", "==", fancyName)
-              .where("userId", "==", username);
-
-            const response = await betRef.get();
-            const liveBets = response.docs.map((doc) => {
-              const document = doc.data();
-              document.id = doc.id;
-              return document;
-            });
+            const liveBets = await BetData.find({
+              matchId: matchId,
+              fancyName: fancyName,
+              userId: username,
+            }).exec();
 
             if (liveBets.length > 0) {
               const newObj = {
@@ -2012,30 +1920,30 @@ const BetController = {
                 }
               }
               docId = liveBets[0].transactionId;
-              coinDb = db.collection("coinMap").doc(liveBets[0].transactionId);
-              await coinDb.update({
-                value: parseFloat(sum),
-                lastUpdated: Date.now(),
+              const filter = { transactionId: liveBets[0].transactionId };
+              const update = {
+                $set: { value: parseFloat(sum), lastUpdated: Date.now() },
+              };
+
+              const result = await CoinMap.findOneAndUpdate(filter, update, {
+                new: true,
               });
             } else {
               const amount =
                 priceVal > 1 ? Math.round(stake * priceVal * 100) / 100 : stake;
               docId = uuidv4();
-              coinDb = db.collection("coinMap").doc(docId);
-              const msg = `Bet placed of ${stake} coins on ${fancyName}`;
-              const type = 2;
-              await coinDb.set({
+              const coinMap = new CoinMap({
                 value: parseFloat(amount),
-                msg: msg,
-                type,
-                matchId,
+                msg: `Bet placed of ${stake} coins on ${fancyName}`,
+                type: 2,
+                matchId: matchId,
                 setter: username.toLowerCase(),
                 createdOn: Date.now(),
               });
+              await coinMap.save();
             }
             const betId = uuidv4();
-            const betDb = db.collection("betDataMap").doc(betId);
-            await betDb.set({
+            const betData = new BetData({
               userId: username,
               stake: parseInt(stake),
               transactionId: docId,
@@ -2046,12 +1954,13 @@ const BetController = {
               fancyName: fancyName,
               ipDetail: ipDetail,
               matchname: matchname,
-              matchId,
-              sportId,
+              matchId: matchId,
+              sportId: sportId,
               settled: false,
               pname: req.user.name,
-              createdOn: Date.now(),
             });
+
+            await betData.save();
             const loss =
               priceVal > 1 ? Math.round(stake * priceVal * 100) / 100 : stake;
 
@@ -2078,8 +1987,7 @@ const BetController = {
                 lossList.filter((x) => x.id === id)[0].commissionAmount
               );
               if (id !== username) {
-                const betUserMap = db.collection("betUserMap").doc(uuidv4());
-                await betUserMap.set({
+                const betUserMap = new BetUserMap({
                   name: "sessionbet",
                   company: id,
                   betId,
@@ -2105,6 +2013,7 @@ const BetController = {
                   adminShare: percent,
                   createdOn: Date.now(),
                 });
+                await betUserMap.save();
               }
             }
             countAndUpdateCoin(username.toLowerCase());
@@ -2119,46 +2028,39 @@ const BetController = {
   },
   async getUserBets(req, res) {
     const userId = req.user.email.split("@")[0];
-    const userRef = db.collection("betUserMap").where("player", "==", userId);
-    userRef.get().then(async (value) => {
-      const data = value.docs.map((doc) => doc.data());
-      const matchListId = [...new Set(data.map((item) => item.matchId))];
-      var matchList = [];
-      for (var i = 0; i < matchListId.length; i++) {
-        const matchRef = db.collection("matchList").doc(matchListId[i]);
-        const value = await matchRef.get();
-        const data = value.data();
-        matchList.push(data);
-      }
-      const arr = [];
-      for (var i = 0; i < data.length; i++) {
-        const row = data[i];
-        if (row.settled) {
-          if (arr.filter((x) => x.matchId === row.matchId).length) {
-            if (row.won && row.won === true) {
-              arr.filter((x) => x.matchId === row.matchId)[0].sum +=
-                row.lossAmount;
-            } else {
-              arr.filter((x) => x.matchId === row.matchId)[0].sum -=
-                row.profitAmount;
-            }
+    const data = await BetUserMap.find({ player: userId }).lean();
+    const matchListId = [...new Set(data.map((item) => item.matchId))];
+    const matchList = await MatchList.find({
+      gameId: { $in: matchListId },
+    }).lean();
+    const arr = [];
+    for (var i = 0; i < data.length; i++) {
+      const row = data[i];
+      if (row.settled) {
+        if (arr.filter((x) => x.matchId === row.matchId).length) {
+          if (row.won && row.won === true) {
+            arr.filter((x) => x.matchId === row.matchId)[0].sum +=
+              row.lossAmount;
           } else {
-            const sum =
-              row.won && row.won === true
-                ? row.lossAmount
-                : -1 * row.profitAmount;
-            arr.push({
-              matchId: row.matchId,
-              matchname: matchList.filter((x) => x.gameId === row.matchId)[0]
-                .eventName,
-              sum: sum,
-              createdOn: row.createdOn,
-            });
+            arr.filter((x) => x.matchId === row.matchId)[0].sum -=
+              row.profitAmount;
           }
+        } else {
+          const match = matchList.filter((x) => x.gameId === row.matchId)[0];
+          const sum =
+            row.won && row.won === true
+              ? row.lossAmount
+              : -1 * row.profitAmount;
+          arr.push({
+            matchId: row.matchId,
+            matchname: match.eventName,
+            sum: sum,
+            createdOn: row.createdOn,
+          });
         }
       }
-      res.send(arr);
-    });
+    }
+    res.send(arr);
   },
 };
 
