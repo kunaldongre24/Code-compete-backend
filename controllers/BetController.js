@@ -1853,7 +1853,7 @@ const BetController = {
           var sum = 0;
           var coinDb;
           if (filterValue.length) {
-            const liveBets = await BetData.find({
+            const liveBets = await BetDataMap.find({
               matchId: matchId,
               fancyName: fancyName,
               userId: username,
@@ -1943,7 +1943,7 @@ const BetController = {
               await coinMap.save();
             }
             const betId = uuidv4();
-            const betData = new BetData({
+            const betData = new BetDataMap({
               userId: username,
               stake: parseInt(stake),
               transactionId: docId,

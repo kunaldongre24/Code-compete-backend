@@ -1,4 +1,3 @@
-const { db } = require("../db");
 const { countAndUpdateCoin } = require("./CoinController");
 const CommissionModel = require("../models/CommissionMap");
 const CoinModel = require("../models/Coins");
