@@ -29,28 +29,24 @@ const CommissionController = {
       getter = userId;
       setter = company;
     }
-    if (Math.abs(amount) > 0) {
-      const coin = new CoinModel({
-        value: amount,
-        type: 3,
-        msg: "Bet coin distribution",
-        matchId,
-        getter,
-        setter,
-        createdOn: Date.now(),
-      });
-      await coin.save();
-    }
     try {
-      const bet = await BetUserMap.findById(id);
-      if (!bet) {
-        return;
+      if (amount !== 0) {
+        const coin = new CoinModel({
+          value: amount,
+          type: 3,
+          msg: "Bet coin distribution",
+          matchId,
+          getter,
+          setter,
+          createdOn: Date.now(),
+        });
+        await coin.save();
       }
-      bet.set({
-        settled: true,
-        won,
-      });
-      await bet.save();
+      const update = await BetUserMap.findOneAndUpdate(
+        { _id: id },
+        { settled: true, won: won },
+        { new: true }
+      );
     } catch (err) {
       console.error(err);
     }

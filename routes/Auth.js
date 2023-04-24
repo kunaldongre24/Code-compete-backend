@@ -16,7 +16,7 @@ router.get(
   Auth,
   AuthController.getSuperStockistCount
 );
-router.post("/signup", AuthController.signup);
+router.post("/signup", Auth, AuthController.signup);
 router.post("/editUser", Auth, AuthController.UpdateUser);
 // router.post("/createManager", Auth, AuthController.createManager);
 

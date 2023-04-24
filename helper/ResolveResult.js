@@ -4,18 +4,16 @@ const BetDataMap = require("../models/BetDataMap");
 const MatchList = require("../models/MatchList");
 const ResolveResult = async () => {
   try {
-    const betRef = BetDataMap.find({ settled: { $ne: true } }).exec();
+    const betRef = BetDataMap.find({ settled: false }).exec();
     const response = await betRef;
     const data = response.map((doc) => {
       const document = doc.toObject();
-      document.id = doc._id;
       return document;
     });
-    const matchBetRef = MatchList.find({ settled: { $ne: true } }).exec();
+    const matchBetRef = MatchList.find({ settled: false }).exec();
     const matchResponse = await matchBetRef;
     const matchList = matchResponse.map((doc) => {
       const document = doc.toObject();
-      document.id = doc._id;
       return document;
     });
     var resultData = [];
@@ -52,7 +50,7 @@ const ResolveResult = async () => {
             : 0
           : 0;
       if (winnerSid > 0) {
-        resolveMatchBet(matchList[i].marketId, winnerSid, matchList[i].id);
+        resolveMatchBet(matchList[i].marketId, winnerSid, matchList[i]._id);
       }
     }
 

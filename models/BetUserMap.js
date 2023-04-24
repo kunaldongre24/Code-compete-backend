@@ -3,18 +3,24 @@ const Schema = mongoose.Schema;
 
 const betUserMapSchema = new Schema({
   adminShare: { type: Number, required: true },
-  comAmount: { type: Number, requied: true },
   betId: { type: String, required: false },
   commissionPercentage: { type: Number, required: false },
+  myCom: { type: Number, required: false },
+  comAmount: { type: Number, required: false },
+  sessionCommission: { type: Number, required: false },
+  sessionComPerc: { type: Number, required: false },
   company: { type: String, required: true },
   lossAmount: { type: Number, required: true },
+  profitAmount: { type: Number, required: true },
   marketId: { type: String, required: false },
   fancyName: { type: String, required: false },
-  ipDetails: { type: String, required: true },
+  name: { type: String, required: true },
+  ipDetail: { type: String, required: true },
   isBack: { type: Boolean, required: true },
   isLay: { type: Boolean, required: true },
+  runnerArray: { type: Array, required: false },
   matchId: { type: String, required: true },
-  matchName: { type: String, required: true },
+  matchname: { type: String, required: true },
   odds: { type: Number, required: true },
   pname: { type: String, required: true },
   priceValue: { type: Number, required: true },
@@ -26,7 +32,7 @@ const betUserMapSchema = new Schema({
   stake: { type: Number, required: true },
   player: { type: String, required: true },
   won: { type: Boolean, default: false, required: true },
-  createdOn: { type: Date, default: Date.now(), required: true },
+  createdOn: { type: Date, default: Date.now, required: true },
 });
 
 module.exports = mongoose.model("BetUserMap", betUserMapSchema);

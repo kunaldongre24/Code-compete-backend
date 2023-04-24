@@ -4,7 +4,11 @@ const axios = require("axios");
 const CoinController = require("./CoinController");
 const CommissionController = require("./CommissionController");
 const { countAndUpdateCoin, removeNum } = require("./CoinController");
-const { getMyAgents, getUserInformation } = require("./AuthController");
+const {
+  getMyAgents,
+  getUserInformation,
+  getUserByUsername,
+} = require("./AuthController");
 const clientCollection = require("../helper/clientCollection");
 const countCash = require("../helper/countCash");
 const BetList = require("../models/BetList");
@@ -14,6 +18,8 @@ const BetUserMap = require("../models/BetUserMap");
 const MatchUserMap = require("../models/MatchUserMap");
 const MatchBetMap = require("../models/MatchBetMap");
 const MatchList = require("../models/MatchList");
+const MatchBetList = require("../models/MatchBetList");
+const { ObjectId } = require("mongodb");
 
 const BetController = {
   didWon(isBack, value, odds) {
@@ -38,68 +44,74 @@ const BetController = {
     if (!fancyName || !fancyName.trim() || !value || !value.trim()) {
       return;
     }
-
     const wonArr = [];
-
     const betRef = BetUserMap.find({
       fancyName: fancyName,
-      settled: { $ne: true },
+      settled: false,
     });
-
     const data = await betRef;
-
     const betRef2 = BetDataMap.find({
       fancyName: fancyName,
-      settled: { $ne: true },
+      settled: false,
     });
-
+    var sessionCom = 3;
     for (i = 0; i < data.length; i++) {
       const {
         lossAmount,
-        comAmount,
-        id,
+        profitAmount,
+        _id,
         isBack,
         odds,
         player,
         company,
         matchId,
+        sessionComPerc,
       } = data[i];
-
+      sessionCom -= sessionComPerc;
       const won = BetController.didWon(isBack, value, odds);
       wonArr.push(won);
-
-      const commissionAmount = won ? lossAmount : comAmount;
-
+      const commissionAmount = won ? lossAmount : profitAmount;
       await CommissionController.coinDistribution(
         won,
         player,
         company,
         commissionAmount,
-        id,
+        _id,
         matchId
       );
-
       await countAndUpdateCoin(company.toLowerCase());
       await countAndUpdateCoin(player.toLowerCase());
     }
-
     const resp = await betRef2;
-
     if (!resp.length) {
       console.log("No matching documents.");
       return;
     }
-
     const settledArr = [];
-
+    var totalBetAmount = 0;
+    var match_id;
+    var player_id;
     for (let i = 0; i < resp.length; i++) {
-      const { odds, isBack, userId, transactionId, matchId } = resp[i];
-
+      const {
+        _id,
+        odds,
+        isBack,
+        userId,
+        transactionId,
+        matchId,
+        stake,
+        priceValue,
+        player,
+      } = resp[i];
+      match_id = matchId;
+      player_id = userId;
+      const rate = priceValue > 1 ? priceValue : 1;
+      const amount = rate * stake;
+      totalBetAmount += amount;
+      const won = BetController.didWon(isBack, value, odds);
       if (!settledArr.includes(transactionId)) {
         settledArr.push(transactionId);
-
         const transactionData = await CoinMap.findOne({ _id: transactionId });
-
         const coinDb = new CoinMap({
           value: parseFloat(transactionData.value),
           msg: "Settlement",
@@ -108,19 +120,30 @@ const BetController = {
           getter: userId,
           createdOn: Date.now(),
         });
-
         await coinDb.save();
         await countAndUpdateCoin(userId.toLowerCase());
       }
-
       const isWon = BetController.didWon(isBack, value, odds);
       await BetDataMap.findOneAndUpdate(
-        { transactionId: transactionId },
+        { _id: _id },
         { settled: true, won: isWon, result: value },
         { merge: true }
       );
     }
-
+    const comAmount = (totalBetAmount * sessionCom) / 100;
+    if (comAmount !== 0) {
+      const coinDb = new CoinMap({
+        value: Math.abs(comAmount),
+        msg: "Commission Distribution",
+        matchId: match_id,
+        type: 3,
+        getter: player_id,
+        createdOn: Date.now(),
+      });
+      await coinDb.save();
+      console.log(player_id);
+      countAndUpdateCoin(player_id);
+    }
     const resultDb = new BetList({
       fancyName,
       value,
@@ -262,31 +285,31 @@ const BetController = {
       return;
     }
     await MatchList.updateOne(
-      { _id: matchId },
+      { gameId: matchId },
       { $set: { settled: true, winnerSid } }
     );
 
     var won = false;
-    const data = await betUserMapModel.find({
+    const data = await BetUserMap.find({
       marketId: sid,
-      settled: { $ne: true },
+      settled: false,
     });
     const matchInfo = await MatchBetMap.find({
       marketId: sid,
-      settled: { $ne: true },
+      settled: false,
     });
     if (matchInfo.length === 0) {
       console.log("No bets found");
       return;
     }
-    const coin = await CoinModel.findOne({ _id: matchInfo[0].transactionId });
+    const coin = await CoinMap.findOne({ _id: matchInfo[0].transactionId });
     if (!coin) {
       // handle case where coin document is not found
     }
     const transactionData = coin.toObject();
-
-    let position = transactionData.newArr.filter((x) => x.sid === winnerSid)[0]
-      .position;
+    let position = transactionData.newArr.filter(
+      (x) => parseInt(x.sid) === winnerSid
+    )[0].position;
     let playerId,
       playerComPercentage = 3;
     let pMatchId;
@@ -295,7 +318,7 @@ const BetController = {
       const {
         lossAmount,
         profitAmount,
-        id,
+        _id,
         isBack,
         player,
         company,
@@ -327,7 +350,6 @@ const BetController = {
         comArr.push(elem);
         if (comAmount !== 0) {
           const coinDb = new CoinMap({
-            _id: new mongoose.Types.ObjectId(),
             value: Math.abs(comAmount),
             msg: "Commission Distribution",
             matchId,
@@ -348,7 +370,7 @@ const BetController = {
           player,
           company,
           lossAmount,
-          id,
+          _id,
           matchId
         );
       } else {
@@ -357,7 +379,7 @@ const BetController = {
           player,
           company,
           profitAmount,
-          id,
+          _id,
           matchId
         );
       }
@@ -371,7 +393,6 @@ const BetController = {
       comArr.push(elem);
       if (comAmount !== 0) {
         const coinDb = new CoinMap({
-          _id: uuidv4(),
           value: Math.abs(comAmount),
           msg: "Commission Distribution",
           matchId: pMatchId,
@@ -386,20 +407,20 @@ const BetController = {
       const elem = { comAmount: 0, player: playerId };
       comArr.push(elem);
     }
-    const resp = await betRef2.get();
-    if (resp.empty) {
+
+    if (matchInfo.length === 0) {
       console.log("No matching documents.");
       return;
     }
+
     const settledArr = [];
-    resp.forEach(async (doc) => {
-      const { selectionId, isBack, userId, transactionId, matchId } =
-        doc.data();
+    for (const bet of matchInfo) {
+      const { selectionId, isBack, userId, transactionId, matchId } = bet;
       if (!settledArr.includes(transactionId)) {
         settledArr.push(transactionId);
-        const coinRef = await CoinMapModel.findOne({ _id: transactionId });
+        const coinRef = await CoinMap.findOne({ _id: transactionId });
         const transactionData = coinRef.toObject();
-        const coinDb = new CoinMapModel({
+        const coinDb = new CoinMap({
           value: parseFloat(transactionData.value),
           msg: "Settlement",
           matchId,
@@ -407,7 +428,6 @@ const BetController = {
           getter: userId,
           createdOn: Date.now(),
         });
-
         await coinDb.save();
         countAndUpdateCoin(userId);
       }
@@ -425,22 +445,19 @@ const BetController = {
           isWon = true;
         }
       }
-      await doc.ref.set(
-        { settled: true, won: isWon, winner: winnerSid },
-        { merge: true }
+      await MatchBetMap.updateOne(
+        { _id: bet._id },
+        { settled: true, won: isWon, winner: winnerSid }
       );
-    });
+    }
     const agentArr = [];
     let client = {};
-
-    response.forEach(async (doc) => {
-      const { selectionId, isBack, company, matchId, matchname, player } =
-        doc.data();
+    for (const bet of data) {
+      const { selectionId, isBack, company, matchId, matchname, player } = bet;
       if (!agentArr.includes((x) => x.company === player)) {
         client = { company: player, matchId, matchname };
         agentArr.push({ company, matchId, matchname });
       }
-
       var isWon = false;
       if (isBack) {
         if (parseInt(winnerSid) === parseInt(selectionId)) {
@@ -456,12 +473,11 @@ const BetController = {
         }
       }
       const comAmount = comArr.filter((x) => x.player === company)[0].comAmount;
-
-      doc.ref.set(
-        { settled: true, won: isWon, winner: winnerSid, comAmount },
-        { merge: true }
+      await BetUserMap.updateOne(
+        { _id: bet._id },
+        { settled: true, won: isWon, winner: winnerSid, comAmount }
       );
-    });
+    }
     agentArr.push(client);
     const resultDoc = new MatchBetList({
       sid,
@@ -488,7 +504,6 @@ const BetController = {
         const sum = doc.sum;
         totalSum += parseFloat(sum);
       });
-
       const result = new MatchUserMap({
         company,
         matchId,
@@ -587,7 +602,7 @@ const BetController = {
     res.send(data);
   },
   async getMyPlayerBets(matchId, userId) {
-    const userRef = await sessionBetSchema.find({
+    const userRef = await BetUserMap.find({
       matchId: matchId,
       company: userId,
       name: "sessionbet",
@@ -597,9 +612,13 @@ const BetController = {
   async getAllMyClientBets(matchId, userId) {
     let userRef;
     if (matchId === "all") {
-      userRef = await BetUser.find({ player: userId, settled: true });
+      userRef = await BetUserMap.find({ player: userId, settled: true });
     } else {
-      userRef = await BetUser.find({ matchId, player: userId, settled: true });
+      userRef = await BetUserMap.find({
+        matchId,
+        player: userId,
+        settled: true,
+      });
     }
 
     return userRef;
@@ -1147,7 +1166,6 @@ const BetController = {
             arr.push(inf);
           }
         }
-        console.log(arr);
       });
       res.send(arr);
     } catch (error) {
@@ -1313,7 +1331,7 @@ const BetController = {
                 odds: odds,
                 selectionName: selectionName,
                 ipDetail: ipDetail,
-                matchname: matchDetails.eventName.split("/")[0],
+                matchname: matchname,
                 matchId: matchId,
                 sportId: sportId,
                 runnerArray: runnerArray,
@@ -1382,7 +1400,7 @@ const BetController = {
                 negativeSum !== null ? negativeSum : 0
               );
               const coin = await CoinMap.findOne({
-                transactionId: betData[0].transactionId,
+                _id: betData[0].transactionId,
               });
               if (!coin) {
                 throw new Error("Coin not found"); // handle error appropriately
@@ -1390,16 +1408,16 @@ const BetController = {
 
               coin.value = parseFloat(changeAmount);
               coin.newArr = newArr;
-              coin.lastUpdatd = Date.now();
+              coin.lastUpdated = Date.now();
               await coin.save();
             } else {
-              docId = uuidv4();
+              docId = new ObjectId();
               const betData = {
                 userId: username,
                 stake: stake,
                 isBack: isBack,
                 isLay: !isBack,
-                transactionId: docId,
+                transactionId: docId.toString(),
                 priceValue: priceValue,
                 marketId: resp[0].mid,
                 odds: odds,
@@ -1469,7 +1487,7 @@ const BetController = {
                 _id: docId,
                 value: parseFloat(amount),
                 msg: msg,
-                type,
+                type: type,
                 newArr,
                 matchId,
                 setter: username.toLowerCase(),
@@ -1495,28 +1513,29 @@ const BetController = {
               );
               if (id !== username) {
                 const betUserMap = new BetUserMap({
-                  adminShare: percent,
-                  comAmount: commissionAmount,
-                  betId: uuidv4(),
-                  commissionPercentage,
+                  name: "matchbet",
                   company: id,
-                  lossAmount: Math.abs(commission),
-                  ipDetails: ipDetail,
-                  isBack: isBack,
-                  isLay: !isBack,
-                  matchId,
-                  matchName: matchname,
-                  odds: odds,
-                  pname: req.user.name,
-                  priceValue: priceValue,
-                  selectionId,
-                  selectionName: selectionName,
-                  settled: false,
-                  sportId,
-                  stake: stake,
+                  commissionPercentage,
                   player: username,
-                  createdOn: Date.now(),
+                  lossAmount: Math.abs(commission),
+                  profitAmount,
+                  selectionId,
+                  stake: stake,
+                  isBack: isBack,
+                  marketId: resp[0].mid,
+                  isLay: !isBack,
+                  priceValue: priceValue,
+                  odds: odds,
+                  selectionName: selectionName,
+                  ipDetail: ipDetail,
+                  matchname: matchname,
+                  matchId,
+                  sportId,
+                  settled: false,
+                  adminShare: percent,
+                  pname: req.user.name,
                   runnerArray,
+                  createdOn: Date.now(),
                 });
 
                 betUserMap.save();
@@ -1763,7 +1782,7 @@ const BetController = {
           if (id !== username) {
             const betUserMap = new BetUserMap({
               adminShare: percent,
-              comAmount: commissionAmount,
+              profitAmount: commissionAmount,
               company: id,
               lossAmount: Math.abs(commission),
               ipDetails: ipDetail,
@@ -1851,7 +1870,6 @@ const BetController = {
           );
           var docId;
           var sum = 0;
-          var coinDb;
           if (filterValue.length) {
             const liveBets = await BetDataMap.find({
               matchId: matchId,
@@ -1881,15 +1899,13 @@ const BetController = {
 
               for (let i = 0; i < liveBets.length; i++) {
                 const bet1 = liveBets[i];
-
-                if (pairedIds.includes(bet1.id)) {
+                if (pairedIds.includes(bet1._id)) {
                   continue;
                 }
-
                 for (let j = i + 1; j < liveBets.length; j++) {
                   const bet2 = liveBets[j];
 
-                  if (pairedIds.includes(bet2.id)) {
+                  if (pairedIds.includes(bet2._id)) {
                     continue;
                   }
                   if (bet1.fancyName === bet2.fancyName) {
@@ -1904,14 +1920,14 @@ const BetController = {
                       const stakeDiff = Math.abs(amount1 - amount2);
                       sum += stakeDiff;
 
-                      pairedIds.push(bet1.id, bet2.id);
+                      pairedIds.push(bet1._id, bet2._id);
 
                       break;
                     }
                   }
                 }
 
-                if (!pairedIds.includes(bet1.id)) {
+                if (!pairedIds.includes(bet1._id)) {
                   const amount =
                     bet1.priceValue > 1
                       ? Math.round(bet1.stake * bet1.priceValue * 100) / 100
@@ -1920,7 +1936,7 @@ const BetController = {
                 }
               }
               docId = liveBets[0].transactionId;
-              const filter = { transactionId: liveBets[0].transactionId };
+              const filter = { _id: liveBets[0].transactionId };
               const update = {
                 $set: { value: parseFloat(sum), lastUpdated: Date.now() },
               };
@@ -1931,7 +1947,6 @@ const BetController = {
             } else {
               const amount =
                 priceVal > 1 ? Math.round(stake * priceVal * 100) / 100 : stake;
-              docId = uuidv4();
               const coinMap = new CoinMap({
                 value: parseFloat(amount),
                 msg: `Bet placed of ${stake} coins on ${fancyName}`,
@@ -1941,9 +1956,11 @@ const BetController = {
                 createdOn: Date.now(),
               });
               await coinMap.save();
+              docId = coinMap._id.toString();
             }
             const betId = uuidv4();
             const betData = new BetDataMap({
+              betId,
               userId: username,
               stake: parseInt(stake),
               transactionId: docId,
@@ -1958,12 +1975,11 @@ const BetController = {
               sportId: sportId,
               settled: false,
               pname: req.user.name,
+              createdOn: Date.now(),
             });
-
             await betData.save();
             const loss =
               priceVal > 1 ? Math.round(stake * priceVal * 100) / 100 : stake;
-
             const profit =
               priceVal > 1 ? stake : Math.round(stake * priceVal * 100) / 100;
             const profitList = await CommissionController.disburseSessionCoin(
@@ -1997,7 +2013,7 @@ const BetController = {
                   player: username,
                   lossAmount: Math.abs(commission),
                   profitAmount,
-                  transactionId: coinDb.id,
+                  transactionId: docId,
                   stake: stake,
                   isBack: isBack,
                   isLay: !isBack,
@@ -2028,11 +2044,14 @@ const BetController = {
   },
   async getUserBets(req, res) {
     const userId = req.user.email.split("@")[0];
+    const userInfo = getUserInformation(userId);
     const data = await BetUserMap.find({ player: userId }).lean();
     const matchListId = [...new Set(data.map((item) => item.matchId))];
     const matchList = await MatchList.find({
       gameId: { $in: matchListId },
     }).lean();
+    const sessionCommission = userInfo.sessionCommission;
+    const matchCommission = userInfo.matchCommission;
     const arr = [];
     for (var i = 0; i < data.length; i++) {
       const row = data[i];
@@ -2048,9 +2067,7 @@ const BetController = {
         } else {
           const match = matchList.filter((x) => x.gameId === row.matchId)[0];
           const sum =
-            row.won && row.won === true
-              ? row.lossAmount
-              : -1 * row.profitAmount;
+            row.won && row.won === true ? row.lossAmount : -row.profitAmount;
           arr.push({
             matchId: row.matchId,
             matchname: match.eventName,

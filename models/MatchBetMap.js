@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const matchBetSchema = new Schema({
-  ipDetails: { type: String, required: true },
+  ipDetail: { type: String, required: true },
   isBack: { type: Boolean, required: true },
   isLay: { type: Boolean, required: true },
   marketId: { type: String, required: true },
@@ -17,13 +17,13 @@ const matchBetSchema = new Schema({
   settled: { type: Boolean, default: false, required: true },
   sportId: { type: Number, required: true },
   stake: { type: Number, required: true },
-  transactionId: { type: Number, required: true },
+  transactionId: { type: String, required: true },
   userId: { type: String, required: true },
   winner: { type: String, required: false },
   won: { type: Boolean, required: false },
-  createdOn: { type: Date, default: Date.now(), required: true },
+  createdOn: { type: Date, default: Date.now, required: true },
 });
 
-const MatchBet = mongoose.model("matchBetSchema", matchBetSchema);
+const MatchBet = mongoose.model("matchBetMap", matchBetSchema);
 
 module.exports = MatchBet;

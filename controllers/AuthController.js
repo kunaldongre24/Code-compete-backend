@@ -212,9 +212,14 @@ const AuthController = {
       return res.status(500).send({ error: "Internal server error" });
     }
   },
+  isBlank(num) {
+    return num === null || num === undefined || isNaN(num) || num < 0;
+  },
   async signup(req, res) {
+    const { isBlank } = AuthController;
+
     try {
-      const companyId = "cc0001";
+      const companyId = req.user.email.split("@")[0];
       var {
         username,
         password,
@@ -227,26 +232,42 @@ const AuthController = {
       } = req.body;
 
       if (
-        username === undefined ||
-        password === undefined ||
-        name === undefined ||
-        companyId === undefined ||
-        matchShare === undefined ||
-        level === undefined ||
-        fixedLimit === undefined ||
-        AgentMatchcommision === undefined ||
-        AgentSessioncommision === undefined
+        !username.trim().length > 0 ||
+        !password.length > 0 ||
+        !name.trim().length > 0 ||
+        !companyId.trim().length > 0 ||
+        level <= 0 ||
+        isBlank(fixedLimit) ||
+        isBlank(AgentMatchcommision) > 0 ||
+        isBlank(AgentSessioncommision) > 0
       ) {
+        console.log(
+          username,
+          password,
+          name,
+          level,
+          isBlank(fixedLimit),
+          isBlank(AgentMatchcommision),
+          isBlank(AgentSessioncommision)
+        );
         return res.send({ userCreated: false, msg: "Missing Information" });
       }
 
       username = username.toLowerCase();
-      const userInfo = await UserModel.findOne({ username: companyId });
+      const userData = await UserModel.findOne({ username: companyId });
       const totalCoins = await CoinController.countCoin(
         companyId.toLowerCase()
       );
-      if (userInfo.level !== 1 && totalCoins < fixedLimit) {
-        return res.send({ msg: "Insufficient Balance" });
+      var mShare = 0;
+      if (level === 6) {
+        mShare = userData.matchShare;
+      } else {
+        mShare = matchShare;
+      }
+      if (parseInt(userData.level) !== 1 && totalCoins < fixedLimit) {
+        console.log("Insufficient Balance");
+        res.send({ userCreate: false, msg: "Insufficient Balance" });
+        return;
       }
 
       const email = `${username}@fly247.in`;
@@ -257,10 +278,6 @@ const AuthController = {
         displayName: name,
       });
 
-      const userRef = UserModel.where("username", companyId);
-      const userData = await userRef.findOne();
-
-      const share = userData.matchShare - matchShare;
       const p1Coins = await CoinController.countCoin(userData.username);
       const p2Coins = await CoinController.countCoin(username);
 
@@ -268,7 +285,7 @@ const AuthController = {
       const commisionData = {
         setter: companyId,
         getter: username,
-        matchShare: matchShare,
+        matchShare: mShare,
         getterPreviousLimit: p2Coins ? p2Coins : 0,
         setterPreviousLimit: p1Coins ? p1Coins : 0,
         matchCommission: AgentMatchcommision,
@@ -285,11 +302,14 @@ const AuthController = {
         getter: username.toLowerCase(),
         setter: userData.username.toLowerCase(),
         setterPreviousLimit: p2Coins ? p2Coins : 0,
-        getterPreviousLimit: parseFloat(fixedLimit),
+        getterPreviousLimit: parseFloat(fixedLimit)
+          ? parseFloat(fixedLimit)
+          : 0,
         createdOn: Date.now(),
       };
 
-      const newCoin = await CoinModel.create(coinData);
+      await CoinModel.create(coinData);
+      const share = userData.matchShare - mShare;
 
       const userJson = {
         uid: userRecord.uid,

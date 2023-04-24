@@ -62,17 +62,20 @@ const MatchController = {
         settled: true,
       });
       const data = betUserMap.map((doc) => doc.toObject());
-
       const matchList = await MatchList.find();
       const value = matchList.map((doc) => doc.toObject());
 
       for (var i = 0; i < value.length; i++) {
         let sum = 0;
-        const arr = data.filter((x) => x.matchId === value[i].id);
+        const arr = data.filter((x) => x.matchId === value[i].gameId);
         let myComm = 0;
+        let isCom = false;
         for (var j = 0; j < arr.length; j++) {
           if (arr[j].name === "matchbet") {
-            myComm -= arr[j].comAmount;
+            if (!isCom) {
+              myComm -= arr[j].comAmount;
+              isCom = true;
+            }
             if (arr[j].won) {
               sum -= arr[j].lossAmount;
             } else {
@@ -100,7 +103,7 @@ const MatchController = {
   async getSingleMatch(req, res) {
     try {
       const { matchId } = req.params;
-      const match = await MatchList.findOne({ _id: matchId });
+      const match = await MatchList.findOne({ gameId: matchId });
       if (!match) {
         return res.status(404).send("Match not found");
       }

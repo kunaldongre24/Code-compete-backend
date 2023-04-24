@@ -46,6 +46,9 @@ const CoinController = {
     user.totalCoins = Math.round(parseFloat(totalCoins) * 100) / 100;
     await user.save();
   },
+  isNumber(n) {
+    return typeof n === "number" && !isNaN(n);
+  },
   async limitControl(req, res) {
     const { type, username, amount } = req.body;
     if (type === undefined || username === undefined || amount === undefined) {
@@ -53,8 +56,30 @@ const CoinController = {
     }
     const userEmail = req.user.email;
     const user = userEmail.split("@")[0];
+    const totalCoins = await CoinController.countCoin(user.toLowerCase());
+    const playerCoins = await CoinController.countCoin(username.toLowerCase());
     const userQuery = UserModel.findOne({ username: username });
     const userInfo = await userQuery.exec();
+    if (!CoinController.isNumber(parseInt(amount)) || amount <= 0) {
+      console.log("Invalid Amount");
+      res.send({ status: 0, msg: "Invalid Amount" });
+      return;
+    }
+    console.log(playerCoins, amount, username);
+
+    if (parseInt(type) === 0 && playerCoins < amount) {
+      res.send({ status: 0, msg: "User limit exceed" });
+      return;
+    }
+    if (
+      parseInt(type) === 1 &&
+      parseInt(userInfo.level) !== 1 &&
+      totalCoins < amount
+    ) {
+      res.send({ status: 0, msg: "Insufficient Balance" });
+      return;
+    }
+
     if (!userInfo) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -88,27 +113,35 @@ const CoinController = {
     } else {
       return res.status(400).json({ error: "Unknown Error Occurred" });
     }
-
     await CoinController.countAndUpdateCoin(username.toLowerCase());
     await CoinController.countAndUpdateCoin(user.toLowerCase());
-
-    res.json({
-      message: parseInt(type) === 1 ? "Limit Increased" : "Limit Decreased",
+    res.send({
+      status: 1,
+      msg: parseInt(type) === 1 ? "Limit Increased" : "Limit Decreased",
     });
   },
-  async createCoinRecord(getter, setter, value, type, msg) {
+  async createCoinRecord({
+    getter,
+    setter,
+    value,
+    type,
+    msg,
+    getterPreviousLimit,
+    setterPreviousLimit,
+  }) {
     const coin = new Coin({
       getter,
       setter,
       value,
-      type,
+      type: type,
+      getterPreviousLimit,
+      setterPreviousLimit,
       msg,
       createdOn: Date.now(),
     });
 
     try {
       const savedCoin = await coin.save();
-      console.log("Coin saved:", savedCoin);
       return savedCoin;
     } catch (error) {
       console.error("Error saving coin:", error);
