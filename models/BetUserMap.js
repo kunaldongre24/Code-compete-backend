@@ -15,7 +15,6 @@ const betUserMapSchema = new Schema({
   marketId: { type: String, required: false },
   fancyName: { type: String, required: false },
   name: { type: String, required: true },
-  ipDetail: { type: String, required: true },
   isBack: { type: Boolean, required: true },
   isLay: { type: Boolean, required: true },
   runnerArray: { type: Array, required: false },

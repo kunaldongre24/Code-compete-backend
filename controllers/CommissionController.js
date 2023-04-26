@@ -42,7 +42,7 @@ const CommissionController = {
         });
         await coin.save();
       }
-      const update = await BetUserMap.findOneAndUpdate(
+      await BetUserMap.findOneAndUpdate(
         { _id: id },
         { settled: true, won: won },
         { new: true }

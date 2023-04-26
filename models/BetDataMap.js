@@ -3,7 +3,6 @@ const Schema = mongoose.Schema;
 
 const betDataMapSchema = new Schema({
   fancyName: { type: String, required: true },
-  ipDetail: { type: String, required: true },
   isBack: { type: Boolean, required: true },
   isLay: { type: Boolean, required: true },
   matchId: { type: String, required: true },

@@ -20,6 +20,7 @@ const MatchBetMap = require("../models/MatchBetMap");
 const MatchList = require("../models/MatchList");
 const MatchBetList = require("../models/MatchBetList");
 const { ObjectId } = require("mongodb");
+const positionCalculator = require("../helper/positionCalculator");
 
 const BetController = {
   didWon(isBack, value, odds) {
@@ -54,7 +55,6 @@ const BetController = {
       fancyName: fancyName,
       settled: false,
     });
-    var sessionCom = 3;
     for (i = 0; i < data.length; i++) {
       const {
         lossAmount,
@@ -65,9 +65,7 @@ const BetController = {
         player,
         company,
         matchId,
-        sessionComPerc,
       } = data[i];
-      sessionCom -= sessionComPerc;
       const won = BetController.didWon(isBack, value, odds);
       wonArr.push(won);
       const commissionAmount = won ? lossAmount : profitAmount;
@@ -89,7 +87,7 @@ const BetController = {
     }
     const settledArr = [];
     var totalBetAmount = 0;
-    var match_id;
+    // var match_id;
     var player_id;
     for (let i = 0; i < resp.length; i++) {
       const {
@@ -101,14 +99,12 @@ const BetController = {
         matchId,
         stake,
         priceValue,
-        player,
       } = resp[i];
-      match_id = matchId;
+      // match_id = matchId;
       player_id = userId;
       const rate = priceValue > 1 ? priceValue : 1;
       const amount = rate * stake;
       totalBetAmount += amount;
-      const won = BetController.didWon(isBack, value, odds);
       if (!settledArr.includes(transactionId)) {
         settledArr.push(transactionId);
         const transactionData = await CoinMap.findOne({ _id: transactionId });
@@ -130,20 +126,22 @@ const BetController = {
         { merge: true }
       );
     }
-    const comAmount = (totalBetAmount * sessionCom) / 100;
-    if (comAmount !== 0) {
-      const coinDb = new CoinMap({
-        value: Math.abs(comAmount),
-        msg: "Commission Distribution",
-        matchId: match_id,
-        type: 3,
-        getter: player_id,
-        createdOn: Date.now(),
-      });
-      await coinDb.save();
-      console.log(player_id);
-      countAndUpdateCoin(player_id);
-    }
+    const playerInfo = await getUserInformation(player_id);
+
+    const comAmount = (totalBetAmount * playerInfo.sessionCommission) / 100;
+    // if (comAmount !== 0) {
+    //   const coinDb = new CoinMap({
+    //     value: Math.abs(comAmount),
+    //     msg: "Commission Distribution",
+    //     matchId: match_id,
+    //     type: 3,
+    //     getter: player_id,
+    //     createdOn: Date.now(),
+    //   });
+    //   await coinDb.save();
+    //   console.log(player_id);
+    //   countAndUpdateCoin(player_id);
+    // }
     const resultDb = new BetList({
       fancyName,
       value,
@@ -281,14 +279,13 @@ const BetController = {
   //   return;
   // },
   async resolveMatchBet(sid, winnerSid, matchId) {
-    if (sid === undefined || winnerSid === undefined || matchId === undefined) {
+    if (!sid || !winnerSid || !matchId) {
       return;
     }
     await MatchList.updateOne(
       { gameId: matchId },
       { $set: { settled: true, winnerSid } }
     );
-
     var won = false;
     const data = await BetUserMap.find({
       marketId: sid,
@@ -391,18 +388,18 @@ const BetController = {
       const comAmount = (position * playerComPercentage) / 100;
       const elem = { comAmount, player: playerId };
       comArr.push(elem);
-      if (comAmount !== 0) {
-        const coinDb = new CoinMap({
-          value: Math.abs(comAmount),
-          msg: "Commission Distribution",
-          matchId: pMatchId,
-          type: 3,
-          getter: playerId,
-          createdOn: Date.now(),
-        });
-        await coinDb.save();
-        countAndUpdateCoin(playerId);
-      }
+      // if (comAmount !== 0) {
+      //   const coinDb = new CoinMap({
+      //     value: Math.abs(comAmount),
+      //     msg: "Commission Distribution",
+      //     matchId: pMatchId,
+      //     type: 3,
+      //     getter: playerId,
+      //     createdOn: Date.now(),
+      //   });
+      //   await coinDb.save();
+      //   countAndUpdateCoin(playerId);
+      // }
     } else {
       const elem = { comAmount: 0, player: playerId };
       comArr.push(elem);
@@ -1222,40 +1219,37 @@ const BetController = {
       isLay,
       odds,
       selectionName,
-      ipDetail,
       matchname,
       priceValue,
       matchId,
       sportId,
-      type,
     } = req.body;
-    if (
-      stake === undefined ||
-      isBack === undefined ||
-      isLay === undefined ||
-      priceValue === undefined ||
-      odds === undefined ||
-      selectionName === undefined ||
-      ipDetail === undefined ||
-      matchname === undefined ||
-      matchId === undefined ||
-      sportId === undefined ||
-      type === undefined
-    ) {
-      console.log(
-        `${stake}=${stake === undefined}\n${isBack}=${
-          isBack === undefined
-        }\n${isLay}=${isLay === undefined}\n${priceValue}=${
-          priceValue === undefined
-        }\n${odds}=${odds === undefined}\n${selectionName}=${
-          selectionName === undefined
-        }\n${matchname}=${matchname === undefined}\n${matchId}=${
-          matchId === undefined
-        }\n${sportId}=${sportId === undefined}\n${type}=${type === undefined}\n
-       `
-      );
-      return res.send({ msg: "Insufficient data recieved!" });
-    }
+    // if (
+    //   stake === undefined ||
+    //   isBack === undefined ||
+    //   isLay === undefined ||
+    //   priceValue === undefined ||
+    //   odds === undefined ||
+    //   selectionName === undefined ||
+    //   matchname === undefined ||
+    //   matchId === undefined ||
+    //   sportId === undefined ||
+    //   type
+    // ) {
+    //   console.log(
+    //     `${stake}=${stake === undefined}\n${isBack}=${
+    //       isBack === undefined
+    //     }\n${isLay}=${isLay === undefined}\n${priceValue}=${
+    //       priceValue === undefined
+    //     }\n${odds}=${odds === undefined}\n${selectionName}=${
+    //       selectionName === undefined
+    //     }\n${matchname}=${matchname === undefined}\n${matchId}=${
+    //       matchId === undefined
+    //     }\n${sportId}=${sportId === undefined}\n${type}=${type === undefined}\n
+    //    `
+    //   );
+    //   return res.send({ msg: "Insufficient data recieved!" });
+    // }
     if (stake < 100) {
       return res.send({ msg: "The amount cannot be less than 100", status: 0 });
     }
@@ -1266,286 +1260,268 @@ const BetController = {
       });
     }
 
-    const totalCoins = await CoinController.countCoin(username.toLowerCase());
-    const amount = isBack ? (priceValue * stake) / 100 : stake;
+    const url = `http://139.144.12.137/getbm2?eventId=${matchId}`;
+    const response = await axios.get(url);
+    const runnerArray = [];
+    var selectionId;
+    if (response.data) {
+      if (response.data.t1 && response.data.t1.length) {
+        selectionId = response.data.t1[0].filter(
+          (x) => x.nat === selectionName
+        )[0].sid;
+        const resp = response.data.t1[0];
+        for (var i = 0; i < resp.length; i++) {
+          const object = {
+            runner: resp[i].nat,
+            sid: resp[i].sid,
+          };
+          runnerArray.push(object);
+        }
+      }
 
-    if (totalCoins < amount) {
-      return res.send({ msg: "Insufficient Balance" });
-    } else {
-      const url = `http://139.144.12.137/getbm2?eventId=${matchId}`;
-      const response = await axios.get(url);
-      const runnerArray = [];
-      var selectionId;
-      if (response.data) {
-        if (response.data.t1 && response.data.t1.length) {
-          selectionId = response.data.t1[0].filter(
-            (x) => x.nat === selectionName
-          )[0].sid;
-          const resp = response.data.t1[0];
-          for (var i = 0; i < resp.length; i++) {
-            const object = {
-              runner: resp[i].nat,
-              sid: resp[i].sid,
-            };
-            runnerArray.push(object);
+      if (response.data.t2 && response.data.t2.length) {
+        let resp = response.data.t2[0].bm1;
+        const matchBetData = await MatchBetMap.find({
+          matchId: matchId,
+          userId: username,
+        }).lean();
+        const totalCoins = await CoinController.countCoin(
+          username.toLowerCase()
+        );
+        let transactionId;
+        let coin;
+        let transactionData;
+        let matchVal;
+        if (matchBetData.length > 0) {
+          transactionId = matchBetData[0].transactionId;
+          coin = await CoinMap.findOne({ _id: transactionId });
+          transactionData = coin.toObject();
+          matchVal = coin ? transactionData.value : 0;
+        } else {
+          matchVal = 0;
+        }
+        const betObj = {
+          userId: username,
+          stake: stake,
+          isBack: isBack,
+          selectionId: selectionId,
+          isLay: !isBack,
+          marketId: resp[0].mid,
+          priceValue: priceValue,
+          odds: odds,
+          selectionName: selectionName,
+          matchname: matchname,
+          matchId: matchId,
+          sportId: sportId,
+          settled: false,
+          pname: req.user.name,
+          createdOn: Date.now(),
+        };
+
+        matchBetData.push(betObj);
+        const posRes = positionCalculator(matchBetData, resp);
+        let negativeSum = 0;
+        for (let i = 0; i < posRes.length; i++) {
+          if (posRes[i].position && posRes[i].position < 0) {
+            if (negativeSum > posRes[i].position) {
+              negativeSum = posRes[i].position;
+            }
           }
         }
 
-        if (response.data.t2 && response.data.t2.length) {
-          const resp = response.data.t2[0].bm1;
-          for (var i = 0; i < runnerArray.length; i++) {
-            runnerArray[i].back = resp.filter(
-              (x) => x.nat === runnerArray[i].runner
-            )[0].l1;
-            runnerArray[i].lay = resp.filter(
-              (x) => x.nat === runnerArray[i].runner
-            )[0].l1;
-          }
-          const currentData = response.data.t2[0].bm1.filter(
-            (x) => x.nat === selectionName
-          );
-          const filteredOdds = currentData.filter(
-            (x) =>
-              (isBack && parseFloat(x.b1) === parseFloat(odds)) ||
-              (!isBack && parseFloat(x.l1) === parseFloat(odds))
-          );
-          if (filteredOdds.length && odds > 0) {
-            const username = req.user.email.split("@")[0];
-            const matchBetRef = await MatchBetMap.find({
+        if (totalCoins + matchVal < Math.abs(negativeSum)) {
+          return res.send({ msg: "Insufficient Balance", status: 0 });
+        }
+        for (var i = 0; i < runnerArray.length; i++) {
+          runnerArray[i].back = resp.filter(
+            (x) => x.nat === runnerArray[i].runner
+          )[0].l1;
+          runnerArray[i].lay = resp.filter(
+            (x) => x.nat === runnerArray[i].runner
+          )[0].l1;
+        }
+        const currentData = response.data.t2[0].bm1.filter(
+          (x) => x.nat === selectionName
+        );
+        const filteredOdds = currentData.filter(
+          (x) =>
+            (isBack && parseFloat(x.b1) === parseFloat(odds)) ||
+            (!isBack && parseFloat(x.l1) === parseFloat(odds))
+        );
+        if (filteredOdds.length && odds > 0) {
+          const username = req.user.email.split("@")[0];
+          const matchBetRef = await MatchBetMap.find({
+            matchId: matchId,
+            userId: username,
+          });
+          const betData = matchBetRef.map((doc) => doc.toObject());
+          var docId;
+          let newArr = [];
+          if (betData.length > 0) {
+            const bData = {
+              userId: username,
+              stake: stake,
+              isBack: isBack,
+              selectionId: selectionId,
+              isLay: !isBack,
+              marketId: resp[0].mid,
+              transactionId: betData[0].transactionId,
+              priceValue: priceValue,
+              odds: odds,
+              selectionName: selectionName,
+              matchname: matchname,
+              matchId: matchId,
+              sportId: sportId,
+              runnerArray: runnerArray,
+              settled: false,
+              pname: req.user.name,
+              createdOn: Date.now(),
+            };
+            const matchBetMap = new MatchBetMap(bData);
+            await matchBetMap.save();
+            const userRef = await MatchBetMap.find({
               matchId: matchId,
               userId: username,
             });
-            const betData = matchBetRef.map((doc) => doc.toObject());
-            var docId;
-            let newArr = [];
-            if (betData.length > 0) {
-              const matchBetMap = new MatchBetMap({
-                userId: username,
-                stake: stake,
-                isBack: isBack,
-                selectionId: selectionId,
-                isLay: !isBack,
-                marketId: resp[0].mid,
-                transactionId: betData[0].transactionId,
-                priceValue: priceValue,
-                odds: odds,
-                selectionName: selectionName,
-                ipDetail: ipDetail,
-                matchname: matchname,
-                matchId: matchId,
-                sportId: sportId,
-                runnerArray: runnerArray,
-                settled: false,
-                pname: req.user.name,
-                createdOn: Date.now(),
-              });
-              await matchBetMap.save();
-              const userRef = await MatchBetMap.find({
-                matchId: matchId,
-                userId: username,
-              });
-
-              const matchBetData = userRef.map((doc) => doc.toObject());
-              for (var i = 0; i < resp.length; i++) {
-                const teamOdds = resp[i];
-
-                for (var j = 0; j < matchBetData.length; j++) {
-                  const pos = matchBetData[j];
-                  const { isBack, stake, odds } = pos;
-                  if (teamOdds.nat === pos.selectionName) {
-                    if (!resp[i].position) {
-                      resp[i].position = 0;
-                    }
-                    if (isBack) {
-                      const val = parseFloat((odds * stake) / 100);
-                      resp[i].position += val;
-                    } else {
-                      const val = parseFloat((odds * stake) / 100);
-                      resp[i].position -= val;
-                    }
-                  } else {
-                    if (!resp[i].position) {
-                      resp[i].position = 0;
-                    }
-                    if (isBack) {
-                      const val = parseFloat(stake);
-                      resp[i].position -= val;
-                    } else {
-                      const val = parseFloat(stake);
-                      resp[i].position += val;
-                    }
-                  }
+            const matchBetData = userRef.map((doc) => doc.toObject());
+            resp = positionCalculator(matchBetData, resp);
+            let negativeSum = 0;
+            for (let i = 0; i < resp.length; i++) {
+              if (resp[i].position && resp[i].position < 0) {
+                if (negativeSum > resp[i].position) {
+                  negativeSum = resp[i].position;
                 }
-              }
-              let negativeSum = 0;
-              for (let i = 0; i < resp.length; i++) {
-                if (resp[i].position && resp[i].position < 0) {
-                  if (negativeSum > resp[i].position) {
-                    negativeSum = resp[i].position;
-                  }
-                }
-              }
-              newArr = resp.map(({ mid, nat, position }) => ({
-                mid,
-                nat,
-                position,
-              }));
-              for (let i = 0; i < newArr.length; i++) {
-                const sid = runnerArray.filter(
-                  (x) => x.runner === newArr[i].nat
-                )[0].sid;
-                newArr[i].sid = sid;
-              }
-              const changeAmount = Math.abs(
-                negativeSum !== null ? negativeSum : 0
-              );
-              const coin = await CoinMap.findOne({
-                _id: betData[0].transactionId,
-              });
-              if (!coin) {
-                throw new Error("Coin not found"); // handle error appropriately
-              }
-
-              coin.value = parseFloat(changeAmount);
-              coin.newArr = newArr;
-              coin.lastUpdated = Date.now();
-              await coin.save();
-            } else {
-              docId = new ObjectId();
-              const betData = {
-                userId: username,
-                stake: stake,
-                isBack: isBack,
-                isLay: !isBack,
-                transactionId: docId.toString(),
-                priceValue: priceValue,
-                marketId: resp[0].mid,
-                odds: odds,
-                selectionId: selectionId,
-                runnerArray: runnerArray,
-                selectionName: selectionName,
-                ipDetail: ipDetail,
-                matchname: matchname,
-                matchId: matchId,
-                pname: req.user.name,
-                sportId: sportId,
-                settled: false,
-                createdOn: Date.now(),
-              };
-
-              const betDb = new MatchBetMap(betData); // create a new document with the bet data
-              await betDb.save(); // save the document to the database
-              const matchBetData = await MatchBetMap.find({
-                matchId: matchId,
-                userId: username,
-              }).lean();
-              for (var i = 0; i < resp.length; i++) {
-                const teamOdds = resp[i];
-                for (var j = 0; j < matchBetData.length; j++) {
-                  const pos = matchBetData[j];
-                  const { isBack, stake, odds } = pos;
-                  if (teamOdds.nat === pos.selectionName) {
-                    if (!resp[i].position) {
-                      resp[i].position = 0;
-                    }
-                    if (isBack) {
-                      const val = parseFloat((odds * stake) / 100);
-                      resp[i].position += val;
-                    } else {
-                      const val = parseFloat((odds * stake) / 100);
-                      resp[i].position -= val;
-                    }
-                  } else {
-                    if (!resp[i].position) {
-                      resp[i].position = 0;
-                    }
-                    if (isBack) {
-                      const val = parseFloat(stake);
-                      resp[i].position -= val;
-                    } else {
-                      const val = parseFloat(stake);
-                      resp[i].position += val;
-                    }
-                  }
-                }
-              }
-              newArr = resp.map(({ mid, nat, position }) => ({
-                mid,
-                nat,
-                position,
-              }));
-              for (let i = 0; i < newArr.length; i++) {
-                const sid = runnerArray.filter(
-                  (x) => x.runner === newArr[i].nat
-                )[0].sid;
-                newArr[i].sid = sid;
-              }
-              const amount = isBack ? stake : (priceValue * stake) / 100;
-              const type = 2;
-              const msg = `Bet placed of ${stake} coins on ${selectionName}`;
-              const coinMap = new CoinMap({
-                _id: docId,
-                value: parseFloat(amount),
-                msg: msg,
-                type: type,
-                newArr,
-                matchId,
-                setter: username.toLowerCase(),
-                createdOn: Date.now(),
-              });
-              await coinMap.save();
-            }
-            const loss = isBack ? stake : Math.round(stake * odds) / 100;
-            const profit = isBack ? Math.round(stake * odds) / 100 : stake;
-            const profitList = await CommissionController.disburseMatchCoin(
-              username,
-              profit * -1
-            );
-            const lossList = await CommissionController.disburseMatchCoin(
-              username,
-              loss
-            );
-            for (var i = 0; i < profitList.length; i++) {
-              const { id, commission, percent, commissionPercentage } =
-                profitList[i];
-              const profitAmount = Math.abs(
-                lossList.filter((x) => x.id === id)[0].commission
-              );
-              if (id !== username) {
-                const betUserMap = new BetUserMap({
-                  name: "matchbet",
-                  company: id,
-                  commissionPercentage,
-                  player: username,
-                  lossAmount: Math.abs(commission),
-                  profitAmount,
-                  selectionId,
-                  stake: stake,
-                  isBack: isBack,
-                  marketId: resp[0].mid,
-                  isLay: !isBack,
-                  priceValue: priceValue,
-                  odds: odds,
-                  selectionName: selectionName,
-                  ipDetail: ipDetail,
-                  matchname: matchname,
-                  matchId,
-                  sportId,
-                  settled: false,
-                  adminShare: percent,
-                  pname: req.user.name,
-                  runnerArray,
-                  createdOn: Date.now(),
-                });
-
-                betUserMap.save();
               }
             }
-            countAndUpdateCoin(username);
-            res.send({ msg: "Bet Placed Successfully!", status: 1 });
+            newArr = resp.map(({ mid, nat, position }) => ({
+              mid,
+              nat,
+              position,
+            }));
+            for (let i = 0; i < newArr.length; i++) {
+              const sid = runnerArray.filter(
+                (x) => x.runner === newArr[i].nat
+              )[0].sid;
+              newArr[i].sid = sid;
+            }
+            const changeAmount = Math.abs(
+              negativeSum !== null ? negativeSum : 0
+            );
+            const coin = await CoinMap.findOne({
+              _id: betData[0].transactionId,
+            });
+            if (!coin) {
+              throw new Error("Coin not found"); // handle error appropriately
+            }
+            coin.value = parseFloat(changeAmount);
+            coin.newArr = newArr;
+            coin.lastUpdated = Date.now();
+            await coin.save();
           } else {
-            res.send({ msg: "Bhav Changed.", status: 0 });
+            docId = new ObjectId();
+            const betData = {
+              userId: username,
+              stake: stake,
+              isBack: isBack,
+              isLay: !isBack,
+              transactionId: docId.toString(),
+              priceValue: priceValue,
+              marketId: resp[0].mid,
+              odds: odds,
+              selectionId: selectionId,
+              runnerArray: runnerArray,
+              selectionName: selectionName,
+              matchname: matchname,
+              matchId: matchId,
+              pname: req.user.name,
+              sportId: sportId,
+              settled: false,
+              createdOn: Date.now(),
+            };
+
+            const betDb = new MatchBetMap(betData); // create a new document with the bet data
+            await betDb.save(); // save the document to the database
+            const matchBetData = await MatchBetMap.find({
+              matchId: matchId,
+              userId: username,
+            }).lean();
+            resp = positionCalculator(matchBetData, resp);
+
+            newArr = resp.map(({ mid, nat, position }) => ({
+              mid,
+              nat,
+              position,
+            }));
+            for (let i = 0; i < newArr.length; i++) {
+              const sid = runnerArray.filter(
+                (x) => x.runner === newArr[i].nat
+              )[0].sid;
+              newArr[i].sid = sid;
+            }
+            const amount = isBack ? stake : (priceValue * stake) / 100;
+            const type = 2;
+            const msg = `Bet placed of ${stake} coins on ${selectionName}`;
+            const coinMap = new CoinMap({
+              _id: docId,
+              value: parseFloat(amount),
+              msg: msg,
+              type: type,
+              newArr,
+              matchId,
+              setter: username.toLowerCase(),
+              createdOn: Date.now(),
+            });
+            await coinMap.save();
           }
+          const loss = isBack ? stake : Math.round(stake * odds) / 100;
+          const profit = isBack ? Math.round(stake * odds) / 100 : stake;
+          const profitList = await CommissionController.disburseMatchCoin(
+            username,
+            profit * -1
+          );
+          const lossList = await CommissionController.disburseMatchCoin(
+            username,
+            loss
+          );
+          for (var i = 0; i < profitList.length; i++) {
+            const { id, commission, percent, commissionPercentage } =
+              profitList[i];
+            const profitAmount = Math.abs(
+              lossList.filter((x) => x.id === id)[0].commission
+            );
+            if (id !== username) {
+              const betUserMap = new BetUserMap({
+                name: "matchbet",
+                company: id,
+                commissionPercentage,
+                player: username,
+                lossAmount: Math.abs(commission),
+                profitAmount,
+                selectionId,
+                stake: stake,
+                isBack: isBack,
+                marketId: resp[0].mid,
+                isLay: !isBack,
+                priceValue: priceValue,
+                odds: odds,
+                selectionName: selectionName,
+                matchname: matchname,
+                matchId,
+                sportId,
+                settled: false,
+                adminShare: percent,
+                pname: req.user.name,
+                runnerArray,
+                createdOn: Date.now(),
+              });
+
+              betUserMap.save();
+            }
+          }
+          countAndUpdateCoin(username);
+          res.send({ msg: "Bet Placed Successfully!", status: 1 });
+        } else {
+          res.send({ msg: "Bhav Changed.", status: 0 });
         }
       }
     }
@@ -1577,7 +1553,6 @@ const BetController = {
       isLay,
       odds,
       selectionName,
-      ipDetail,
       matchname,
       priceValue,
       matchId,
@@ -1591,7 +1566,6 @@ const BetController = {
       priceValue === undefined ||
       odds === undefined ||
       selectionName === undefined ||
-      ipDetail === undefined ||
       matchname === undefined ||
       matchId === undefined ||
       sportId === undefined ||
@@ -1645,7 +1619,6 @@ const BetController = {
             runnerArray,
             odds: 0.95,
             selectionName: selectionName,
-            ipDetail: ipDetail,
             matchId,
             sportId: 4,
             settled: false,
@@ -1750,7 +1723,6 @@ const BetController = {
             priceValue: 0.95,
             odds: 0.95,
             selectionName: selectionName,
-            ipDetail: ipDetail,
             matchname: matchname,
             matchId: matchId,
             time: timestamp,
@@ -1785,7 +1757,6 @@ const BetController = {
               profitAmount: commissionAmount,
               company: id,
               lossAmount: Math.abs(commission),
-              ipDetails: ipDetail,
               isBack: isBack,
               isLay: !isBack,
               matchId: matchId,
@@ -1810,47 +1781,46 @@ const BetController = {
     }
   },
   async placeBet(req, res) {
-    const username = req.user.email.split("@")[0];
-    const {
-      stake,
-      isBack,
-      isLay,
-      priceValue,
-      odds,
-      fancyName,
-      ipDetail,
-      matchname,
-      matchId,
-      sportId,
-    } = req.body;
-    if (
-      stake === undefined ||
-      isBack === undefined ||
-      isLay === undefined ||
-      priceValue === undefined ||
-      odds === undefined ||
-      fancyName === undefined ||
-      ipDetail === undefined ||
-      matchname === undefined ||
-      matchId === undefined ||
-      sportId === undefined
-    ) {
-      return res.send({ msg: "Insufficient data recieved!" });
-    }
-    const priceVal = parseFloat(priceValue).toFixed(2);
-    if (stake < 100) {
-      return res.send({ msg: "The amount cannot be less than 100", status: 0 });
-    }
-    if (stake > 50000) {
-      return res.send({
-        msg: "The amount cannot be greater than 50000",
-        status: 0,
-      });
-    }
-    const totalCoins = await CoinController.countCoin(username.toLowerCase());
-    if (totalCoins < stake) {
-      return res.send({ msg: "Insufficient Balance" });
-    } else {
+    try {
+      const username = req.user.email.split("@")[0];
+      const {
+        stake,
+        isBack,
+        isLay,
+        priceValue,
+        odds,
+        fancyName,
+        matchname,
+        matchId,
+        sportId,
+      } = req.body;
+      // if (
+      //   stake === undefined ||
+      //   isBack === undefined ||
+      //   isLay === undefined ||
+      //   priceValue === undefined ||
+      //   odds === undefined ||
+      //   fancyName === undefined ||
+      //   matchname === undefined ||
+      //   matchId === undefined ||
+      //   sportId === undefined
+      // ) {
+      //   return res.send({ msg: "Insufficient data recieved!" });
+      // }
+      const priceVal = parseFloat(priceValue).toFixed(2);
+      if (stake < 100) {
+        return res.send({
+          msg: "The amount cannot be less than 100",
+          status: 0,
+        });
+      }
+      if (stake > 50000) {
+        return res.send({
+          msg: "The amount cannot be greater than 50000",
+          status: 0,
+        });
+      }
+
       const url = `http://139.144.12.137/getbm2?eventId=${matchId}`;
       const response = await axios.get(url);
       if (response.data) {
@@ -1886,7 +1856,6 @@ const BetController = {
                 priceValue: priceVal,
                 odds: odds,
                 fancyName: fancyName,
-                ipDetail: ipDetail,
                 matchname: matchname,
                 matchId,
                 sportId,
@@ -1913,13 +1882,16 @@ const BetController = {
                       (bet1.isBack && !bet2.isBack && bet1.odds <= bet2.odds) ||
                       (!bet1.isBack && bet2.isBack && bet1.odds >= bet2.odds)
                     ) {
-                      const amount1 =
-                        Math.round(bet1.stake * bet1.priceValue * 100) / 100;
-                      const amount2 =
-                        Math.round(bet2.stake * bet2.priceValue * 100) / 100;
+                      const amount1 = Math.round(bet1.stake * 100) / 100;
+                      const amount2 = Math.round(bet2.stake * 100) / 100;
                       const stakeDiff = Math.abs(amount1 - amount2);
-                      sum += stakeDiff;
-
+                      const amount3 =
+                        Math.round(bet1.stake * bet1.priceValue * 100) / 100;
+                      const amount4 =
+                        Math.round(bet2.stake * bet2.priceValue * 100) / 100;
+                      const lossDiff = Math.abs(amount3 - amount4);
+                      const max = Math.max(stakeDiff, lossDiff);
+                      sum += max;
                       pairedIds.push(bet1._id, bet2._id);
 
                       break;
@@ -1935,18 +1907,32 @@ const BetController = {
                   sum += amount;
                 }
               }
+              const totalCoins = await CoinController.countCoin(
+                username.toLowerCase()
+              );
               docId = liveBets[0].transactionId;
+              coin = await CoinMap.findOne({ _id: docId });
+              transactionData = coin.toObject();
+              matchVal = coin ? transactionData.value : 0;
+              if (totalCoins + matchVal < Math.abs(sum)) {
+                return res.send({ msg: "Insufficient Balance", status: 0 });
+              }
               const filter = { _id: liveBets[0].transactionId };
               const update = {
                 $set: { value: parseFloat(sum), lastUpdated: Date.now() },
               };
-
-              const result = await CoinMap.findOneAndUpdate(filter, update, {
+              await CoinMap.findOneAndUpdate(filter, update, {
                 new: true,
               });
             } else {
               const amount =
                 priceVal > 1 ? Math.round(stake * priceVal * 100) / 100 : stake;
+              const totalCoins = await CoinController.countCoin(
+                username.toLowerCase()
+              );
+              if (totalCoins < amount) {
+                return res.send({ msg: "Insufficient Balance" });
+              }
               const coinMap = new CoinMap({
                 value: parseFloat(amount),
                 msg: `Bet placed of ${stake} coins on ${fancyName}`,
@@ -1969,7 +1955,6 @@ const BetController = {
               priceValue: priceVal,
               odds: odds,
               fancyName: fancyName,
-              ipDetail: ipDetail,
               matchname: matchname,
               matchId: matchId,
               sportId: sportId,
@@ -2021,7 +2006,6 @@ const BetController = {
                   priceValue: priceVal,
                   odds: odds,
                   fancyName: fancyName,
-                  ipDetail: ipDetail,
                   matchname: matchname,
                   matchId,
                   sportId,
@@ -2040,6 +2024,9 @@ const BetController = {
         }
         return res.send({ msg: "Unknown Error" });
       }
+    } catch (error) {
+      return res.send({ msg: "Some error Occurred", status: 0 });
+      console.log(error);
     }
   },
   async getUserBets(req, res) {

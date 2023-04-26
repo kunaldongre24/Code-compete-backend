@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const matchBetSchema = new Schema({
-  ipDetail: { type: String, required: true },
   isBack: { type: Boolean, required: true },
   isLay: { type: Boolean, required: true },
   marketId: { type: String, required: true },
