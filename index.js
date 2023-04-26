@@ -19,6 +19,9 @@ const origin = [
   "https://ma.fly247.in",
   "https://ng.fly247.in",
 ];
+const { PORT } = require("./config/config.js");
+require("./config/database.js");
+
 const io = require("socket.io")(server, {
   cors: { origin },
 });
@@ -47,7 +50,6 @@ io.on("connection", (socket) => {
   });
 });
 
-const { PORT } = process.env;
 app.disable("etag");
 
 app.use(

@@ -1,81 +1,76 @@
-const { db } = require("../db");
-const ListController = {
-    async getSaList(req, res) {
-        const username = req.user.email.split("@")[0];
-        const userRef = db.collection('users')
-            .where("companyId", "==", username)
-            .where("level", "==", 5);
-        userRef.get().then(value => {
-            const data = value.docs.map(doc => doc.data());
-            res.send(data);
-        })
-    },
-    async getSpList(req, res) {
-        const username = req.user.email.split("@")[0];
-        const userRef = db.collection('users')
-            .where("companyId", "==", username)
-            .where("level", "==", 6)
-            ;
-        userRef.get().then(value => {
-            const data = value.docs.map(doc => doc.data());
-            res.send(data);
-        })
-    },
-    async getSsList(req, res) {
-        const username = req.user.email.split("@")[0];
-        const userRef = db.collection('users')
-            .where("companyId", "==", username)
-            .where("level", "==", 4)
-            ;
-        userRef.get().then(value => {
-            const data = value.docs.map(doc => doc.data());
-            res.send(data);
-        })
-    },
-    async getScList(req, res) {
-        const username = req.user.email.split("@")[0];
-        const userRef = db.collection('users')
-            .where("companyId", "==", username)
-            .where("level", "==", 2)
-            ;
-        userRef.get().then(value => {
-            const data = value.docs.map(doc => doc.data());
-            res.send(data);
-        })
-    },
+const UserModel = require("../models/User");
 
-    async getMaList(req, res) {
-        const username = req.user.email.split("@")[0];
-        const userRef = db.collection('users')
-            .where("companyId", "==", username)
-            .where("level", "==", 7)
-            ;
-        userRef.get().then(value => {
-            const data = value.docs.map(doc => doc.data());
-            res.send(data);
-        })
-    },
-    async getSstList(req, res) {
-        const username = req.user.email.split("@")[0];
-        const userRef = db.collection('users')
-            .where("companyId", "==", username)
-            .where("level", "==", 3)
-            ;
-        userRef.get().then(value => {
-            const data = value.docs.map(doc => doc.data());
-            res.send(data);
-        })
+const ListController = {
+  async getSaList(req, res) {
+    const username = req.user.email.split("@")[0];
+    try {
+      const users = await UserModel.find({ companyId: username, level: 5 });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while retrieving SAs");
     }
-    ,
-    async getAllList(req, res) {
-        const username = req.user.email.split("@")[0];
-        const userRef = db.collection('users')
-            .where("companyId", "==", username);
-        userRef.get().then(value => {
-            const data = value.docs.map(doc => doc.data());
-            res.send(data);
-        })
-    },
+  },
+  async getSpList(req, res) {
+    const username = req.user.email.split("@")[0];
+    try {
+      const users = await UserModel.find({ companyId: username, level: 6 });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while retrieving SPs");
+    }
+  },
+  async getSsList(req, res) {
+    const username = req.user.email.split("@")[0];
+    try {
+      const users = await UserModel.find({ companyId: username, level: 4 });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while retrieving SSs");
+    }
+  },
+  async getScList(req, res) {
+    const username = req.user.email.split("@")[0];
+    try {
+      const users = await UserModel.find({ companyId: username, level: 2 });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while retrieving SCs");
+    }
+  },
+  async getMaList(req, res) {
+    const username = req.user.email.split("@")[0];
+    try {
+      const users = await UserModel.find({ companyId: username, level: 7 });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while retrieving MAs");
+    }
+  },
+  async getSstList(req, res) {
+    const username = req.user.email.split("@")[0];
+    try {
+      const users = await UserModel.find({ companyId: username, level: 3 });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while retrieving SSTs");
+    }
+  },
+  async getAllList(req, res) {
+    const username = req.user.email.split("@")[0];
+    try {
+      const users = await UserModel.find({ companyId: username });
+      res.send(users);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while retrieving all users");
+    }
+  },
 };
 
 module.exports = ListController;

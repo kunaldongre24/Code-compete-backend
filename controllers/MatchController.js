@@ -1,5 +1,8 @@
 const axios = require("axios");
 const { db } = require("../db");
+const Count = require("../models/Count");
+const MatchList = require("../models/MatchList");
+const BetUserMap = require("../models/BetUserMap");
 
 const MatchController = {
   async getLiveTime(req, res) {
@@ -15,13 +18,8 @@ const MatchController = {
       const response2 = await axios.get(url2);
 
       const singleMatch = data.filter((x) => x.gameId === matchId);
-      const gameRef = db.collection("matchList").doc(matchId);
-      const gameSnapshot = await gameRef.get();
-      if (
-        response2.data.t1 &&
-        response2.data.t1.length &&
-        !gameSnapshot.exists
-      ) {
+      const gameSnapshot = await MatchList.findOne({ gameId: matchId });
+      if (response2.data.t1 && response2.data.t1.length && !gameSnapshot) {
         const t1 = response2.data.t1[0];
         singleMatch[0].createdOn = Date.now();
         const runnerArray = [];
@@ -31,7 +29,7 @@ const MatchController = {
         }
         singleMatch[0].runnerArray = runnerArray;
         singleMatch[0].settled = false;
-        await gameRef.set(singleMatch[0]);
+        await MatchList.create(singleMatch[0]);
         res.send({ status: true });
       } else {
         return res.send({ status: false });
@@ -44,33 +42,40 @@ const MatchController = {
       });
     }
   },
+  async addData(req, res) {
+    try {
+      const updatedCount = await Count.findOneAndUpdate(
+        { name: "player" },
+        { $inc: { count: 1 } },
+        { new: true }
+      );
+      res.status(200).json(updatedCount);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
   async getAllMatchList(req, res) {
     try {
       const { userId } = req.params;
-      const betRef = db
-        .collection("betUserMap")
-        .where("company", "==", userId)
-        .where("settled", "==", true);
-      const response = await betRef.get();
-      const data = response.docs.map((doc) => {
-        const document = doc.data();
-        document.id = doc.id;
-        return document;
+      const betUserMap = await BetUserMap.find({
+        company: userId,
+        settled: true,
       });
-      const matchRef = db.collection("matchList");
-      const resp = await matchRef.get();
-      const value = resp.docs.map((doc) => {
-        const document = doc.data();
-        document.id = doc.id;
-        return document;
-      });
+      const data = betUserMap.map((doc) => doc.toObject());
+      const matchList = await MatchList.find();
+      const value = matchList.map((doc) => doc.toObject());
+
       for (var i = 0; i < value.length; i++) {
         let sum = 0;
-        const arr = data.filter((x) => x.matchId === value[i].id);
+        const arr = data.filter((x) => x.matchId === value[i].gameId);
         let myComm = 0;
+        let isCom = false;
         for (var j = 0; j < arr.length; j++) {
           if (arr[j].name === "matchbet") {
-            myComm -= arr[j].comAmount;
+            if (!isCom) {
+              myComm -= arr[j].comAmount;
+              isCom = true;
+            }
             if (arr[j].won) {
               sum -= arr[j].lossAmount;
             } else {
@@ -94,13 +99,19 @@ const MatchController = {
       res.status(500).send("Internal server error");
     }
   },
+
   async getSingleMatch(req, res) {
-    const { matchId } = req.params;
-    const matchRef = db.collection("matchList").doc(matchId);
-    await matchRef.get().then((value) => {
-      const data = value.data();
-      res.send(data);
-    });
+    try {
+      const { matchId } = req.params;
+      const match = await MatchList.findOne({ gameId: matchId });
+      if (!match) {
+        return res.status(404).send("Match not found");
+      }
+      res.send(match);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal server error");
+    }
   },
   async getMatches(req, res) {
     const url = `http://marketsarket.in:3000/getcricketmatches`;

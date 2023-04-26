@@ -9,10 +9,10 @@ router.post("/placeTossBet", Auth, BetController.placeTossBet);
 router.post("/settleBet", BetController.settleBet);
 router.post("/settleMatchBet", BetController.settleMatchBet);
 router.post("/getCompanyReport", BetController.getCompanyReport);
-router.post("/settleTossBet", Auth, BetController.settleTossBet);
+// router.post("/settleTossBet", Auth, BetController.settleTossBet);
 router.get("/getMatchBets/:matchId", Auth, BetController.getBetsByMatchId);
 router.get("/getBetPosition/:matchId", Auth, BetController.getMatchBetPosition);
-router.get("/getTossPosition/:matchId", Auth, BetController.getTossBetPosition);
+// router.get("/getTossPosition/:matchId", Auth, BetController.getTossBetPosition);
 router.get("/getMyPlayerBets/:matchId", Auth, BetController.getBetUsingUserId);
 router.get("/getCompanyLenDen", Auth, BetController.getCompanyLenDen);
 router.get(
@@ -28,7 +28,7 @@ router.get(
   BetController.getDetailedMatchBets
 );
 router.get("/getAllbets", Auth, BetController.getAllBets);
-router.get("/getAllTossBets", Auth, BetController.getAllTossBets);
+// router.get("/getAllTossBets", Auth, BetController.getAllTossBets);
 router.get(
   "/getAllMatchTossBets/:matchId",
   Auth,
@@ -59,7 +59,7 @@ router.get(
 );
 router.get("/getUserBets/:matchId", Auth, BetController.getLiveBets);
 router.get("/getMatchLedger/:matchId", Auth, BetController.getMatchLedger);
-router.get("/getTossLedger/:matchId", Auth, BetController.getTossLedger);
-router.get("/getTossBets/:matchId", Auth, BetController.getTossBets);
+// router.get("/getTossLedger/:matchId", Auth, BetController.getTossLedger);
+// router.get("/getTossBets/:matchId", Auth, BetController.getTossBets);
 
 module.exports = router;

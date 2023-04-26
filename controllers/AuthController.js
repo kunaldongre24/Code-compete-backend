@@ -1,43 +1,45 @@
-const { fs, db, FieldValue } = require("../db");
-const { v4: uuidv4 } = require("uuid");
+const { fs } = require("../db");
 const CoinController = require("./CoinController");
 const { countAndUpdateCoin } = require("./CoinController");
+const UserModel = require("../models/User");
+const CommissionModel = require("../models/CommissionMap");
+const CoinModel = require("../models/Coins");
+const Count = require("../models/Count");
+
 const AuthController = {
   async getUserByUid(uid) {
     try {
-      const userRef = db.collection("users").doc(uid);
-      const value = await userRef.get();
-      const data = value.data();
-      return data;
+      const user = await UserModel.findOne({ uid: uid }).exec();
+      return user;
     } catch (error) {
       console.log(error);
+      throw error;
     }
-    return;
   },
   async getLiveTime(req, res) {
     const time = Date.now();
     res.send({ time });
   },
   async getMyAgents(username) {
-    const userRef = db.collection("users").where("companyId", "==", username);
-    const value = await userRef.get();
-    const arr = [];
-    value.forEach((doc) => {
-      arr.push(doc.data());
-    });
-    return arr;
+    try {
+      const users = await UserModel.find({ companyId: username }).exec();
+      return users;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   },
   async getMyClients(username) {
-    const userRef = db
-      .collection("users")
-      .where("companyId", "==", username)
-      .where("level", "==", 6);
-    const value = await userRef.get();
-    const arr = [];
-    value.forEach((doc) => {
-      arr.push(doc.data());
-    });
-    return arr;
+    try {
+      const users = await UserModel.find({
+        companyId: username,
+        level: 6,
+      }).exec();
+      return users;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   },
   async getUserById(req, res) {
     const { id } = req.params;
@@ -45,11 +47,9 @@ const AuthController = {
     res.send(response);
   },
   async getUserInformation(username) {
-    const userRef = db.collection("users").where("username", "==", username);
-    const value = await userRef.get();
-    if (value.docs.length) {
-      const data = value.docs[0].data();
-      return data;
+    const user = await UserModel.findOne({ username: username });
+    if (user) {
+      return user;
     }
     return;
   },
@@ -72,126 +72,152 @@ const AuthController = {
   //   res.send({ msg: "Users deleted" });
   // },
   async getPlayerCount(req, res) {
-    const countRef = db.collection("count").doc("player");
-    await countRef.update({
-      count: FieldValue.increment(1),
-    });
-    await countRef.get().then((value) => {
-      const data = value.data();
-      res.send(data);
-    });
+    try {
+      const updatedCount = await Count.findOneAndUpdate(
+        { name: "player" },
+        { $inc: { count: 1 } },
+        { new: true }
+      );
+      res.status(200).json(updatedCount);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   },
   async getAgentCount(req, res) {
-    const countRef = db.collection("count").doc("agent");
-    await countRef.update({
-      count: FieldValue.increment(1),
-    });
-    await countRef.get().then((value) => {
-      const data = value.data();
-      res.send(data);
-    });
+    try {
+      const updatedCount = await Count.findOneAndUpdate(
+        { name: "agent" },
+        { $inc: { count: 1 } },
+        { new: true }
+      );
+      res.status(200).json(updatedCount);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   },
   async getManagerCount(req, res) {
-    const countRef = db.collection("count").doc("manager");
-    await countRef.update({
-      count: FieldValue.increment(1),
-    });
-    await countRef.get().then((value) => {
-      const data = value.data();
-      res.send(data);
-    });
+    try {
+      const updatedCount = await Count.findOneAndUpdate(
+        { name: "manager" },
+        { $inc: { count: 1 } },
+        { new: true }
+      );
+      res.status(200).json(updatedCount);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   },
   async getStockistCount(req, res) {
-    const countRef = db.collection("count").doc("stockist");
-    await countRef.update({
-      count: FieldValue.increment(1),
-    });
-    await countRef.get().then((value) => {
-      const data = value.data();
-      res.send(data);
-    });
+    try {
+      const updatedCount = await Count.findOneAndUpdate(
+        { name: "stockist" },
+        { $inc: { count: 1 } },
+        { new: true }
+      );
+      res.status(200).json(updatedCount);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   },
   async getScCount(req, res) {
-    const countRef = db.collection("count").doc("sc");
-    await countRef.update({
-      count: FieldValue.increment(1),
-    });
-    await countRef.get().then((value) => {
-      const data = value.data();
-      res.send(data);
-    });
+    try {
+      const updatedCount = await Count.findOneAndUpdate(
+        { name: "superCompany" },
+        { $inc: { count: 1 } },
+        { new: true }
+      );
+      res.status(200).json(updatedCount);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: error });
+    }
   },
   async getSuperStockistCount(req, res) {
-    const countRef = db.collection("count").doc("superStockist");
-    await countRef.update({
-      count: FieldValue.increment(1),
-    });
-    await countRef.get().then((value) => {
-      const data = value.data();
-      res.send(data);
-    });
+    try {
+      const updatedCount = await Count.findOneAndUpdate(
+        { name: "superStockist" },
+        { $inc: { count: 1 } },
+        { new: true }
+      );
+      res.status(200).json(updatedCount);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   },
 
-  createManager(req, res) {
-    const companyId = req.user.email.split("@")[0];
-    const { username, password, level, name } = req.body;
-    if (
-      username === undefined ||
-      password === undefined ||
-      name === undefined ||
-      companyId === undefined ||
-      level === undefined
-    ) {
-      return res.send({ err: "Missing Information" });
-    }
-    const email = `${username}@fly247.in`;
-    fs.auth()
-      .createUser({
-        email,
-        password: "sa@#!$#@@$%2" + password,
-        displayName: name,
-      })
-      .then(async (userRecord) => {
-        const userRef = db
-          .collection("users")
-          .where("username", "==", companyId);
-        await userRef
-          .get()
-          .then(async (value) => {
-            const userJson = {
-              uid: userRecord.uid,
-              username,
-              name,
-              email,
-              level,
-              companyId,
-            };
-            const usersDb = db.collection("users");
-            await usersDb.doc(userRecord.uid).set(userJson);
-            res.send({ userCreated: true });
-          })
-          .catch((error) => {
-            console.log("Error creating new user:", error);
-          });
-      });
-  },
+  // createManager(req, res) {
+  //   const companyId = req.user.email.split("@")[0];
+  //   const { username, password, level, name } = req.body;
+  //   if (
+  //     username === undefined ||
+  //     password === undefined ||
+  //     name === undefined ||
+  //     companyId === undefined ||
+  //     level === undefined
+  //   ) {
+  //     return res.send({ err: "Missing Information" });
+  //   }
+  //   const email = `${username}@fly247.in`;
+  //   fs.auth()
+  //     .createUser({
+  //       email,
+  //       password: "sa@#!$#@@$%2" + password,
+  //       displayName: name,
+  //     })
+  //     .then(async (userRecord) => {
+  //       const userRef = db
+  //         .collection("users")
+  //         .where("username", "==", companyId);
+  //       await userRef
+  //         .get()
+  //         .then(async (value) => {
+  //           const userJson = {
+  //             uid: userRecord.uid,
+  //             username,
+  //             name,
+  //             email,
+  //             level,
+  //             companyId,
+  //           };
+  //           const usersDb = db.collection("users");
+  //           await usersDb.doc(userRecord.uid).set(userJson);
+  //           res.send({ userCreated: true });
+  //         })
+  //         .catch((error) => {
+  //           console.log("Error creating new user:", error);
+  //         });
+  //     });
+  // },
   async UpdateUser(req, res) {
     const { uid, fname, lname } = req.body;
     if (uid === undefined || fname === undefined || lname === undefined) {
       return res.send({ err: "Missing Information" });
     }
     const name = fname + " " + lname;
-    const usersDb = db.collection("users");
-    const userJson = {
-      name,
-    };
-    await usersDb.doc(uid).update(userJson);
-    res.send({
-      userCreated: true,
-      msg: "User has been created Successfully",
-    });
+    try {
+      const user = await UserModel.findOneAndUpdate(
+        { uid: uid },
+        { name: name },
+        { new: true }
+      );
+      if (!user) {
+        return res.status(404).send({ error: "User not found" });
+      }
+      return res.status(200).send({
+        userUpdated: true,
+        msg: "User has been updated successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({ error: "Internal server error" });
+    }
+  },
+  isBlank(num) {
+    return num === null || num === undefined || isNaN(num) || num < 0;
   },
   async signup(req, res) {
+    const { isBlank } = AuthController;
+
     try {
       const companyId = req.user.email.split("@")[0];
       var {
@@ -206,26 +232,42 @@ const AuthController = {
       } = req.body;
 
       if (
-        username === undefined ||
-        password === undefined ||
-        name === undefined ||
-        companyId === undefined ||
-        matchShare === undefined ||
-        level === undefined ||
-        fixedLimit === undefined ||
-        AgentMatchcommision === undefined ||
-        AgentSessioncommision === undefined
+        !username.trim().length > 0 ||
+        !password.length > 0 ||
+        !name.trim().length > 0 ||
+        !companyId.trim().length > 0 ||
+        level <= 0 ||
+        isBlank(fixedLimit) ||
+        isBlank(AgentMatchcommision) > 0 ||
+        isBlank(AgentSessioncommision) > 0
       ) {
+        console.log(
+          username,
+          password,
+          name,
+          level,
+          isBlank(fixedLimit),
+          isBlank(AgentMatchcommision),
+          isBlank(AgentSessioncommision)
+        );
         return res.send({ userCreated: false, msg: "Missing Information" });
       }
+
       username = username.toLowerCase();
-      const userInfo = await AuthController.getUserInformation(companyId);
+      const userData = await UserModel.findOne({ username: companyId });
       const totalCoins = await CoinController.countCoin(
         companyId.toLowerCase()
       );
-
-      if (userInfo.level !== 1 && totalCoins < fixedLimit) {
-        return res.send({ msg: "Insufficient Balance" });
+      var mShare = 0;
+      if (level === 6) {
+        mShare = userData.matchShare;
+      } else {
+        mShare = matchShare;
+      }
+      if (parseInt(userData.level) !== 1 && totalCoins < fixedLimit) {
+        console.log("Insufficient Balance");
+        res.send({ userCreate: false, msg: "Insufficient Balance" });
+        return;
       }
 
       const email = `${username}@fly247.in`;
@@ -236,38 +278,38 @@ const AuthController = {
         displayName: name,
       });
 
-      const userRef = db.collection("users").where("username", "==", companyId);
-      const value = await userRef.get();
-
-      const data = value.docs[0].data();
-      const share = data.matchShare - matchShare;
-      const type = 1;
-      const p1Coins = await CoinController.countCoin(data.username);
+      const p1Coins = await CoinController.countCoin(userData.username);
       const p2Coins = await CoinController.countCoin(username);
-      const msg = `Opening Balance By ${data.username} (${data.name}) To ${username} (${name})`;
-      const commisionDb = db.collection("commisionMap").doc(uuidv4());
-      await commisionDb.set({
+
+      const msg = `Opening Balance By ${userData.username} (${userData.name}) To ${username} (${name})`;
+      const commisionData = {
         setter: companyId,
         getter: username,
-        matchShare: matchShare,
+        matchShare: mShare,
         getterPreviousLimit: p2Coins ? p2Coins : 0,
         setterPreviousLimit: p1Coins ? p1Coins : 0,
         matchCommission: AgentMatchcommision,
         sessionCommission: AgentSessioncommision,
         createdOn: Date.now(),
-      });
+      };
 
-      const coinDb = db.collection("coinMap").doc(uuidv4());
-      await coinDb.set({
+      await CommissionModel.create(commisionData);
+
+      const coinData = {
         value: parseFloat(fixedLimit),
         msg: msg,
-        type,
+        type: 1,
         getter: username.toLowerCase(),
-        setter: data.username.toLowerCase(),
+        setter: userData.username.toLowerCase(),
         setterPreviousLimit: p2Coins ? p2Coins : 0,
-        getterPreviousLimit: parseFloat(fixedLimit),
+        getterPreviousLimit: parseFloat(fixedLimit)
+          ? parseFloat(fixedLimit)
+          : 0,
         createdOn: Date.now(),
-      });
+      };
+
+      await CoinModel.create(coinData);
+      const share = userData.matchShare - mShare;
 
       const userJson = {
         uid: userRecord.uid,
@@ -275,17 +317,18 @@ const AuthController = {
         name,
         email,
         level,
+        totalCoins: parseFloat(fixedLimit),
         companyId,
         matchShare: share,
         matchCommission: AgentMatchcommision ? AgentMatchcommision : 0,
         sessionCommission: AgentSessioncommision ? AgentSessioncommision : 0,
         createdOn: Date.now(),
       };
-      const usersDb = db.collection("users");
-      await usersDb.doc(userRecord.uid).set(userJson);
+
+      await UserModel.create(userJson);
 
       countAndUpdateCoin(username);
-      countAndUpdateCoin(data.username);
+      countAndUpdateCoin(userData.username);
 
       res.send({
         userCreated: true,
