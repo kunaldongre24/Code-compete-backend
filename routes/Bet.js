@@ -10,8 +10,14 @@ router.post("/settleBet", BetController.settleBet);
 router.post("/settleMatchBet", BetController.settleMatchBet);
 router.post("/getCompanyReport", BetController.getCompanyReport);
 // router.post("/settleTossBet", Auth, BetController.settleTossBet);
+router.get("/odds", BetController.getSOdds);
 router.get("/getMatchBets/:matchId", Auth, BetController.getBetsByMatchId);
 router.get("/getBetPosition/:matchId", Auth, BetController.getMatchBetPosition);
+router.get(
+  "/getDeclaredSession/:matchId",
+  Auth,
+  BetController.getDeclaredSession
+);
 // router.get("/getTossPosition/:matchId", Auth, BetController.getTossBetPosition);
 router.get("/getMyPlayerBets/:matchId", Auth, BetController.getBetUsingUserId);
 router.get("/getCompanyLenDen", Auth, BetController.getCompanyLenDen);
@@ -27,7 +33,9 @@ router.get(
   Auth,
   BetController.getDetailedMatchBets
 );
-router.get("/getAllbets", Auth, BetController.getAllBets);
+router.post("/deleteFancyBets", BetController.checkDeleteFancyResult);
+router.post("/deleteMatchResult", BetController.checkDeleteMatchResult);
+router.get("/deleteMatchBets/:marketId/:pwd", BetController.deleteMatchBet);
 // router.get("/getAllTossBets", Auth, BetController.getAllTossBets);
 router.get(
   "/getAllMatchTossBets/:matchId",

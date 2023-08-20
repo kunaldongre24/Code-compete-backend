@@ -1,14 +1,9 @@
-const { db } = require("../db");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const CoinController = require("./CoinController");
 const CommissionController = require("./CommissionController");
 const { countAndUpdateCoin, removeNum } = require("./CoinController");
-const {
-  getMyAgents,
-  getUserInformation,
-  getUserByUsername,
-} = require("./AuthController");
+const { getMyAgents, getUserInformation } = require("./AuthController");
 const clientCollection = require("../helper/clientCollection");
 const countCash = require("../helper/countCash");
 const BetList = require("../models/BetList");
@@ -21,22 +16,22 @@ const MatchList = require("../models/MatchList");
 const MatchBetList = require("../models/MatchBetList");
 const { ObjectId } = require("mongodb");
 const positionCalculator = require("../helper/positionCalculator");
+const { default: mongoose } = require("mongoose");
+const http = require("http");
+const https = require("https");
+const axiosInstance = axios.create({
+  timeout: 5000,
+  httpAgent: new http.Agent({ keepAlive: true }),
+  httpsAgent: new https.Agent({ keepAlive: true }),
+});
 
 const BetController = {
   didWon(isBack, value, odds) {
-    var won = false;
+    let won;
     if (isBack) {
-      if (value >= odds) {
-        won = true;
-      } else {
-        won = false;
-      }
+      won = value >= odds;
     } else {
-      if (value < odds) {
-        won = true;
-      } else {
-        won = false;
-      }
+      won = value < odds;
     }
     return won;
   },
@@ -65,6 +60,7 @@ const BetController = {
         player,
         company,
         matchId,
+        fancyName,
       } = data[i];
       const won = BetController.didWon(isBack, value, odds);
       wonArr.push(won);
@@ -75,7 +71,13 @@ const BetController = {
         company,
         commissionAmount,
         _id,
-        matchId
+        matchId,
+        fancyName
+      );
+      await BetUserMap.findOneAndUpdate(
+        { _id: _id },
+        { settled: true, won: won, result: value },
+        { new: true }
       );
       await countAndUpdateCoin(company.toLowerCase());
       await countAndUpdateCoin(player.toLowerCase());
@@ -87,7 +89,7 @@ const BetController = {
     }
     const settledArr = [];
     var totalBetAmount = 0;
-    // var match_id;
+    var match_id;
     var player_id;
     for (let i = 0; i < resp.length; i++) {
       const {
@@ -100,24 +102,28 @@ const BetController = {
         stake,
         priceValue,
       } = resp[i];
-      // match_id = matchId;
+
       player_id = userId;
+      match_id = matchId;
       const rate = priceValue > 1 ? priceValue : 1;
       const amount = rate * stake;
       totalBetAmount += amount;
       if (!settledArr.includes(transactionId)) {
         settledArr.push(transactionId);
         const transactionData = await CoinMap.findOne({ _id: transactionId });
-        const coinDb = new CoinMap({
-          value: parseFloat(transactionData.value),
-          msg: "Settlement",
-          type: 3,
-          matchId,
-          getter: userId,
-          createdOn: Date.now(),
-        });
-        await coinDb.save();
-        await countAndUpdateCoin(userId.toLowerCase());
+        if (transactionData.value !== 0) {
+          const coinDb = new CoinMap({
+            value: parseFloat(transactionData.value),
+            msg: "Settlement",
+            type: 3,
+            selectionName: fancyName,
+            matchId,
+            getter: userId,
+            createdOn: Date.now(),
+          });
+          await coinDb.save();
+          await countAndUpdateCoin(userId.toLowerCase());
+        }
       }
       const isWon = BetController.didWon(isBack, value, odds);
       await BetDataMap.findOneAndUpdate(
@@ -126,30 +132,13 @@ const BetController = {
         { merge: true }
       );
     }
-    const playerInfo = await getUserInformation(player_id);
-
-    const comAmount = (totalBetAmount * playerInfo.sessionCommission) / 100;
-    // if (comAmount !== 0) {
-    //   const coinDb = new CoinMap({
-    //     value: Math.abs(comAmount),
-    //     msg: "Commission Distribution",
-    //     matchId: match_id,
-    //     type: 3,
-    //     getter: player_id,
-    //     createdOn: Date.now(),
-    //   });
-    //   await coinDb.save();
-    //   console.log(player_id);
-    //   countAndUpdateCoin(player_id);
-    // }
     const resultDb = new BetList({
       fancyName,
       value,
+      matchId: match_id,
       createdOn: Date.now(),
     });
-
     await resultDb.save();
-
     return;
   },
   // async resolveTossBet(result, matchId) {
@@ -284,15 +273,15 @@ const BetController = {
     }
     await MatchList.updateOne(
       { gameId: matchId },
-      { $set: { settled: true, winnerSid } }
+      { $set: { settled: true, winnerSid: winnerSid } }
     );
     var won = false;
     const data = await BetUserMap.find({
-      marketId: sid,
+      matchId: matchId,
       settled: false,
     });
     const matchInfo = await MatchBetMap.find({
-      marketId: sid,
+      matchId: matchId,
       settled: false,
     });
     if (matchInfo.length === 0) {
@@ -304,12 +293,11 @@ const BetController = {
       // handle case where coin document is not found
     }
     const transactionData = coin.toObject();
-    let position = transactionData.newArr.filter(
-      (x) => parseInt(x.sid) === winnerSid
-    )[0].position;
+
+    let position = transactionData.newArr.filter((x) => x.sid === winnerSid)[0]
+      .position;
     let playerId,
       playerComPercentage = 3;
-    let pMatchId;
     const comArr = [];
     for (i = 0; i < data.length; i++) {
       const {
@@ -323,18 +311,18 @@ const BetController = {
         matchId,
         commissionPercentage,
         adminShare,
+        selectionName,
       } = data[i];
       playerId = player;
       playerComPercentage -= commissionPercentage;
-      pMatchId = matchId;
       if (isBack) {
-        if (parseInt(winnerSid) === parseInt(selectionId)) {
+        if (winnerSid === selectionId) {
           won = true;
         } else {
           won = false;
         }
       } else {
-        if (parseInt(winnerSid) === parseInt(selectionId)) {
+        if (winnerSid === selectionId) {
           won = false;
         } else {
           won = true;
@@ -350,6 +338,7 @@ const BetController = {
             value: Math.abs(comAmount),
             msg: "Commission Distribution",
             matchId,
+            selectionName,
             type: 3,
             getter: company,
             createdOn: Date.now(),
@@ -368,7 +357,8 @@ const BetController = {
           company,
           lossAmount,
           _id,
-          matchId
+          matchId,
+          selectionName
         );
       } else {
         CommissionController.coinDistribution(
@@ -377,7 +367,8 @@ const BetController = {
           company,
           profitAmount,
           _id,
-          matchId
+          matchId,
+          selectionName
         );
       }
       countAndUpdateCoin(player.toLowerCase());
@@ -388,18 +379,6 @@ const BetController = {
       const comAmount = (position * playerComPercentage) / 100;
       const elem = { comAmount, player: playerId };
       comArr.push(elem);
-      // if (comAmount !== 0) {
-      //   const coinDb = new CoinMap({
-      //     value: Math.abs(comAmount),
-      //     msg: "Commission Distribution",
-      //     matchId: pMatchId,
-      //     type: 3,
-      //     getter: playerId,
-      //     createdOn: Date.now(),
-      //   });
-      //   await coinDb.save();
-      //   countAndUpdateCoin(playerId);
-      // }
     } else {
       const elem = { comAmount: 0, player: playerId };
       comArr.push(elem);
@@ -409,7 +388,6 @@ const BetController = {
       console.log("No matching documents.");
       return;
     }
-
     const settledArr = [];
     for (const bet of matchInfo) {
       const { selectionId, isBack, userId, transactionId, matchId } = bet;
@@ -417,26 +395,28 @@ const BetController = {
         settledArr.push(transactionId);
         const coinRef = await CoinMap.findOne({ _id: transactionId });
         const transactionData = coinRef.toObject();
-        const coinDb = new CoinMap({
-          value: parseFloat(transactionData.value),
-          msg: "Settlement",
-          matchId,
-          type: 3,
-          getter: userId,
-          createdOn: Date.now(),
-        });
-        await coinDb.save();
-        countAndUpdateCoin(userId);
+        if (transactionData.value !== 0) {
+          const coinDb = new CoinMap({
+            value: parseFloat(transactionData.value),
+            msg: "Settlement",
+            matchId,
+            type: 3,
+            getter: userId,
+            createdOn: Date.now(),
+          });
+          await coinDb.save();
+          countAndUpdateCoin(userId);
+        }
       }
       var isWon = false;
       if (isBack) {
-        if (parseInt(winnerSid) === parseInt(selectionId)) {
+        if (winnerSid === selectionId) {
           isWon = true;
         } else {
           isWon = false;
         }
       } else {
-        if (parseInt(winnerSid) === parseInt(selectionId)) {
+        if (winnerSid === selectionId) {
           isWon = false;
         } else {
           isWon = true;
@@ -451,19 +431,21 @@ const BetController = {
     let client = {};
     for (const bet of data) {
       const { selectionId, isBack, company, matchId, matchname, player } = bet;
-      if (!agentArr.includes((x) => x.company === player)) {
-        client = { company: player, matchId, matchname };
+      if (!agentArr.some((agent) => agent.company === company)) {
+        client.company = player;
+        client.matchId = matchId;
+        client.matchname = matchname;
         agentArr.push({ company, matchId, matchname });
       }
       var isWon = false;
       if (isBack) {
-        if (parseInt(winnerSid) === parseInt(selectionId)) {
+        if (winnerSid === selectionId) {
           isWon = true;
         } else {
           isWon = false;
         }
       } else {
-        if (parseInt(winnerSid) === parseInt(selectionId)) {
+        if (winnerSid === selectionId) {
           isWon = false;
         } else {
           isWon = true;
@@ -472,7 +454,12 @@ const BetController = {
       const comAmount = comArr.filter((x) => x.player === company)[0].comAmount;
       await BetUserMap.updateOne(
         { _id: bet._id },
-        { settled: true, won: isWon, winner: winnerSid, comAmount }
+        {
+          settled: true,
+          won: isWon,
+          winner: winnerSid,
+          comAmount,
+        }
       );
     }
     agentArr.push(client);
@@ -482,6 +469,7 @@ const BetController = {
       createdOn: Date.now(),
     });
     await resultDoc.save();
+    console.log(agentArr);
     for (var i = 0; i < agentArr.length; i++) {
       const { matchId, company, matchname } = agentArr[i];
       let final;
@@ -516,6 +504,110 @@ const BetController = {
     }
     return;
   },
+  async checkDeleteFancyResult(req, res) {
+    try {
+      const { fancyName, matchId } = req.body;
+      await BetController.deleteFancyResult(fancyName, matchId);
+      res.send("Fancy Result Deleted!");
+    } catch (error) {
+      console.log(error);
+      res.send("Error Encountered");
+    }
+  },
+  async checkDeleteMatchResult(req, res) {
+    try {
+      const { winner, matchId } = req.body;
+      await BetController.deleteMatchResult(winner, matchId);
+      res.send("Match Result Deleted!");
+    } catch (error) {
+      console.log(error);
+      res.send("Error Encountered");
+    }
+  },
+  async deleteFancyResult(fancyName, matchId) {
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const queryOptions = { session };
+        const queries = [
+          BetDataMap.updateMany(
+            { matchId, fancyName },
+            { $set: { settled: false, won: false } },
+            queryOptions
+          ),
+          BetUserMap.updateMany(
+            { matchId, fancyName },
+            { $set: { settled: false, won: false } },
+            queryOptions
+          ),
+          CoinMap.deleteMany(
+            { matchId, selectionName: fancyName, type: 3 },
+            queryOptions
+          ),
+        ];
+        for await (const query of queries) {
+          // Do nothing
+        }
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      session.endSession();
+    }
+  },
+  async deleteMatchResult(winner, matchId) {
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const queryOptions = { session };
+        const queries = [
+          MatchBetMap.updateMany(
+            { matchId },
+            { $set: { settled: false, won: false } },
+            queryOptions
+          ),
+          BetUserMap.updateMany(
+            { matchId, winner },
+            { $set: { settled: false } },
+            queryOptions
+          ),
+          CoinMap.deleteMany({ selectionName: matchId, type: 3 }, queryOptions),
+        ];
+        for await (const query of queries) {
+          // Do nothing
+        }
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      session.endSession();
+    }
+  },
+  async deleteMatchBet(req, res) {
+    const { marketId, pwd } = req.params;
+    if (!marketId || pwd !== "567Eight@") {
+      return res.send("<3");
+    }
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const queryOptions = { session };
+        const queries = [
+          MatchBetMap.deleteMany({ marketId }, queryOptions),
+          BetUserMap.deleteMany({ marketId, name: "matchbet" }, queryOptions),
+          CoinMap.deleteMany({ "newArr.0.mid": marketId }, queryOptions),
+        ];
+        for await (const query of queries) {
+          // Do nothing
+        }
+      });
+      res.send("Bet Deleted");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      session.endSession();
+    }
+  },
   async settleBet(req, res) {
     const { fancyName, value } = req.body;
     BetController.resolveBet(fancyName, value);
@@ -532,12 +624,29 @@ const BetController = {
   //   res.send({ msg: "Bet Settled" });
   // },
   async getBetsByMatchId(req, res) {
-    const { matchId } = req.params;
-    const userRef = BetDataMap.find({ matchId });
-    userRef.exec().then((data) => {
-      const unique = [...new Set(data.map((item) => item.fancyName))];
-      res.send(unique);
-    });
+    try {
+      const { matchId } = req.params;
+      const uniqueFancyNames = await BetDataMap.distinct("fancyName", {
+        matchId,
+      }).exec();
+      res.send(uniqueFancyNames);
+    } catch (error) {
+      // Handle any errors that occur during the execution
+      res.status(500).send("An error occurred");
+    }
+  },
+  async fetchUnsettledMatches(socket) {
+    try {
+      const currentTime = new Date().toISOString(); // Convert current time to ISO string format
+      const unsettledMatches = await MatchList.find({
+        settled: false,
+        marketStartTime: { $lt: currentTime },
+      }).exec();
+      socket.emit("unsettledMatches", unsettledMatches);
+    } catch (error) {
+      console.error(error);
+      socket.emit("error", "Internal server error");
+    }
   },
   async getCompanyLenDen(req, res) {
     const userId = req.user.email.split("@")[0];
@@ -581,24 +690,89 @@ const BetController = {
   //   const betData = await TossBet.find({ matchId: matchId, userId: userId });
   //   res.send(betData);
   // },
-  async getSessionBetPosition(req, res) {
+  // async getSessionBetPosition(req, res) {
+  //   try {
+  //     const userId = req.user.email.split("@")[0];
+  //     const { matchId } = req.params;
+  //     const bets = await BetUserMap.find({ userId, matchId });
+  //     res.send(bets);
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).send("Server error");
+  //   }
+  // },
+  async getDeclaredSession(req, res) {
     try {
       const userId = req.user.email.split("@")[0];
       const { matchId } = req.params;
-      const bets = await SessionBet.find({ userId, matchId });
-      res.send(bets);
+      const bets = await BetUserMap.find({
+        company: userId,
+        matchId,
+        settled: true,
+        name: "sessionbet",
+      });
+      const arr = [];
+      for (let i = 0; i < bets.length; i++) {
+        const row = bets[i];
+        const {
+          won,
+          fancyName,
+          profitAmount,
+          lossAmount,
+          sessionCommission,
+          myCom,
+          createdOn,
+        } = row;
+        if (!arr.some((x) => x.fancyName === row.fancyName)) {
+          const result = row.result
+            ? row.result
+            : row.result === 0
+            ? 0
+            : "No Result";
+          const sum = won ? -lossAmount : profitAmount;
+          const elem = {
+            fancyName,
+            result,
+            createdOn,
+            sum: sum + sessionCommission - Math.abs(myCom),
+          };
+          arr.push(elem);
+        } else {
+          const sum = won ? -lossAmount : profitAmount;
+          arr.filter((x) => x.fancyName === fancyName)[0].sum +=
+            sum + sessionCommission - Math.abs(myCom);
+        }
+      }
+      return res.send(arr);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Server error");
+      return res.send({ status: 0, msg: "Server Error" });
     }
+  },
+  async getMarketPosition(req, res) {
+    const userId = req.user.email.split("@")[0];
+    const { matchId } = req.params;
+    const bets = await BetUserMap.find({
+      company: userId,
+      matchId,
+      settled: true,
+      name: "sessionbet",
+    });
   },
   async getBetUsingUserId(req, res) {
     const { matchId } = req.params;
     const userId = req.user.email.split("@")[0];
-    const data = await BetController.getMyPlayerBets(matchId, userId);
+    const data = await BetController.getMyPlayerSessionBets(matchId, userId);
     res.send(data);
   },
   async getMyPlayerBets(matchId, userId) {
+    const userRef = await BetUserMap.find({
+      matchId: matchId,
+      company: userId,
+    });
+    return userRef;
+  },
+  async getMyPlayerSessionBets(matchId, userId) {
     const userRef = await BetUserMap.find({
       matchId: matchId,
       company: userId,
@@ -631,16 +805,12 @@ const BetController = {
     }
   },
   async getMyPlayerAllBets(matchId, userId) {
-    let query = { company: userId, settled: true };
-    if (matchId !== "all") {
-      query.matchId = matchId;
-    }
-    try {
-      const data = await BetUserMap.find(query);
-      return data;
-    } catch (error) {
-      return;
-    }
+    const query =
+      matchId !== "all"
+        ? { company: userId, settled: true, matchId }
+        : { company: userId, settled: true };
+    const data = await BetUserMap.find(query);
+    return data;
   },
   async getDetailedMatchBets(req, res) {
     const { matchId } = req.params;
@@ -652,19 +822,34 @@ const BetController = {
       res.status(500).send("Server error");
     }
   },
-  async getAllBets(req, res) {
+  async getAllBets(socket) {
     try {
-      const data = await BetDataMap.find({ settled: { $ne: true } });
-      const arr = [];
-      data.forEach((bet) => {
-        if (!arr.some((e) => e.fancyName === bet.fancyName)) {
-          arr.push({ fancyName: bet.fancyName, matchId: bet.matchId });
-        }
-      });
-      res.send(arr);
+      const bets = await BetDataMap.aggregate([
+        { $match: { settled: false } },
+        {
+          $group: {
+            _id: "$fancyName",
+            matchId: { $first: "$matchId" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            fancyName: "$_id",
+            matchId: 1,
+          },
+        },
+        {
+          $sort: {
+            fancyName: 1, // Sort in ascending order
+          },
+        },
+      ]);
+
+      socket.emit("allBets", bets);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Server Error");
+      socket.emit("error", "Internal server error");
     }
   },
   // async getAllTossBets(req, res) {
@@ -683,6 +868,24 @@ const BetController = {
   //     res.send(arr);
   //   }
   // },
+  async getSOdds(req, res) {
+    try {
+      const url = `https://api3.streamingtv.fun:3457/api/bm_fancy/32472782/1`;
+      const headers = {
+        Origin: "https://www.lc247.live",
+      };
+      const response = await axios.get(url, { headers });
+      const data = {
+        t1: null,
+        t2: [response.data.BMmarket],
+        t3: response.data.Fancymarket,
+      };
+      res.send(data);
+    } catch (error) {
+      console.error(error);
+      res.send({ err: "Error" });
+    }
+  },
   async getAllMatchTossBets(req, res) {
     const { matchId } = req.params;
     const userId = req.user.email.split("@")[0];
@@ -1187,7 +1390,6 @@ const BetController = {
     const data = await MatchBetMap.find({
       matchId,
       userId: username,
-      settled: true,
     });
     res.send(data);
   },
@@ -1212,11 +1414,11 @@ const BetController = {
     return nRate;
   },
   async placeMatchBet(req, res) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     const username = req.user.email.split("@")[0];
     const {
       stake,
       isBack,
-      isLay,
       odds,
       selectionName,
       matchname,
@@ -1259,17 +1461,22 @@ const BetController = {
         status: 0,
       });
     }
-
-    const url = `http://139.144.12.137/getbm2?eventId=${matchId}`;
+    const apiUrl = "https://betplace247.com/api/client/clientgetFullMarket";
+    const apiResponse = await axios.post(apiUrl, { eventId: matchId });
+    let matchData = apiResponse.data;
+    if (matchData.length === 0) {
+      return;
+    }
+    const { marketId } = matchData[0];
+    const url = `https://fly247.tech/api/v1/api/getOdds/${matchId}/${marketId}`;
     const response = await axios.get(url);
     const runnerArray = [];
     var selectionId;
     if (response.data) {
       if (response.data.t1 && response.data.t1.length) {
-        selectionId = response.data.t1[0].filter(
-          (x) => x.nat === selectionName
-        )[0].sid;
-        const resp = response.data.t1[0];
+        selectionId = response.data.t1.filter((x) => x.nat === selectionName)[0]
+          .sid;
+        const resp = response.data.t1;
         for (var i = 0; i < resp.length; i++) {
           const object = {
             runner: resp[i].nat,
@@ -1533,6 +1740,7 @@ const BetController = {
     }
     return retStr;
   },
+
   convertTimeStamp(x) {
     if (x) {
       const timestamp = new Date(
@@ -1781,12 +1989,12 @@ const BetController = {
     }
   },
   async placeBet(req, res) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     try {
       const username = req.user.email.split("@")[0];
       const {
         stake,
         isBack,
-        isLay,
         priceValue,
         odds,
         fancyName,
@@ -1794,19 +2002,7 @@ const BetController = {
         matchId,
         sportId,
       } = req.body;
-      // if (
-      //   stake === undefined ||
-      //   isBack === undefined ||
-      //   isLay === undefined ||
-      //   priceValue === undefined ||
-      //   odds === undefined ||
-      //   fancyName === undefined ||
-      //   matchname === undefined ||
-      //   matchId === undefined ||
-      //   sportId === undefined
-      // ) {
-      //   return res.send({ msg: "Insufficient data recieved!" });
-      // }
+      console.log(matchId);
       const priceVal = parseFloat(priceValue).toFixed(2);
       if (stake < 100) {
         return res.send({
@@ -1821,7 +2017,14 @@ const BetController = {
         });
       }
 
-      const url = `http://139.144.12.137/getbm2?eventId=${matchId}`;
+      const apiUrl = "https://betplace247.com/api/client/clientgetFullMarket";
+      const apiResponse = await axios.post(apiUrl, { eventId: matchId });
+      let matchData = apiResponse.data;
+      if (matchData.length === 0) {
+        return;
+      }
+      const { marketId } = matchData[0];
+      const url = `https://fly247.tech/api/v1/api/getOdds/${matchId}/${marketId}`;
       const response = await axios.get(url);
       if (response.data) {
         if (response.data && response.data.t3.length > 0) {
@@ -1937,6 +2140,7 @@ const BetController = {
                 value: parseFloat(amount),
                 msg: `Bet placed of ${stake} coins on ${fancyName}`,
                 type: 2,
+                selectionName: fancyName,
                 matchId: matchId,
                 setter: username.toLowerCase(),
                 createdOn: Date.now(),
@@ -2001,6 +2205,7 @@ const BetController = {
                   transactionId: docId,
                   stake: stake,
                   isBack: isBack,
+                  marketId,
                   isLay: !isBack,
                   pname: req.user.name,
                   priceValue: priceVal,
@@ -2025,8 +2230,8 @@ const BetController = {
         return res.send({ msg: "Unknown Error" });
       }
     } catch (error) {
-      return res.send({ msg: "Some error Occurred", status: 0 });
       console.log(error);
+      return res.send({ msg: "Session Changed", status: 0 });
     }
   },
   async getUserBets(req, res) {
@@ -2042,8 +2247,8 @@ const BetController = {
     const arr = [];
     for (var i = 0; i < data.length; i++) {
       const row = data[i];
-      if (row.settled) {
-        if (arr.filter((x) => x.matchId === row.matchId).length) {
+      if (arr.filter((x) => x.matchId === row.matchId).length) {
+        if (row.settled) {
           if (row.won && row.won === true) {
             arr.filter((x) => x.matchId === row.matchId)[0].sum +=
               row.lossAmount;
@@ -2051,13 +2256,20 @@ const BetController = {
             arr.filter((x) => x.matchId === row.matchId)[0].sum -=
               row.profitAmount;
           }
-        } else {
-          const match = matchList.filter((x) => x.gameId === row.matchId)[0];
+        }
+      } else {
+        const match = matchList.filter((x) => x.gameId === row.matchId)[0];
+        if (match) {
           const sum =
-            row.won && row.won === true ? row.lossAmount : -row.profitAmount;
+            row.settled === true
+              ? row.won && row.won === true
+                ? row.lossAmount
+                : -row.profitAmount
+              : 0;
           arr.push({
             matchId: row.matchId,
             matchname: match.eventName,
+            marketStartTime: match.marketStartTime,
             sum: sum,
             createdOn: row.createdOn,
           });

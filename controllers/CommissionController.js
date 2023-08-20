@@ -22,7 +22,7 @@ const CommissionController = {
       res.send({ err: "An error occurred while fetching data" });
     }
   },
-  async coinDistribution(won, userId, company, amount, id, matchId) {
+  async coinDistribution(won, userId, company, amount, matchId, fancyName) {
     let getter = company;
     let setter = userId;
     if (won) {
@@ -37,16 +37,12 @@ const CommissionController = {
           msg: "Bet coin distribution",
           matchId,
           getter,
+          selectionName: fancyName,
           setter,
           createdOn: Date.now(),
         });
         await coin.save();
       }
-      await BetUserMap.findOneAndUpdate(
-        { _id: id },
-        { settled: true, won: won },
-        { new: true }
-      );
     } catch (err) {
       console.error(err);
     }
@@ -156,7 +152,6 @@ const CommissionController = {
         };
         arr.push(inf);
       }
-
       if (arr.filter((x) => x.id === getter).length) {
         arr.filter((x) => x.id === getter)[0].commissionAmount =
           Math.abs(comDis);

@@ -1,31 +1,15 @@
 const mongoose = require("mongoose");
 
 var matchListSchema = new mongoose.Schema({
-  back1: {
+  id: {
     type: Number,
     required: true,
   },
-  back11: {
-    type: Number,
+  sportId: {
+    type: String,
     required: true,
   },
-  back12: {
-    type: Number,
-    required: true,
-  },
-  lay1: {
-    type: Number,
-    required: true,
-  },
-  lay11: {
-    type: Number,
-    required: true,
-  },
-  lay12: {
-    type: Number,
-    required: true,
-  },
-  eid: {
+  eventId: {
     type: String,
     required: true,
   },
@@ -33,7 +17,31 @@ var matchListSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  f: {
+  marketId: {
+    type: String,
+    required: true,
+  },
+  runnerId1: {
+    type: String,
+    required: true,
+  },
+  runnerName1: {
+    type: String,
+    required: true,
+  },
+  runnerId2: {
+    type: String,
+    required: true,
+  },
+  runnerName2: {
+    type: String,
+    required: true,
+  },
+  marketStartTime: {
+    type: Date,
+    required: true,
+  },
+  matchStatus: {
     type: String,
     required: true,
   },
@@ -41,14 +49,7 @@ var matchListSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  inPlay: {
-    type: String,
-    required: true,
-  },
-  m1: {
-    type: String,
-    required: true,
-  },
+
   marketId: {
     type: String,
     required: true,
@@ -61,16 +62,8 @@ var matchListSchema = new mongoose.Schema({
     type: Boolean,
     required: false,
   },
-  tv: {
-    type: String,
-    required: true,
-  },
-  vir: {
-    type: Number,
-    required: false,
-  },
   winnerSid: {
-    type: Number,
+    type: String,
     required: false,
   },
   createdOn: {

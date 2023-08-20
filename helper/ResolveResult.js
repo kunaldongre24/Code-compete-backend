@@ -2,61 +2,62 @@ const { resolveBet, resolveMatchBet } = require("../controllers/BetController");
 const axios = require("axios");
 const BetDataMap = require("../models/BetDataMap");
 const MatchList = require("../models/MatchList");
+const BetUserMap = require("../models/BetUserMap");
+
 const ResolveResult = async () => {
   try {
-    const betRef = BetDataMap.find({ settled: false }).exec();
-    const response = await betRef;
-    const data = response.map((doc) => {
-      const document = doc.toObject();
-      return document;
-    });
-    const matchBetRef = MatchList.find({ settled: false }).exec();
-    const matchResponse = await matchBetRef;
-    const matchList = matchResponse.map((doc) => {
-      const document = doc.toObject();
-      return document;
-    });
-    var resultData = [];
-    const unique = [...new Set(data.map((item) => item.matchId))];
-    const uniqueFancy = [...new Set(data.map((item) => item.fancyName))];
+    const betsToResolve = await BetUserMap.find({ settled: false });
+    const matchesToResolve = await MatchList.find({ settled: false });
 
-    for (var i = 0; i < unique.length; i++) {
-      const url =
-        "http://172.105.49.104:3000/resultbygameid?eventId=" + unique[i];
-      const res = await axios.get(url);
-      if (!res.data.status) {
-        resultData = [...resultData, ...res.data];
+    const uniqueMatches = [
+      ...new Set(betsToResolve.map(({ matchId }) => matchId)),
+    ];
+    const uniqueFancyNames = [
+      ...new Set(betsToResolve.map(({ fancyName }) => fancyName)),
+    ];
+
+    const resultDataPromises = uniqueMatches.map((id) =>
+      axios.get(`http://172.105.49.104:3000/resultbygameid?eventId=${id}`)
+    );
+    const resultDataResponses = await Promise.all(resultDataPromises);
+    const resultData = resultDataResponses
+      .filter(({ data }) => !data.status)
+      .flatMap(({ data }) => data);
+
+    const resolveBetPromises = [];
+    uniqueFancyNames.forEach((fancyName) => {
+      const result = resultData.find(({ nat }) => nat === fancyName)?.result;
+      if (result >= 0) {
+        resolveBetPromises.push(resolveBet(fancyName, result));
       }
-    }
-    for (var i = 0; i < uniqueFancy.length; i++) {
-      if (resultData.filter((x) => x.nat === uniqueFancy[i]).length > 0) {
-        const result = resultData.filter((x) => x.nat === uniqueFancy[i])[0]
-          .result;
-        if (result >= 0) {
-          resolveBet(uniqueFancy[i], result);
-        }
-      }
-    }
-    for (var i = 0; i < matchList.length; i++) {
-      const url =
-        "http://178.79.149.218:4000/listmarketbook/" + matchList[i].marketId;
-      const res = await axios.get(url);
+    });
+    await Promise.allSettled(resolveBetPromises);
+
+    const matchBetPromises = [];
+    for (const match of matchesToResolve) {
+      const { marketId, gameId } = match;
+      const res = await axios.get(
+        `http://178.79.149.218:4000/listmarketbook/${marketId}`
+      );
       const runnerList = res.data.length > 0 && res.data[0];
       const winnerSid =
-        runnerList.status && runnerList.runners
-          ? runnerList.runners.filter((x) => x.status === "WINNER").length > 0
-            ? runnerList.runners.filter((x) => x.status === "WINNER")[0]
+        runnerList?.status && runnerList.runners
+          ? runnerList.runners.filter(({ status }) => status === "WINNER")
+              .length > 0
+            ? runnerList.runners.find(({ status }) => status === "WINNER")
                 .selectionId
             : 0
           : 0;
       if (winnerSid > 0) {
-        resolveMatchBet(matchList[i].marketId, winnerSid, matchList[i]._id);
+        matchBetPromises.push(resolveMatchBet(marketId, winnerSid, gameId));
       }
     }
+    await Promise.allSettled(matchBetPromises);
 
     console.log("Bet Resolved");
   } catch (error) {
-    console.log(error);
+    console.log(error.code);
   }
 };
+
 module.exports = ResolveResult;

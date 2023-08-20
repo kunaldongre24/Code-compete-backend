@@ -5,7 +5,7 @@ const matchUserMapSchema = new Schema({
   company: { type: String, required: true },
   matchId: { type: String, required: true },
   matchname: { type: String, required: true },
-  sid: { type: Number, required: true },
+  sid: { type: String, required: true },
   sum: { type: Number, required: true },
   total: { type: Number, required: true },
   type: { type: String, required: true },

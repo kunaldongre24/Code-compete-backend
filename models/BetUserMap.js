@@ -12,7 +12,7 @@ const betUserMapSchema = new Schema({
   company: { type: String, required: true },
   lossAmount: { type: Number, required: true },
   profitAmount: { type: Number, required: true },
-  marketId: { type: String, required: false },
+  marketId: { type: String, required: true },
   fancyName: { type: String, required: false },
   name: { type: String, required: true },
   isBack: { type: Boolean, required: true },
@@ -20,6 +20,7 @@ const betUserMapSchema = new Schema({
   runnerArray: { type: Array, required: false },
   matchId: { type: String, required: true },
   matchname: { type: String, required: true },
+  result: { type: Number, required: false },
   odds: { type: Number, required: true },
   pname: { type: String, required: true },
   priceValue: { type: Number, required: true },
@@ -33,5 +34,4 @@ const betUserMapSchema = new Schema({
   won: { type: Boolean, default: false, required: true },
   createdOn: { type: Date, default: Date.now, required: true },
 });
-
 module.exports = mongoose.model("BetUserMap", betUserMapSchema);
