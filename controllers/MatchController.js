@@ -11,16 +11,19 @@ const MatchController = {
   async setMatchInfo(req, res) {
     try {
       const { matchId } = req.params;
-      const url = "http://marketsarket.in:3000/getcricketmatches";
-      const response = await axios.get(url);
+      const url = "https://betplace247.com/api/client/clientgetFullMarket";
+      const response = await axios.post(url, { eventId: matchId });
       const data = response.data;
-      const url2 = `http://139.144.12.137/getbm2?eventId=${matchId}`;
+      if (data.length === 0) {
+        return;
+      }
+      const singleMatch = data.filter((x) => x.eventId === matchId);
+      singleMatch[0].gameId = matchId;
+      const url2 = `https://fly247.tech/api/v1/api/getOdds/${matchId}/${singleMatch[0].marketId}`;
       const response2 = await axios.get(url2);
-
-      const singleMatch = data.filter((x) => x.gameId === matchId);
       const gameSnapshot = await MatchList.findOne({ gameId: matchId });
       if (response2.data.t1 && response2.data.t1.length && !gameSnapshot) {
-        const t1 = response2.data.t1[0];
+        const t1 = response2.data.t1;
         singleMatch[0].createdOn = Date.now();
         const runnerArray = [];
         for (var i = 0; i < t1.length; i++) {
@@ -64,7 +67,6 @@ const MatchController = {
       const data = betUserMap.map((doc) => doc.toObject());
       const matchList = await MatchList.find();
       const value = matchList.map((doc) => doc.toObject());
-
       for (var i = 0; i < value.length; i++) {
         let sum = 0;
         const arr = data.filter((x) => x.matchId === value[i].gameId);
@@ -82,7 +84,8 @@ const MatchController = {
               sum += arr[j].profitAmount;
             }
           } else if (arr[j].name === "sessionbet") {
-            myComm -= arr[j].myCom - arr[j].sessionCommission;
+            myComm -=
+              Math.abs(arr[j].myCom) - Math.abs(arr[j].sessionCommission);
             if (arr[j].won) {
               sum -= arr[j].lossAmount;
             } else {
@@ -99,7 +102,16 @@ const MatchController = {
       res.status(500).send("Internal server error");
     }
   },
-
+  async getMatchList(req, res) {
+    try {
+      const matchList = await MatchList.find();
+      const value = matchList.map((doc) => doc.toObject());
+      res.send(value);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal server error");
+    }
+  },
   async getSingleMatch(req, res) {
     try {
       const { matchId } = req.params;

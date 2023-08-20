@@ -18,6 +18,6 @@ router.get(
 );
 router.post("/signup", Auth, AuthController.signup);
 router.post("/editUser", Auth, AuthController.UpdateUser);
-// router.post("/createManager", Auth, AuthController.createManager);
+router.post("/createManager", Auth, AuthController.createManager);
 
 module.exports = router;

@@ -6,6 +6,7 @@ const CoinSchema = new Schema({
   setter: { type: String, required: false },
   getterPreviousLimit: { type: Number, required: false },
   setterPreviousLimit: { type: Number, required: false },
+  selectionName: { type: String, required: false },
   type: { type: Number, required: true },
   value: { type: Number, required: true },
   msg: { type: String, default: "-", required: true },

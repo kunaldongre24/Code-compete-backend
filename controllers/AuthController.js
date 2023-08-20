@@ -145,49 +145,41 @@ const AuthController = {
     }
   },
 
-  // createManager(req, res) {
-  //   const companyId = req.user.email.split("@")[0];
-  //   const { username, password, level, name } = req.body;
-  //   if (
-  //     username === undefined ||
-  //     password === undefined ||
-  //     name === undefined ||
-  //     companyId === undefined ||
-  //     level === undefined
-  //   ) {
-  //     return res.send({ err: "Missing Information" });
-  //   }
-  //   const email = `${username}@fly247.in`;
-  //   fs.auth()
-  //     .createUser({
-  //       email,
-  //       password: "sa@#!$#@@$%2" + password,
-  //       displayName: name,
-  //     })
-  //     .then(async (userRecord) => {
-  //       const userRef = db
-  //         .collection("users")
-  //         .where("username", "==", companyId);
-  //       await userRef
-  //         .get()
-  //         .then(async (value) => {
-  //           const userJson = {
-  //             uid: userRecord.uid,
-  //             username,
-  //             name,
-  //             email,
-  //             level,
-  //             companyId,
-  //           };
-  //           const usersDb = db.collection("users");
-  //           await usersDb.doc(userRecord.uid).set(userJson);
-  //           res.send({ userCreated: true });
-  //         })
-  //         .catch((error) => {
-  //           console.log("Error creating new user:", error);
-  //         });
-  //     });
-  // },
+  async createManager(req, res) {
+    try {
+      const companyId = req.user.email.split("@")[0];
+      if (companyId !== "cc0001") {
+        return;
+      }
+
+      const { username, password, level, name } = req.body;
+      if (!username || !password || !name || !companyId || !level) {
+        return res.send({ err: "Missing Information" });
+      }
+
+      const email = `${username.toLowerCase()}@fly247.in`;
+      const userRecord = await fs.auth().createUser({
+        email,
+        password: "sa@#!$#@@$%2" + password,
+        displayName: name,
+      });
+
+      const userJson = {
+        uid: userRecord.uid,
+        username: username.toLowerCase(),
+        name,
+        email,
+        level,
+        companyId,
+      };
+      await UserModel.create(userJson);
+
+      res.send({ userCreated: true });
+    } catch (error) {
+      console.log("Error creating new user:", error);
+      res.send({ userCreated: false, err: "Failed to create user" });
+    }
+  },
   async UpdateUser(req, res) {
     const { uid, fname, lname } = req.body;
     if (uid === undefined || fname === undefined || lname === undefined) {
@@ -201,7 +193,9 @@ const AuthController = {
         { new: true }
       );
       if (!user) {
-        return res.status(404).send({ error: "User not found" });
+        return res
+          .status(404)
+          .send({ userCreated: false, msg: "User not found" });
       }
       return res.status(200).send({
         userUpdated: true,
@@ -209,7 +203,9 @@ const AuthController = {
       });
     } catch (error) {
       console.log(error);
-      return res.status(500).send({ error: "Internal server error" });
+      return res
+        .status(500)
+        .send({ userCreated: false, msg: "Internal server error" });
     }
   },
   isBlank(num) {
@@ -241,15 +237,6 @@ const AuthController = {
         isBlank(AgentMatchcommision) > 0 ||
         isBlank(AgentSessioncommision) > 0
       ) {
-        console.log(
-          username,
-          password,
-          name,
-          level,
-          isBlank(fixedLimit),
-          isBlank(AgentMatchcommision),
-          isBlank(AgentSessioncommision)
-        );
         return res.send({ userCreated: false, msg: "Missing Information" });
       }
 
@@ -266,7 +253,7 @@ const AuthController = {
       }
       if (parseInt(userData.level) !== 1 && totalCoins < fixedLimit) {
         console.log("Insufficient Balance");
-        res.send({ userCreate: false, msg: "Insufficient Balance" });
+        res.send({ userCreated: false, msg: "Insufficient Balance" });
         return;
       }
 
@@ -301,10 +288,8 @@ const AuthController = {
         type: 1,
         getter: username.toLowerCase(),
         setter: userData.username.toLowerCase(),
-        setterPreviousLimit: p2Coins ? p2Coins : 0,
-        getterPreviousLimit: parseFloat(fixedLimit)
-          ? parseFloat(fixedLimit)
-          : 0,
+        setterPreviousLimit: p1Coins ? p1Coins : 0,
+        getterPreviousLimit: 0,
         createdOn: Date.now(),
       };
 

@@ -1,4 +1,5 @@
 const UserModel = require("../models/User");
+const CoinController = require("./CoinController");
 
 const ListController = {
   async getSaList(req, res) {
@@ -63,13 +64,18 @@ const ListController = {
   },
   async getAllList(req, res) {
     const username = req.user.email.split("@")[0];
-    try {
-      const users = await UserModel.find({ companyId: username });
-      res.send(users);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("An error occurred while retrieving all users");
-    }
+    const users = await UserModel.find({ companyId: username });
+
+    const usersWithBalance = await Promise.all(
+      users.map(async (user) => {
+        const downBalance = await CoinController.calculateDownBalance(
+          user.username
+        );
+        return { ...user.toObject(), downBalance: downBalance };
+      })
+    );
+
+    res.send(usersWithBalance);
   },
 };
 

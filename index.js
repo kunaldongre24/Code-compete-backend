@@ -7,9 +7,6 @@ const logger = require("morgan");
 var cors = require("cors");
 const cron = require("node-cron");
 const server = require("http").createServer(app);
-const ResolveResult = require("./helper/ResolveResult");
-const getMatchOdds = require("./helper/getMatchOdds");
-const getMatchScore = require("./helper/getMatchScore");
 const getMyPlayerBets = require("./helper/getMyPlayerBets");
 const origin = [
   "http://localhost:3000",
@@ -20,24 +17,36 @@ const origin = [
   "https://ng.fly247.in",
 ];
 const { PORT } = require("./config/config.js");
+const ApiController = require("./controllers/ApiController");
+const { pages } = require("./helper/scraptest");
+const BetController = require("./controllers/BetController");
 require("./config/database.js");
 
 const io = require("socket.io")(server, {
   cors: { origin },
 });
-
 io.on("connection", (socket) => {
-  console.log("Client connected");
+  console.log("Client connected", socket.id);
   let intervalId;
-  socket.on("getMatchOdds", (matchId) => {
+  socket.on("getMatchOdds", (data) => {
     intervalId = setInterval(async () => {
-      await getMatchOdds(matchId, socket);
-    }, 1000);
+      await ApiController.getMatchOdds(data, socket);
+    }, 500);
   });
   socket.on("getMatchScore", (matchId) => {
     intervalId = setInterval(async () => {
-      await getMatchScore(matchId, socket);
-    }, 1000);
+      await ApiController.matchWebSocket(matchId, socket);
+    }, 500);
+  });
+  socket.on("getUnsettledMatch", () => {
+    intervalId = setInterval(async () => {
+      await BetController.fetchUnsettledMatches(socket);
+    }, 500);
+  });
+  socket.on("getAllBets", () => {
+    intervalId = setInterval(async () => {
+      await BetController.getAllBets(socket);
+    }, 500);
   });
   socket.on("getMyPlayerBets", (data) => {
     intervalId = setInterval(async () => {
@@ -59,8 +68,10 @@ app.use(
     optionSuccessStatus: 200,
   })
 );
-
-cron.schedule("*/30 * * * * *", ResolveResult);
+cron.schedule("*/30 * * * * *", () => {
+  console.log(`pages:${pages.size}`, pages.size > 0 ? [...pages.keys()] : "");
+});
+// cron.schedule("0 */2 * * *", login);
 app.use("/static", express.static("static"));
 app.use(compression());
 app.use(logger("dev"));

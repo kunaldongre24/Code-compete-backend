@@ -17,10 +17,12 @@ var userSchema = new mongoose.Schema({
   matchCommission: {
     type: Number,
     required: true,
+    default: 0,
   },
   matchShare: {
     type: Number,
     required: true,
+    default: 0,
   },
   name: {
     type: String,
@@ -29,10 +31,12 @@ var userSchema = new mongoose.Schema({
   sessionCommission: {
     type: Number,
     required: true,
+    default: 0,
   },
   totalCoins: {
     type: Number,
     required: true,
+    default: 0,
   },
   uid: {
     type: String,
@@ -42,6 +46,7 @@ var userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  createdOn: { type: Date, default: Date.now, required: true },
 });
 
 //Export the model
