@@ -1,5 +1,4 @@
 const { getUserInformation } = require("../controllers/AuthController");
-const { db } = require("../db");
 const round = require("./round");
 const countClient = async (matchId, username) => {
   const userRef = db

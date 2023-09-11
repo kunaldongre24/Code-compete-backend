@@ -1,4 +1,3 @@
-const { fs } = require("../db");
 const CoinController = require("./CoinController");
 const { countAndUpdateCoin } = require("./CoinController");
 const UserModel = require("../models/User");

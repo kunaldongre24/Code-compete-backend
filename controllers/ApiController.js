@@ -87,52 +87,14 @@ const ApiController = {
   async getTOdds(req, res) {
     try {
       const { eventId } = req.params;
-      const url = "https://betplace247.com/api/client/clientgetFullMarket";
       const apiUrl =
-        "https://api2.streamingtv.fun:3469/api/bm_fancy/" + eventId;
+        "https://api3.streamingtv.fun:3459/api/bm_fancy/" + eventId;
 
-      let response;
-      if (cache[eventId]) {
-        response = { data: cache[eventId] };
-      } else {
-        console.log("Cache called!");
-        response = await axios.post(url, { eventId });
-        cache[eventId] = response.data;
-      }
-
-      const apiResponse = await axios.get(apiUrl);
-
-      const { data } = response;
+      const apiResponse = await axios.get(apiUrl, { headers: {
+        origin: "https://www.lc247.live"
+      }});
       const cData = apiResponse.data;
-
-      const t1 = [];
-      const {
-        runnerId1,
-        runnerName1,
-        runnerId2,
-        runnerName2,
-        runnerId3,
-        runnerName3,
-      } = data[0];
-
-      if (runnerId1 && runnerName1) {
-        t1.push({ sid: runnerId1, nat: runnerName1, sr: 1 });
-      }
-      if (runnerId2 && runnerName2) {
-        t1.push({ sid: runnerId2, nat: runnerName2, sr: 2 });
-      }
-      if (runnerId3 && runnerName3) {
-        t1.push({ sid: runnerId3, nat: runnerName3, sr: 3 });
-      }
-
-      const format = {
-        t1,
-        t2: { bm1: cData.BMmarket?.bm1 || [] },
-        t3: cData.Fancymarket || [],
-        eventId,
-      };
-
-      res.send(format);
+      res.send(cData);
     } catch (error) {
       console.log(error);
       res.send({ error });

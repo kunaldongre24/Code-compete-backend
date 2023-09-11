@@ -16,7 +16,6 @@ const origin = [
   "https://ma.fly247.in",
   "https://ng.fly247.in",
 ];
-const { PORT } = require("./config/config.js");
 const ApiController = require("./controllers/ApiController");
 const { pages } = require("./helper/scraptest");
 const BetController = require("./controllers/BetController");
@@ -68,9 +67,9 @@ app.use(
     optionSuccessStatus: 200,
   })
 );
-cron.schedule("*/30 * * * * *", () => {
-  console.log(`pages:${pages.size}`, pages.size > 0 ? [...pages.keys()] : "");
-});
+// cron.schedule("*/30 * * * * *", () => {
+//   console.log(`pages:${pages.size}`, pages.size > 0 ? [...pages.keys()] : "");
+// });
 // cron.schedule("0 */2 * * *", login);
 app.use("/static", express.static("static"));
 app.use(compression());
@@ -81,7 +80,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use("/api/v1/", indexRouter);
 // catch 404 and forward to erro  r handler
 
-const port = PORT || 8000;
+const port =  8000;
 server.listen(port, () => {
   console.log(`Listening on port ${port}...`);
 });

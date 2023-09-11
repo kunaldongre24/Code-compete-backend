@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { db } = require("../db");
 const Count = require("../models/Count");
 const MatchList = require("../models/MatchList");
 const BetUserMap = require("../models/BetUserMap");

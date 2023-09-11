@@ -1,12 +1,25 @@
-const mongoose = require("mongoose");
-const { MONGODB_URI } = require("./config.js");
+const mysql = require('mysql2');
 
-mongoose.set("strictQuery", false);
-mongoose
-  .connect(MONGODB_URI)
-  .then((conn) => {
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  })
-  .catch((error) => {
-    console.error(error.message, error.stack);
-  });
+// Create a MySQL connection pool
+const pool = mysql.createPool({
+  host: '127.0.0.1',
+  user: 'kunal',
+  password: 'e$9L#4fG*p&2T@7v',
+  database: 'fly247',
+  waitForConnections: true,
+  connectionLimit: 10, // Adjust this limit as needed
+  queueLimit: 0, 
+  port:3306
+});
+
+// Test the MySQL connection
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL database');
+  connection.release(); // Release the connection when done with it
+});
+
+module.exports = { pool };
