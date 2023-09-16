@@ -17,13 +17,8 @@ const MatchBetList = require("../models/MatchBetList");
 const { ObjectId } = require("mongodb");
 const positionCalculator = require("../helper/positionCalculator");
 const { default: mongoose } = require("mongoose");
-const http = require("http");
-const https = require("https");
-const axiosInstance = axios.create({
-  timeout: 5000,
-  httpAgent: new http.Agent({ keepAlive: true }),
-  httpsAgent: new https.Agent({ keepAlive: true }),
-});
+const getApiData = require("../helper/getApiData");
+
 
 const BetController = {
   didWon(isBack, value, odds) {
@@ -289,9 +284,7 @@ const BetController = {
       return;
     }
     const coin = await CoinMap.findOne({ _id: matchInfo[0].transactionId });
-    if (!coin) {
-      // handle case where coin document is not found
-    }
+   
     const transactionData = coin.toObject();
 
     let position = transactionData.newArr.filter((x) => x.sid === winnerSid)[0]
@@ -868,24 +861,7 @@ const BetController = {
   //     res.send(arr);
   //   }
   // },
-  async getSOdds(req, res) {
-    try {
-      const url = `https://api3.streamingtv.fun:3457/api/bm_fancy/32472782/1`;
-      const headers = {
-        Origin: "https://www.lc247.live",
-      };
-      const response = await axios.get(url, { headers });
-      const data = {
-        t1: null,
-        t2: [response.data.BMmarket],
-        t3: response.data.Fancymarket,
-      };
-      res.send(data);
-    } catch (error) {
-      console.error(error);
-      res.send({ err: "Error" });
-    }
-  },
+  
   async getAllMatchTossBets(req, res) {
     const { matchId } = req.params;
     const userId = req.user.email.split("@")[0];
@@ -1461,18 +1437,10 @@ const BetController = {
         status: 0,
       });
     }
-    const apiUrl = "https://betplace247.com/api/client/clientgetFullMarket";
-    const apiResponse = await axios.post(apiUrl, { eventId: matchId });
-    let matchData = apiResponse.data;
-    if (matchData.length === 0) {
-      return;
-    }
-    const { marketId } = matchData[0];
-    const url = `https://fly247.tech/api/v1/api/getOdds/${matchId}/${marketId}`;
-    const response = await axios.get(url);
+    const response = await getApiData(matchId);
     const runnerArray = [];
     var selectionId;
-    if (response.data) {
+    if (response.status) {
       if (response.data.t1 && response.data.t1.length) {
         selectionId = response.data.t1.filter((x) => x.nat === selectionName)[0]
           .sid;
@@ -1731,6 +1699,8 @@ const BetController = {
           res.send({ msg: "Bhav Changed.", status: 0 });
         }
       }
+    }else{
+      res.send({msg:"Match Closed!", status:0})
     }
   },
   replaceAll(string, obj) {
@@ -2017,16 +1987,8 @@ const BetController = {
         });
       }
 
-      const apiUrl = "https://betplace247.com/api/client/clientgetFullMarket";
-      const apiResponse = await axios.post(apiUrl, { eventId: matchId });
-      let matchData = apiResponse.data;
-      if (matchData.length === 0) {
-        return;
-      }
-      const { marketId } = matchData[0];
-      const url = `https://fly247.tech/api/v1/api/getOdds/${matchId}/${marketId}`;
-      const response = await axios.get(url);
-      if (response.data) {
+      const response = await getApiData(matchId);
+      if (response.status) {
         if (response.data && response.data.t3.length > 0) {
           const currentData = response.data.t3.filter(
             (x) => x.nat === fancyName
@@ -2228,6 +2190,8 @@ const BetController = {
           }
         }
         return res.send({ msg: "Unknown Error" });
+      }else{
+        return res.send({msg:"Some error in fetching data", status:0});
       }
     } catch (error) {
       console.log(error);

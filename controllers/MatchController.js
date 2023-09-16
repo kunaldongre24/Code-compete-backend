@@ -10,32 +10,19 @@ const MatchController = {
   async setMatchInfo(req, res) {
     try {
       const { matchId } = req.params;
-      const url = "https://betplace247.com/api/client/clientgetFullMarket";
+      const url = "https://111111.info/pad=82/listGames?sport=4&inplay=1";
       const response = await axios.post(url, { eventId: matchId });
       const data = response.data;
       if (data.length === 0) {
         return;
       }
       const singleMatch = data.filter((x) => x.eventId === matchId);
-      singleMatch[0].gameId = matchId;
-      const url2 = `https://fly247.tech/api/v1/api/getOdds/${matchId}/${singleMatch[0].marketId}`;
-      const response2 = await axios.get(url2);
-      const gameSnapshot = await MatchList.findOne({ gameId: matchId });
-      if (response2.data.t1 && response2.data.t1.length && !gameSnapshot) {
-        const t1 = response2.data.t1;
         singleMatch[0].createdOn = Date.now();
-        const runnerArray = [];
-        for (var i = 0; i < t1.length; i++) {
-          const elem = { sid: t1[i].sid, name: t1[i].nat };
-          runnerArray.push(elem);
-        }
-        singleMatch[0].runnerArray = runnerArray;
+
         singleMatch[0].settled = false;
         await MatchList.create(singleMatch[0]);
         res.send({ status: true });
-      } else {
-        return res.send({ status: false });
-      }
+     
     } catch (error) {
       console.error(error);
       res.status(500).send({
@@ -124,30 +111,7 @@ const MatchController = {
       res.status(500).send("Internal server error");
     }
   },
-  async getMatches(req, res) {
-    const url = `http://marketsarket.in:3000/getcricketmatches`;
-    const response = await axios.get(url);
-    res.send(response.data);
-  },
 
-  async fancyResult(req, res) {
-    const { eventId, fancyName } = req.body;
-    const result = await MatchController.oddsResult(eventId, fancyName);
-    res.send({ result });
-  },
-  async oddsResult(eventId, fancyName) {
-    const url = "http://172.105.49.104:3000/resultbygameid?eventId=" + eventId;
-    const response = await axios.get(url);
-    const data = response.data;
-    const result = data.filter((x) => x.nat === fancyName)[0].result;
-    return result;
-  },
-  async matchResult(req, res) {
-    const { eventId } = req.params;
-    const url = "http://172.105.49.104:3000/resultbygameid?eventId=" + eventId;
-    const response = await axios.get(url);
-    res.send(response.data);
-  },
 };
 
 module.exports = MatchController;

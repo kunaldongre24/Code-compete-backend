@@ -1,17 +1,19 @@
 const { getUserInformation } = require("../controllers/AuthController");
 const round = require("./round");
-const countClient = async (matchId, username) => {
-  const userRef = db
-    .collection("betUserMap")
-    .where("company", "==", username)
-    .where("settled", "==", true);
-  const userInfo = await getUserInformation(username);
+const countClient = async (username) => {
   try {
-    const value = await userRef.get();
-    const arr = [];
+    const userFilter = {
+      company: username,
+      settled: true,
+    };
 
-    const data = value.docs.map((doc) => {
-      const row = doc.data();
+    const userInfo = await getUserInformation(username); // Assuming this function is defined and working
+
+    const userDocs = await BetUserMap.find(userFilter);
+
+    const arr = [];
+    userDocs.forEach((doc) => {
+      const row = doc;
       const rate = row.priceValue > 1 ? row.priceValue : 1;
       const { myCom } = row;
       if (row.name === "sessionbet") {

@@ -10,7 +10,6 @@ router.post("/settleBet", BetController.settleBet);
 router.post("/settleMatchBet", BetController.settleMatchBet);
 router.post("/getCompanyReport", BetController.getCompanyReport);
 // router.post("/settleTossBet", Auth, BetController.settleTossBet);
-router.get("/odds", BetController.getSOdds);
 router.get("/getMatchBets/:matchId", Auth, BetController.getBetsByMatchId);
 router.get("/getBetPosition/:matchId", Auth, BetController.getMatchBetPosition);
 router.get(

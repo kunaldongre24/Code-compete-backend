@@ -5,7 +5,7 @@ const indexRouter = require("./routes/index");
 const compression = require("compression");
 const logger = require("morgan");
 var cors = require("cors");
-const cron = require("node-cron");
+// const cron = require("node-cron");
 const server = require("http").createServer(app);
 const getMyPlayerBets = require("./helper/getMyPlayerBets");
 const origin = [
@@ -17,8 +17,8 @@ const origin = [
   "https://ng.fly247.in",
 ];
 const ApiController = require("./controllers/ApiController");
-const { pages } = require("./helper/scraptest");
 const BetController = require("./controllers/BetController");
+const getMatchOdds = require("./helper/getMatchOdds");
 require("./config/database.js");
 
 const io = require("socket.io")(server, {
@@ -29,7 +29,7 @@ io.on("connection", (socket) => {
   let intervalId;
   socket.on("getMatchOdds", (data) => {
     intervalId = setInterval(async () => {
-      await ApiController.getMatchOdds(data, socket);
+      await getMatchOdds(data, socket);
     }, 500);
   });
   socket.on("getMatchScore", (matchId) => {

@@ -159,78 +159,7 @@ const CoinController = {
       return { err: error };
     }
   },
-  async getUsedLimit(id) {
-    const { matchId } = req.params;
-    var sum = 0;
-    const matchBetData = await MatchBetMap.find({
-      matchId: matchId,
-      userId: id,
-    });
-    const url = `http://139.144.12.137/getbm2?eventId=${matchId}`;
-    const response = await axios.get(url);
-    if (response.data.t2 && response.data.t2.length) {
-      let resp = response.data.t2[0].bm1;
-      resp = await positionCalculator(matchBetData, resp);
-      let negativeSum = 0;
-      for (let i = 0; i < resp.length; i++) {
-        if (resp[i].position && resp[i].position < 0) {
-          if (negativeSum > resp[i].position) {
-            negativeSum = resp[i].position;
-          }
-        }
-      }
-      sum += negativeSum;
-    }
 
-    const fancyBetData = await BetDataMap.find({
-      matchId,
-      userId: id,
-      settled: false,
-    });
-
-    const liveBets = fancyBetData;
-    const pairedIds = [];
-
-    for (let i = 0; i < liveBets.length; i++) {
-      const bet1 = liveBets[i];
-      if (pairedIds.includes(bet1._id)) {
-        continue;
-      }
-
-      for (let j = i + 1; j < liveBets.length; j++) {
-        const bet2 = liveBets[j];
-
-        if (pairedIds.includes(bet2._id)) {
-          continue;
-        }
-        if (bet1.fancyName === bet2.fancyName) {
-          if (
-            (bet1.isBack && !bet2.isBack && bet1.odds <= bet2.odds) ||
-            (!bet1.isBack && bet2.isBack && bet1.odds >= bet2.odds)
-          ) {
-            const amount1 = Math.round(bet1.stake * 100) / 100;
-            const amount2 = Math.round(bet2.stake * 100) / 100;
-            const stakeDiff = Math.abs(amount1 - amount2);
-            const amount3 =
-              Math.round(bet1.stake * bet1.priceValue * 100) / 100;
-            const amount4 =
-              Math.round(bet2.stake * bet2.priceValue * 100) / 100;
-            const lossDiff = Math.abs(amount3 - amount4);
-            const max = Math.max(stakeDiff, lossDiff);
-            sum += max;
-            pairedIds.push(bet1._id, bet2._id);
-
-            break;
-          }
-        }
-      }
-      if (!pairedIds.includes(bet1._id)) {
-        const rate1 = bet1.priceValue > 1 ? bet1.priceValue : 1;
-        const amount = Math.round(bet1.stake * rate1 * 100) / 100;
-        sum += amount;
-      }
-    }
-  },
   async calculateDownBalance(id) {
     try {
       const agentArr = await UserModel.find(

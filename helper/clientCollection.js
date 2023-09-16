@@ -1,17 +1,19 @@
 const { getUserInformation } = require("../controllers/AuthController");
+const BetUserMap = require("../models/BetUserMap")
 const clientCollection = async (matchId, username) => {
-  const userRef = db
-    .collection("betUserMap")
-    .where("matchId", "==", matchId)
-    .where("company", "==", username)
-    .where("settled", "==", true);
-  const userInfo = await getUserInformation(username);
   try {
-    const value = await userRef.get();
+    const userDocs = await BetUserMap.find({
+      matchId: matchId,
+      company: username,
+      settled: true,
+    });
+
+    const userInfo = await getUserInformation(username); // You need to define getUserInformation
+
     const arr = [];
 
-    const data = value.docs.map((doc) => {
-      const row = doc.data();
+    userDocs.forEach((doc) => {
+      const row = doc.toObject();
       const rate = row.priceValue > 1 ? row.priceValue : 1;
       const { myCom } = row;
       if (row.name === "sessionbet") {

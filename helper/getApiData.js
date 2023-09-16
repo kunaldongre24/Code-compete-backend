@@ -8,22 +8,22 @@ const axiosInstance = axios.create({
   httpsAgent: new https.Agent({ keepAlive: true }),
 });
 
-const getMatchOdds = async (data, socket) => {
+const getApiData = async (matchId) => {
   try {
     if (!data.matchId || typeof data.matchId !== "string") {
       throw new Error("Invalid matchId");
     }
-    const url = `https://api3.streamingtv.fun:3459/api/bm_fancy/${data.matchId}`;
+    const url = `https://api3.streamingtv.fun:3459/api/bm_fancy/${matchId}`;
     const response = await axiosInstance.get(url,{
       headers: {
         origin: 'https://www.lc247.live',
       },
     });
-    socket.emit("matchOdds", response.data);
+    return {status:1, data:response.data};
   } catch (error) {
     console.error(error.code);
-    socket.emit("error", "Internal server error");
+    return {status:0}
   }
 };
 
-module.exports = getMatchOdds;
+module.exports = getApiData;

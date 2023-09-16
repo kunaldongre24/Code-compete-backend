@@ -1,4 +1,3 @@
-const { v4: uuidv4 } = require("uuid");
 const BetController = require("./BetController");
 const { removeNum } = require("./CoinController");
 const Ledger = require("../models/Ledger");
