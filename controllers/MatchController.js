@@ -17,15 +17,14 @@ const MatchController = {
         return;
       }
       const singleMatch = data.filter((x) => x.eventId === matchId);
-        singleMatch[0].createdOn = Date.now();
+      singleMatch[0].createdOn = Date.now();
 
-        singleMatch[0].settled = false;
-        await MatchList.create(singleMatch[0]);
-        res.send({ status: true });
-     
+      singleMatch[0].settled = false;
+      await MatchList.create(singleMatch[0]);
+      res.send({ status: true });
     } catch (error) {
       console.error(error);
-      res.status(500).send({
+      res.send({
         status: false,
         message: "An error occurred while processing the request",
       });
@@ -38,9 +37,9 @@ const MatchController = {
         { $inc: { count: 1 } },
         { new: true }
       );
-      res.status(200).json(updatedCount);
+      res.json(updatedCount);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.json({ message: error.message });
     }
   },
   async getAllMatchList(req, res) {
@@ -85,7 +84,7 @@ const MatchController = {
       res.send(value);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal server error");
+      res.send("Internal server error");
     }
   },
   async getMatchList(req, res) {
@@ -95,7 +94,7 @@ const MatchController = {
       res.send(value);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal server error");
+      res.send("Internal server error");
     }
   },
   async getSingleMatch(req, res) {
@@ -108,10 +107,9 @@ const MatchController = {
       res.send(match);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal server error");
+      res.send("Internal server error");
     }
   },
-
 };
 
 module.exports = MatchController;

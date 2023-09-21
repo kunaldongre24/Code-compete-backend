@@ -3,67 +3,67 @@ const CoinController = require("./CoinController");
 
 const ListController = {
   async getSaList(req, res) {
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     try {
       const users = await UserModel.find({ companyId: username, level: 5 });
       res.send(users);
     } catch (err) {
       console.error(err);
-      res.status(500).send("An error occurred while retrieving SAs");
+      res.send("An error occurred while retrieving SAs");
     }
   },
   async getSpList(req, res) {
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     try {
       const users = await UserModel.find({ companyId: username, level: 6 });
       res.send(users);
     } catch (err) {
       console.error(err);
-      res.status(500).send("An error occurred while retrieving SPs");
+      res.send("An error occurred while retrieving SPs");
     }
   },
   async getSsList(req, res) {
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     try {
       const users = await UserModel.find({ companyId: username, level: 4 });
       res.send(users);
     } catch (err) {
       console.error(err);
-      res.status(500).send("An error occurred while retrieving SSs");
+      res.send("An error occurred while retrieving SSs");
     }
   },
   async getScList(req, res) {
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     try {
       const users = await UserModel.find({ companyId: username, level: 2 });
       res.send(users);
     } catch (err) {
       console.error(err);
-      res.status(500).send("An error occurred while retrieving SCs");
+      res.send("An error occurred while retrieving SCs");
     }
   },
   async getMaList(req, res) {
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     try {
       const users = await UserModel.find({ companyId: username, level: 7 });
       res.send(users);
     } catch (err) {
       console.error(err);
-      res.status(500).send("An error occurred while retrieving MAs");
+      res.send("An error occurred while retrieving MAs");
     }
   },
   async getSstList(req, res) {
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     try {
       const users = await UserModel.find({ companyId: username, level: 3 });
       res.send(users);
     } catch (err) {
       console.error(err);
-      res.status(500).send("An error occurred while retrieving SSTs");
+      res.send("An error occurred while retrieving SSTs");
     }
   },
   async getAllList(req, res) {
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const users = await UserModel.find({ companyId: username });
 
     const usersWithBalance = await Promise.all(

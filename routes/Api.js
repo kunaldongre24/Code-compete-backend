@@ -7,6 +7,5 @@ router.get("/getMatchList", ApiController.getMatchlist);
 router.get("/getTOdds/:eventId", ApiController.getTOdds);
 router.get("/getMatchScore/:eventId", ApiController.getMatchScore);
 // router.get("/getMatchOdds/:eventId", ApiController.getMatchOdds);
-router.get("/getOdds/:eventId/:marketId", ApiController.getOdds);
 
 module.exports = router;

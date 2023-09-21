@@ -19,7 +19,6 @@ const positionCalculator = require("../helper/positionCalculator");
 const { default: mongoose } = require("mongoose");
 const getApiData = require("../helper/getApiData");
 
-
 const BetController = {
   didWon(isBack, value, odds) {
     let won;
@@ -30,7 +29,16 @@ const BetController = {
     }
     return won;
   },
-  async agentReport(req, res) {},
+  async agentReport(req, res) {
+    const resultDb = new BetList({
+      fancyName: "test",
+      value: "test",
+      matchId: 234234,
+      createdOn: Date.now(),
+    });
+    const response = await resultDb.save();
+    res.send({ response });
+  },
   async resolveBet(fancyName, value) {
     if (!fancyName || !fancyName.trim() || !value || !value.trim()) {
       return;
@@ -284,7 +292,7 @@ const BetController = {
       return;
     }
     const coin = await CoinMap.findOne({ _id: matchInfo[0].transactionId });
-   
+
     const transactionData = coin.toObject();
 
     let position = transactionData.newArr.filter((x) => x.sid === winnerSid)[0]
@@ -625,7 +633,7 @@ const BetController = {
       res.send(uniqueFancyNames);
     } catch (error) {
       // Handle any errors that occur during the execution
-      res.status(500).send("An error occurred");
+      res.send("An error occurred");
     }
   },
   async fetchUnsettledMatches(socket) {
@@ -668,7 +676,7 @@ const BetController = {
       res.send(bets);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal server error");
+      res.send("Internal server error");
     }
   },
   async getMatchBetPosition(req, res) {
@@ -691,7 +699,7 @@ const BetController = {
   //     res.send(bets);
   //   } catch (error) {
   //     console.error(error);
-  //     res.status(500).send("Server error");
+  //     res.send("Server error");
   //   }
   // },
   async getDeclaredSession(req, res) {
@@ -812,7 +820,7 @@ const BetController = {
       res.send(data);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Server error");
+      res.send("Server error");
     }
   },
   async getAllBets(socket) {
@@ -861,7 +869,7 @@ const BetController = {
   //     res.send(arr);
   //   }
   // },
-  
+
   async getAllMatchTossBets(req, res) {
     const { matchId } = req.params;
     const userId = req.user.email.split("@")[0];
@@ -1182,7 +1190,7 @@ const BetController = {
       res.send(dataArr);
     } catch (err) {
       console.error(err);
-      res.status(500).send("Internal Server Error");
+      res.send("Internal Server Error");
     }
   },
   async agentSessionEarning(req, res) {
@@ -1346,7 +1354,7 @@ const BetController = {
       res.send(arr);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal Server Error");
+      res.send("Internal Server Error");
     }
   },
   async getCompanyReport(req, res) {
@@ -1699,8 +1707,8 @@ const BetController = {
           res.send({ msg: "Bhav Changed.", status: 0 });
         }
       }
-    }else{
-      res.send({msg:"Match Closed!", status:0})
+    } else {
+      res.send({ msg: "Match Closed!", status: 0 });
     }
   },
   replaceAll(string, obj) {
@@ -2190,8 +2198,8 @@ const BetController = {
           }
         }
         return res.send({ msg: "Unknown Error" });
-      }else{
-        return res.send({msg:"Some error in fetching data", status:0});
+      } else {
+        return res.send({ msg: "Some error in fetching data", status: 0 });
       }
     } catch (error) {
       console.log(error);

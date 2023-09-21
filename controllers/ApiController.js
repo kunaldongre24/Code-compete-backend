@@ -8,7 +8,9 @@ const ApiController = {
     try {
       const apiUrl = "https://111111.info/pad=82/listGames?sport=4&inplay=1";
       const apiResponse = await axios.get(apiUrl);
-      const filteredData = apiResponse.data.filter(x=>x.isFancy===true&&isFancy===true)
+      const filteredData = apiResponse.data.filter(
+        (x) => x.isFancy === true && isFancy === true
+      );
       res.send(filteredData);
     } catch (error) {
       console.log(error);
@@ -30,22 +32,22 @@ const ApiController = {
       res.send({ error });
     }
   },
- 
+
   async getTOdds(req, res) {
     try {
       const { eventId } = req.params;
       const apiUrl = `https://api3.streamingtv.fun:3459/api/bm_fancy/${eventId}`;
-  
+
       const apiResponse = await axios.get(apiUrl, {
         headers: {
-          origin: 'https://www.lc247.live',
+          origin: "https://www.lc247.live",
         },
       });
-  
+
       res.send(apiResponse.data);
     } catch (error) {
       console.error(error);
-      res.status(500).send({ error: 'An error occurred' });
+      res.send({ error: "An error occurred" });
     }
   },
 

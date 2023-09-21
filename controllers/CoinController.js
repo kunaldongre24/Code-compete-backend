@@ -66,7 +66,7 @@ const CoinController = {
         username === undefined ||
         amount === undefined
       ) {
-        return res.status(400).json({ error: "Missing Information" });
+        return res.json({ error: "Missing Information" });
       }
       const userEmail = req.user.email;
       const user = userEmail.split("@")[0].toLowerCase();
@@ -322,7 +322,7 @@ const CoinController = {
       res.send({ msg: "Deleted coins" });
     } catch (err) {
       console.error(err);
-      res.status(500).send({ err: "Error deleting coins" });
+      res.send({ err: "Error deleting coins" });
     }
   },
 };

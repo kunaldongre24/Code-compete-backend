@@ -1,11 +1,11 @@
 const CommissionController = require("../controllers/CommissionController");
 const express = require("express");
+const { verifyUser } = require("../middleware/authenticate");
 const router = express.Router();
-const Auth = require("../middleware/Auth");
 
 router.get(
   "/getCompanyCommission/:username",
-  Auth,
+  verifyUser,
   CommissionController.companyShare
 );
 router.post("/checkDistribution", CommissionController.checkDistribution);

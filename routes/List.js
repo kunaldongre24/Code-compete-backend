@@ -1,16 +1,14 @@
 const ListController = require("../controllers/ListController");
 const express = require("express");
+const { verifyUser } = require("../middleware/authenticate");
 const router = express.Router();
-const Auth = require("../middleware/Auth")
 
-
-router.get("/sa", Auth, ListController.getSaList);
-router.get("/sp", Auth, ListController.getSpList);
-router.get("/ss", Auth, ListController.getSsList);
-router.get("/sc", Auth, ListController.getScList);
-router.get("/ma", Auth, ListController.getMaList);
-router.get("/sst", Auth, ListController.getSstList);
-router.get("/all", Auth, ListController.getAllList);
-
+router.get("/sa", verifyUser, ListController.getSaList);
+router.get("/sp", verifyUser, ListController.getSpList);
+router.get("/ss", verifyUser, ListController.getSsList);
+router.get("/sc", verifyUser, ListController.getScList);
+router.get("/ma", verifyUser, ListController.getMaList);
+router.get("/sst", verifyUser, ListController.getSstList);
+router.get("/all", verifyUser, ListController.getAllList);
 
 module.exports = router;

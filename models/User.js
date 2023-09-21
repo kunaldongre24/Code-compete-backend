@@ -1,14 +1,18 @@
 const mongoose = require("mongoose"); // Erase if already required
+const Schema = mongoose.Schema;
+const passportLocalMongoose = require("passport-local-mongoose");
 
-// Declare the Schema of the Mongo model
-var userSchema = new mongoose.Schema({
+const Session = new Schema({
+  refreshToken: {
+    type: String,
+    default: "",
+  },
+});
+
+var User = new mongoose.Schema({
   companyId: {
     type: String,
     required: false,
-  },
-  email: {
-    type: String,
-    required: true,
   },
   level: {
     type: Number,
@@ -19,6 +23,14 @@ var userSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  authStrategy: {
+    type: String,
+    default: "local",
+  },
+  refreshToken: {
+    type: [{ refreshToken: String }],
+  },
+  currentSession: { type: String },
   matchShare: {
     type: Number,
     required: true,
@@ -38,16 +50,20 @@ var userSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
-  uid: {
-    type: String,
-    required: true,
-  },
   username: {
     type: String,
     required: true,
+    unique: true,
   },
   createdOn: { type: Date, default: Date.now, required: true },
 });
 
+User.set("toJSON", {
+  transform: function (doc, ret, options) {
+    delete ret.refreshToken;
+    return ret;
+  },
+});
+User.plugin(passportLocalMongoose);
 //Export the model
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", User);

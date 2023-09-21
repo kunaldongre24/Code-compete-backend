@@ -5,6 +5,11 @@ const indexRouter = require("./routes/index");
 const compression = require("compression");
 const logger = require("morgan");
 var cors = require("cors");
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const passport = require("passport");
+const session = require("express-session");
+
 // const cron = require("node-cron");
 const server = require("http").createServer(app);
 const getMyPlayerBets = require("./helper/getMyPlayerBets");
@@ -20,10 +25,14 @@ const ApiController = require("./controllers/ApiController");
 const BetController = require("./controllers/BetController");
 const getMatchOdds = require("./helper/getMatchOdds");
 require("./config/database.js");
+require("./strategy/LocalStrategy");
+require("./strategy/JWTStrategy");
+require("./middleware/authenticate");
 
 const io = require("socket.io")(server, {
   cors: { origin },
 });
+
 io.on("connection", (socket) => {
   console.log("Client connected", socket.id);
   let intervalId;
@@ -58,8 +67,6 @@ io.on("connection", (socket) => {
   });
 });
 
-app.disable("etag");
-
 app.use(
   cors({
     origin,
@@ -67,6 +74,28 @@ app.use(
     optionSuccessStatus: 200,
   })
 );
+app.use(cookieParser(process.env.COOKIE_SECRET));
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET, // Replace with your own secret key
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to false in development
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 60000,
+    },
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+app.disable("etag");
+
+app.use(bodyParser.json());
+
 // cron.schedule("*/30 * * * * *", () => {
 //   console.log(`pages:${pages.size}`, pages.size > 0 ? [...pages.keys()] : "");
 // });
@@ -74,13 +103,11 @@ app.use(
 app.use("/static", express.static("static"));
 app.use(compression());
 app.use(logger("dev"));
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use("/api/v1/", indexRouter);
 // catch 404 and forward to erro  r handler
 
-const port =  8000;
+const port = 8000;
 server.listen(port, () => {
   console.log(`Listening on port ${port}...`);
 });
