@@ -1,19 +1,33 @@
-const axios = require("axios");
 const BetController = require("../controllers/BetController");
-const { getOddsData } = require("../controllers/ApiController");
 const getApiData = require("./getApiData");
+const passport = require("passport");
+
+const User = require("../models/User");
+
+// Function to get user information from a token
+const getUserFromToken = (token) => {
+  return new Promise((resolve, reject) => {
+    passport.authenticate("jwt", { session: false }, (err, user) => {
+      if (err || !user) {
+        reject("Unauthorized"); // Reject with an error message
+      } else {
+        resolve(user); // Resolve with the user object
+      }
+    })({ headers: { authorization: `Bearer ${token}` } }); // Pass the token as a header
+  });
+};
 
 const getMyPlayerBets = async (pData, socket) => {
   try {
     const userdata = await getUserFromToken(pData.token);
-    const userId = userdata.email.split("@")[0];
+    const userId = userdata.username;
     const cData = await getApiData(pData.matchId);
     const data = await BetController.getMyPlayerBets(pData.matchId, userId);
     const betData = { odds: cData, betData: data };
     socket.emit("myPlayerBets", betData);
   } catch (error) {
     console.error(error);
-    socket.emit("error", "Internal server error");
+    socket.emit("error", error); // Emit the error message received from getUserFromToken
   }
 };
 

@@ -11,17 +11,26 @@ const MatchController = {
     try {
       const { matchId } = req.params;
       const url = "https://111111.info/pad=82/listGames?sport=4&inplay=1";
-      const response = await axios.post(url, { eventId: matchId });
-      const data = response.data;
-      if (data.length === 0) {
-        return;
-      }
-      const singleMatch = data.filter((x) => x.eventId === matchId);
-      singleMatch[0].createdOn = Date.now();
+      const response = await axios.get(url);
+      const data = response.data.result;
 
-      singleMatch[0].settled = false;
-      await MatchList.create(singleMatch[0]);
-      res.send({ status: true });
+      if (data.length === 0) {
+        return res.send({ status: true });
+      }
+      const existingMatch = await MatchList.findOne({
+        eventId: parseInt(matchId),
+      });
+
+      if (!existingMatch) {
+        // If a record with the same event ID does not exist, create a new one.
+        const singleMatch = data.find((x) => x.eventId === parseInt(matchId));
+        if (singleMatch) {
+          await MatchList.create(singleMatch);
+          return res.send({ status: true });
+        }
+      }
+
+      res.send({ status: true }); // Data with the same event ID already exists, no update needed.
     } catch (error) {
       console.error(error);
       res.send({
@@ -102,7 +111,7 @@ const MatchController = {
       const { matchId } = req.params;
       const match = await MatchList.findOne({ gameId: matchId });
       if (!match) {
-        return res.status(404).send("Match not found");
+        return res.send({ status: 0, msg: "Match not found" });
       }
       res.send(match);
     } catch (error) {

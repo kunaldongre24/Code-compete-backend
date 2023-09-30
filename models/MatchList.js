@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
 
 var matchListSchema = new mongoose.Schema({
-  id: {
-    type: Number,
-    required: true,
-  },
   sportId: {
     type: String,
     required: true,
@@ -17,50 +13,17 @@ var matchListSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  marketId: {
+  markets: {
+    type: Object,
+    required: true,
+  },
+  time: {
     type: String,
     required: true,
-  },
-  runnerId1: {
-    type: String,
-    required: true,
-  },
-  runnerName1: {
-    type: String,
-    required: true,
-  },
-  runnerId2: {
-    type: String,
-    required: true,
-  },
-  runnerName2: {
-    type: String,
-    required: true,
-  },
-  marketStartTime: {
-    type: Date,
-    required: true,
-  },
-  matchStatus: {
-    type: String,
-    required: true,
-  },
-  gameId: {
-    type: String,
-    required: true,
-  },
-
-  marketId: {
-    type: String,
-    required: true,
-  },
-  runnerArray: {
-    type: Array,
-    required: false,
   },
   settled: {
     type: Boolean,
-    required: false,
+    default: false,
   },
   winnerSid: {
     type: String,

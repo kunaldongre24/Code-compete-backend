@@ -8,11 +8,11 @@ function checkEmpty(val) {
   return val === null || val.match(/^ *$/) !== null ? 0 : val;
 }
 
-async function scrapeDynamicContent(eventId, marketId, onData) {
+async function scrapeDynamicContent(eventId, onData) {
   let page;
 
-  if (pages.has(`${eventId}-${marketId}`)) {
-    page = pages.get(`${eventId}-${marketId}`);
+  if (pages.has(`${eventId}`)) {
+    page = pages.get(`${eventId}`);
   } else {
     if (!browser) {
       browser = await puppeteer.launch({
@@ -23,15 +23,13 @@ async function scrapeDynamicContent(eventId, marketId, onData) {
       console.log("count " + browserCount);
     }
     page = await browser.newPage();
-    pages.set(`${eventId}-${marketId}`, page);
+    pages.set(`${eventId}`, page);
   }
 
-  await page.goto(
-    `https://lc247.com/exchange/member/fullmarket/4/${eventId}/${marketId}`
-  );
+  await page.goto(`https://www.lc247.live/#/fullmarkets/${eventId}`);
   const interval = setInterval(async () => {
     try {
-      await page.waitForSelector("table#fancyBetMarketList");
+      await page.waitForSelector("table#bookMakerMarketList");
 
       const bmRows = await page.$$('tr[id^="bookMakerSelection_"]');
       const bmData = await Promise.all(
@@ -47,7 +45,6 @@ async function scrapeDynamicContent(eventId, marketId, onData) {
           );
 
           return {
-            mid: marketId,
             sid: index + 1,
             nat: await row.$eval("th", (th) => th.textContent),
             l1: checkEmpty(lay1Value),
@@ -114,17 +111,16 @@ async function scrapeDynamicContent(eventId, marketId, onData) {
       );
 
       const format = {
-        t1: null,
-        t2: [{ bm1: bmData, bm2: [] }],
-        t3: data.filter((item) => item !== null),
+        BMmarket: { bm1: bmData, bm2: [] },
+        Fancymarket: data.filter((item) => item !== null),
         eventId,
       };
       onData(format); // Invoke the callback function with the new data
     } catch (error) {
       console.error("Error scraping dynamic content lc");
-      if (pages.has(`${eventId}-${marketId}`)) {
+      if (pages.has(`${eventId}`)) {
         await page.close();
-        pages.delete(`${eventId}-${marketId}`);
+        pages.delete(`${eventId}`);
       }
       clearInterval(interval);
     }

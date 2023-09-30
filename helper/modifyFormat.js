@@ -1,33 +1,65 @@
-const modifyFormat = (mid, runner, matchOdds, sessionOdds) => {
-  const t1 = runner.map((item) => {
-    return {
-      sid: item.selectionId,
-      nat: item.runnerName,
-      sr: item.sortPriority,
-    };
-  });
-  const bm1 = matchOdds[0].runners;
-  sessionOdds = sessionOdds.filter((x) => x.gtype === "session");
-  const t3 = sessionOdds.map((item) => {
-    return {
-      mid,
-      nat: item.RunnerName,
-      b1: item.BackPrice1,
-      l1: item.LayPrice1,
-      bs1: item.BackSize1,
-      ls1: item.LaySize1,
-      srno: item.sr_no,
-      gtype: "Fancy",
-      gstatus: item.GameStatus,
-      remark: item.rem,
-      sid: item.SelectionId,
-      ballsess: item.ballsess,
-    };
-  });
-  const format = {
-    success: true,
-    data: { t1, t2: [{ bm1, bm2: [] }], t3, t4: null },
+const modifyFormat = (bm, fancy) => {
+  const isExcluded = (marketName) => {
+    const keywordsToExclude = [
+      "even",
+      "odd",
+      "to",
+      "caught",
+      "face",
+      "highest",
+      "playing",
+      "favourite",
+      "lunch",
+      "total",
+      "method",
+      "bhav",
+    ];
+    const lowerCaseMarketName = marketName.toLowerCase();
+    return keywordsToExclude.some((keyword) =>
+      lowerCaseMarketName.includes(keyword)
+    );
   };
-  return format;
+  const mapMarketItem = (item, i) => {
+    const isSuspended = item.selectionStatus !== "ACTIVE";
+    const back1 = Math.round((item.backOdds - 1) * 10000) / 100;
+    const lay1 = Math.round((item.layOdds - 1) * 10000) / 100;
+    return {
+      nat: item.selectionName,
+      b1: isSuspended ? 0 : back1,
+      bs1: 1000000,
+      l1: isSuspended ? 0 : lay1,
+      ls1: 1000000,
+      s: item.selectionStatus,
+      sr: item.sortingOrder,
+      updatetime: item.marketTime,
+      sid: i,
+    };
+  };
+
+  const bm1 = bm.map(mapMarketItem);
+
+  const Fancymarket = fancy
+    .filter((item) => !isExcluded(item.marketName))
+    .map((item) => {
+      const isSuspended = item.statusName !== "ACTIVE";
+
+      return {
+        sid: item.marketId,
+        nat: item.marketName,
+        b1: isSuspended ? 0 : item.runsYes,
+        bs1: isSuspended ? 0 : item.oddsYes,
+        l1: isSuspended ? 0 : item.runsNo,
+        ls1: isSuspended ? 0 : item.oddsNo,
+        gstatus: item.statusName,
+        srno: item.sortingOrder,
+        updatetime: item.marketTime,
+      };
+    });
+
+  return {
+    BMmarket: { bm1 },
+    Fancymarket,
+  };
 };
+
 module.exports = modifyFormat;

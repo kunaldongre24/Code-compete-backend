@@ -14,10 +14,18 @@ const isTokenExpired = require("../helper/isTokenExpired");
 
 const AuthController = {
   async getMyInfo(req, res) {
-    const { signedCookies = {} } = req;
-    const { refreshToken } = signedCookies;
     try {
-      const user = await User.findById(req.user._id);
+      const user = await User.findById(req.user._id).select({
+        level: 1,
+        name: 1,
+        sessionCommission: 1,
+        totalCoins: 1,
+        matchCommission: 1,
+        username: 1,
+        matchShare: 1,
+        companyId: 1,
+        _id: 1,
+      });
       res.send(user);
     } catch (err) {
       res.send(err);
@@ -155,32 +163,44 @@ const AuthController = {
   async createManager(req, res) {
     try {
       const companyId = req.user.username;
-      if (companyId !== "cc0001") {
-        return;
-      }
 
-      const { username, password, level, name } = req.body;
-      if (!username || !password || !name || !companyId || !level) {
+      const result = await Count.findOne({ name: "manager" });
+      const username = `ma${result.count + 1}`;
+      const { password, level, name } = req.body;
+      if (!username || !password || !name || !companyId) {
         return res.send({ err: "Missing Information" });
       }
 
-      const email = `${username.toLowerCase()}@fly247.in`;
-      const userRecord = await fs.auth().createUser({
-        email,
-        password: "sa@#!$#@@$%2" + password,
-        displayName: name,
-      });
+      const userData = await User.findOne({ username: companyId });
+      if (userData.level !== 1) {
+        return res.send({
+          userCreated: false,
+          msg: "Insufficient Permissions!",
+        });
+      }
 
-      const userJson = {
-        uid: userRecord.uid,
-        username: username.toLowerCase(),
-        name,
-        email,
-        level,
-        companyId,
-      };
-      await User.create(userJson);
-
+      User.register(
+        new User({
+          username,
+          name,
+          level,
+          companyId,
+          createdOn: Date.now(),
+        }),
+        password,
+        async (err, user) => {
+          if (err) {
+            res.statusCode = 500;
+            console.error(err);
+            return res.send({ userCreated: false, msg: "Err" });
+          } else {
+            res.send({
+              userCreated: true,
+              msg: "User has been created Successfully",
+            });
+          }
+        }
+      );
       res.send({ userCreated: true });
     } catch (error) {
       console.error(error);
@@ -188,17 +208,13 @@ const AuthController = {
     }
   },
   async UpdateUser(req, res) {
-    const { uid, fname, lname } = req.body;
-    if (uid === undefined || fname === undefined || lname === undefined) {
+    const { fname, lname } = req.body;
+    if (fname === undefined || lname === undefined) {
       return res.send({ err: "Missing Information" });
     }
     const name = fname + " " + lname;
     try {
-      const user = await User.findOneAndUpdate(
-        { uid: uid },
-        { name: name },
-        { new: true }
-      );
+      const user = await User.findOneAndUpdate({ name: name }, { new: true });
       if (!user) {
         return res
           .status(404)
@@ -238,6 +254,12 @@ const AuthController = {
         companyId.toLowerCase()
       );
       var mShare = 0;
+      if (level <= userData.level) {
+        return res.send({
+          userCreated: false,
+          msg: "Insufficient Permissions!",
+        });
+      }
       if (level === 6) {
         mShare = userData.matchShare;
       } else {
@@ -266,8 +288,8 @@ const AuthController = {
         async (err, user) => {
           if (err) {
             res.statusCode = 500;
-            console.error("Error in creating user!");
-            res.send(err);
+            console.error(err);
+            return res.send({ userCreated: false, msg: "Err" });
           } else {
             const p1Coins = await CoinController.countCoin(userData.username);
             const p2Coins = await CoinController.countCoin(username);
@@ -314,7 +336,7 @@ const AuthController = {
       res.send({ userCreated: false, msg: "Some error occurred" });
     }
   },
-  async login(req, res, next) {
+  async authLogin(req, res, next) {
     try {
       const token = getToken({
         _id: req.user._id,
@@ -327,49 +349,197 @@ const AuthController = {
       user.refreshToken.push({ refreshToken });
       await user.save();
 
-      res.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
+      res.cookie("jsession", refreshToken, COOKIE_OPTIONS);
       res.status(200).json({ success: true, token });
     } catch (err) {
       console.error({ err });
       res.json({ success: false, err });
     }
   },
-  async logout(req, res, next) {
-    const { signedCookies = {} } = req;
-    const { refreshToken } = signedCookies;
-    User.findById(req.user._id).then(
-      (user) => {
-        const tokenIndex = user.refreshToken.findIndex(
-          (item) => item.refreshToken === refreshToken
-        );
+  async userLogin(req, res, next) {
+    try {
+      const token = getToken({
+        _id: req.user._id,
+        username: req.user.username,
+      });
+      const refreshToken = getRefreshToken({ _id: req.user._id });
 
-        if (tokenIndex !== -1) {
-          user.refreshToken.id(user.refreshToken[tokenIndex]._id).remove();
-        }
+      const user = await User.findById(req.user._id);
+      user.currentSession = refreshToken; // Set the current session
+      user.refreshToken.push({ refreshToken });
+      await user.save();
 
-        user.save((err, user) => {
-          if (err) {
-            res.statusCode = 500;
-            res.send(err);
-          } else {
-            res.clearCookie("refreshToken", COOKIE_OPTIONS);
-            res.send({ success: true });
-          }
-        });
-      },
-      (err) => next(err)
-    );
+      res.cookie("usession", refreshToken, COOKIE_OPTIONS);
+      res.status(200).json({ success: true, token });
+    } catch (err) {
+      console.error({ err });
+      res.json({ success: false, err });
+    }
   },
-  async refreshToken(req, res, next) {
+  async managerLogin(req, res, next) {
+    try {
+      const token = getToken({
+        _id: req.user._id,
+        username: req.user.username,
+      });
+      const refreshToken = getRefreshToken({ _id: req.user._id });
+
+      const user = await User.findById(req.user._id);
+      user.currentSession = refreshToken; // Set the current session
+      user.refreshToken.push({ refreshToken });
+      await user.save();
+      res.cookie("msession", refreshToken, COOKIE_OPTIONS);
+      res.status(200).json({ success: true, token });
+    } catch (err) {
+      console.error({ err });
+      res.json({ success: false, err });
+    }
+  },
+  async adminLogout(req, res, next) {
+    try {
+      const { signedCookies = {} } = req;
+      const { jsession } = signedCookies;
+      const user = await User.findById(req.user._id);
+
+      if (!user) {
+        // Handle the case where the user is not found
+        res.statusCode = 404;
+        return res.send({ error: "User not found" });
+      }
+
+      const tokenIndex = user.refreshToken.findIndex(
+        (item) => item.refreshToken === jsession
+      );
+
+      if (tokenIndex !== -1) {
+        // Remove the token using $pull
+        user.refreshToken.pull({ _id: user.refreshToken[tokenIndex]._id });
+      }
+
+      await user.save(); // Use await to save the user document
+
+      res.clearCookie("jsession", COOKIE_OPTIONS);
+      res.send({ success: true });
+    } catch (err) {
+      console.error(err);
+      res.statusCode = 500;
+      res.send(err);
+    }
+  },
+  async userLogout(req, res, next) {
+    try {
+      const { signedCookies = {} } = req;
+      const { usession } = signedCookies;
+      const user = await User.findById(req.user._id);
+
+      if (!user) {
+        res.statusCode = 404;
+        return res.send({ error: "User not found" });
+      }
+
+      const tokenIndex = user.refreshToken.findIndex(
+        (item) => item.refreshToken === usession
+      );
+
+      if (tokenIndex !== -1) {
+        // Remove the token using $pull
+        user.refreshToken.pull({ _id: user.refreshToken[tokenIndex]._id });
+      }
+
+      await user.save(); // Use await to save the user document
+
+      res.clearCookie("usession", COOKIE_OPTIONS);
+      res.send({ success: true });
+    } catch (err) {
+      console.error(err);
+      res.statusCode = 500;
+      res.send(err);
+    }
+  },
+  async managerLogout(req, res, next) {
+    try {
+      const { signedCookies = {} } = req;
+      const { msession } = signedCookies;
+      const user = await User.findById(req.user._id);
+
+      if (!user) {
+        res.statusCode = 404;
+        return res.send({ error: "User not found" });
+      }
+
+      const tokenIndex = user.refreshToken.findIndex(
+        (item) => item.refreshToken === msession
+      );
+
+      if (tokenIndex !== -1) {
+        // Remove the token using $pull
+        user.refreshToken.pull({ _id: user.refreshToken[tokenIndex]._id });
+      }
+
+      await user.save(); // Use await to save the user document
+
+      res.clearCookie("msession", COOKIE_OPTIONS);
+      res.send({ success: true });
+    } catch (err) {
+      console.error(err);
+      res.statusCode = 500;
+      res.send(err);
+    }
+  },
+  async userLogout(req, res, next) {
+    try {
+      const { signedCookies = {} } = req;
+      const { usession } = signedCookies;
+      const user = await User.findById(req.user._id);
+
+      if (!user) {
+        // Handle the case where the user is not found
+        res.statusCode = 404;
+        return res.send({ error: "User not found" });
+      }
+
+      const tokenIndex = user.refreshToken.findIndex(
+        (item) => item.refreshToken === usession
+      );
+
+      if (tokenIndex !== -1) {
+        // Remove the token using $pull
+        user.refreshToken.pull({ _id: user.refreshToken[tokenIndex]._id });
+      }
+
+      await user.save(); // Use await to save the user document
+
+      res.clearCookie("refreshToken", COOKIE_OPTIONS);
+      res.send({ success: true });
+    } catch (err) {
+      console.error(err);
+      res.statusCode = 500;
+      res.send(err);
+    }
+  },
+  async changePassword(req, res, next) {
+    try {
+      const user = await User.findById(req.user._id);
+
+      user
+        .changePassword(req.body.oldPassword, req.body.newPassword)
+        .then(() => {
+          res.send({ status: 1, msg: "Password Changed Successfully!" });
+        })
+        .catch((err) => {
+          res.send({ status: 0, err });
+        });
+    } catch (err) {
+      console.error({ status: 0, err });
+      res.status(500).json({ success: 0, err });
+    }
+  },
+  async checkAdminActive(req, res, next) {
     const { signedCookies = {} } = req;
-    const { refreshToken } = signedCookies;
-    console.log(signedCookies);
-    if (refreshToken) {
+    const { jsession } = signedCookies;
+    if (jsession) {
       try {
-        const payload = jwt.verify(
-          refreshToken,
-          process.env.REFRESH_TOKEN_SECRET
-        );
+        const payload = jwt.verify(jsession, process.env.REFRESH_TOKEN_SECRET);
         const userId = payload._id;
 
         const user = await User.findById(userId);
@@ -378,34 +548,99 @@ const AuthController = {
           res.status(401).send("Unauthorized");
           return;
         }
-
-        // Find the refresh token in the user's tokens array
-        const tokenIndex = user.refreshToken.findIndex(
-          (item) => item.refreshToken === refreshToken
-        );
-
-        if (tokenIndex === -1) {
+        if (user.level > 5 && user.level < 0) {
           res.status(401).send("Unauthorized");
-          return;
         }
+        // Filter out the expired refresh tokens
+        user.refreshToken = user.refreshToken.filter((tokenItem) => {
+          if (isTokenExpired(tokenItem.refreshToken)) {
+            return false; // Remove expired token
+          }
+          return true; // Keep non-expired tokens
+        });
 
-        // Check if the token has expired
-        if (isTokenExpired(payload)) {
-          // Token has expired, remove it from the user's list
-          user.refreshToken.splice(tokenIndex, 1);
-          await user.save();
-          res.status(401).send("Unauthorized");
-          return;
-        }
-
-        // Token is valid, generate a new one and replace it
-        const newRefreshToken = getRefreshToken({ _id: userId });
-        user.refreshToken[tokenIndex] = { refreshToken: newRefreshToken };
         await user.save();
 
         const newAccessToken = getToken({ _id: userId });
 
-        res.cookie("refreshToken", newRefreshToken, COOKIE_OPTIONS);
+        res.status(200).json({ success: true, token: newAccessToken });
+      } catch (err) {
+        console.error(err);
+        res.status(401).send("Unauthorized");
+      }
+    } else {
+      res.status(401).send("Unauthorized");
+    }
+  },
+  async checkUserActive(req, res, next) {
+    const { signedCookies = {} } = req;
+    const { usession } = signedCookies;
+    if (usession) {
+      try {
+        const payload = jwt.verify(usession, process.env.REFRESH_TOKEN_SECRET);
+        const userId = payload._id;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+          res.status(401).send("Unauthorized");
+          return;
+        }
+        if (user.level !== 6) {
+          res.status(401).send("Unauthorized");
+        }
+
+        // Filter out the expired refresh tokens
+        user.refreshToken = user.refreshToken.filter((tokenItem) => {
+          if (isTokenExpired(tokenItem.refreshToken)) {
+            return false; // Remove expired token
+          }
+          return true; // Keep non-expired tokens
+        });
+
+        await user.save();
+
+        const newAccessToken = getToken({ _id: userId });
+
+        res.status(200).json({ success: true, token: newAccessToken });
+      } catch (err) {
+        console.error(err);
+        res.status(401).send("Unauthorized");
+      }
+    } else {
+      res.status(401).send("Unauthorized");
+    }
+  },
+  async checkManagerActive(req, res, next) {
+    const { signedCookies = {} } = req;
+    const { msession } = signedCookies;
+    if (msession) {
+      try {
+        const payload = jwt.verify(msession, process.env.REFRESH_TOKEN_SECRET);
+        const userId = payload._id;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+          res.status(401).send("Unauthorized");
+          return;
+        }
+        if (user.level !== 6) {
+          res.status(401).send("Unauthorized");
+        }
+
+        // Filter out the expired refresh tokens
+        user.refreshToken = user.refreshToken.filter((tokenItem) => {
+          if (isTokenExpired(tokenItem.refreshToken)) {
+            return false; // Remove expired token
+          }
+          return true; // Keep non-expired tokens
+        });
+
+        await user.save();
+
+        const newAccessToken = getToken({ _id: userId });
+
         res.status(200).json({ success: true, token: newAccessToken });
       } catch (err) {
         console.error(err);

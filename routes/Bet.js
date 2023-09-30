@@ -2,14 +2,27 @@ const express = require("express");
 const router = express.Router();
 const BetController = require("../controllers/BetController");
 const { verifyUser } = require("../middleware/authenticate");
+const checkManager = require("../middleware/checkManager");
+const checkPlayer = require("../middleware/checkPlayer");
+const checkAdmin = require("../middleware/checkAdmin");
 
-router.post("/placebet", verifyUser, BetController.placeBet);
-router.post("/placeMatchBet", verifyUser, BetController.placeMatchBet);
+router.post("/placebet", verifyUser, checkPlayer, BetController.placeBet);
+router.post(
+  "/placeMatchBet",
+  verifyUser,
+  checkPlayer,
+  BetController.placeMatchBet
+);
 router.post("/placeTossBet", verifyUser, BetController.placeTossBet);
-router.post("/settleBet", BetController.settleBet);
+router.post("/settleBet", verifyUser, checkManager, BetController.settleBet);
 router.get("/agentReport", BetController.agentReport);
-router.post("/settleMatchBet", BetController.settleMatchBet);
-router.post("/getCompanyReport", BetController.getCompanyReport);
+router.post(
+  "/settleMatchBet",
+  verifyUser,
+  checkManager,
+  BetController.settleMatchBet
+);
+router.post("/getCompanyReport", verifyUser, BetController.getCompanyReport);
 // router.post("/settleTossBet", verifyUser, BetController.settleTossBet);
 router.get(
   "/getMatchBets/:matchId",
@@ -24,21 +37,25 @@ router.get(
 router.get(
   "/getDeclaredSession/:matchId",
   verifyUser,
+  checkAdmin,
   BetController.getDeclaredSession
 );
 // router.get("/getTossPosition/:matchId", verifyUser, BetController.getTossBetPosition);
 router.get(
   "/getMyPlayerBets/:matchId",
   verifyUser,
+  checkAdmin,
   BetController.getBetUsingUserId
 );
 router.get("/getCompanyLenDen", verifyUser, BetController.getCompanyLenDen);
 router.get(
   "/getCompanyReportById/:userId",
   verifyUser,
+  checkAdmin,
   BetController.getReportByUserId
 );
 router.get("/getUserAllBets/", verifyUser, BetController.getUserBets);
+router.get("/getLedgerList/", verifyUser, BetController.getLedgerList);
 router.get(
   "/getAllMatchBets/:matchId",
   verifyUser,
@@ -73,12 +90,14 @@ router.get(
 router.get(
   "/myPlayerCollection/:matchId",
   verifyUser,
+  checkAdmin,
   BetController.playerCollection
 );
 router.get("/myClientBets/:matchId", verifyUser, BetController.myPlayerBets);
 router.get(
   "/myClientCollection/:matchId",
   verifyUser,
+  checkAdmin,
   BetController.myClientCollection
 );
 router.get("/getUserBets/:matchId", verifyUser, BetController.getLiveBets);

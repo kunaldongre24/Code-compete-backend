@@ -17,7 +17,7 @@ const LedgerController = {
   },
   async receiveCash(req, res) {
     try {
-      const userId = req.user.email.split("@")[0];
+      const userId = req.user.username;
       const { username, ledger, note } = req.body;
       const ledgerDb = new Ledger({
         value: parseFloat(ledger),
@@ -105,7 +105,7 @@ const LedgerController = {
   },
   async payCash(req, res) {
     try {
-      const userId = req.user.email.split("@")[0];
+      const userId = req.user.username;
       const { username, ledger, note } = req.body;
       const p1Cash = await Ledger.countCash(username);
       const p2Cash = await Ledger.countCash(userId);

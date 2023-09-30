@@ -470,7 +470,6 @@ const BetController = {
       createdOn: Date.now(),
     });
     await resultDoc.save();
-    console.log(agentArr);
     for (var i = 0; i < agentArr.length; i++) {
       const { matchId, company, matchname } = agentArr[i];
       let final;
@@ -650,7 +649,7 @@ const BetController = {
     }
   },
   async getCompanyLenDen(req, res) {
-    const userId = req.user.email.split("@")[0];
+    const userId = req.user.username;
     const data = await BetController.getLedgerByUserId(userId);
     res.send(data);
   },
@@ -665,7 +664,7 @@ const BetController = {
   },
   async getMatchAllBets(req, res) {
     const { matchId } = req.params;
-    const userId = req.user.email.split("@")[0];
+    const userId = req.user.username;
     try {
       const bets = await BetUserMap.find({
         matchId: matchId,
@@ -680,20 +679,20 @@ const BetController = {
     }
   },
   async getMatchBetPosition(req, res) {
-    const userId = req.user.email.split("@")[0];
+    const userId = req.user.username;
     const { matchId } = req.params;
     const data = await MatchBetMap.find({ matchId: matchId, userId: userId });
     res.send(data);
   },
   // async getTossBetPosition(req, res) {
-  //   const userId = req.user.email.split("@")[0];
+  //   const userId = req.user.username;
   //   const { matchId } = req.params;
   //   const betData = await TossBet.find({ matchId: matchId, userId: userId });
   //   res.send(betData);
   // },
   // async getSessionBetPosition(req, res) {
   //   try {
-  //     const userId = req.user.email.split("@")[0];
+  //     const userId = req.user.username;
   //     const { matchId } = req.params;
   //     const bets = await BetUserMap.find({ userId, matchId });
   //     res.send(bets);
@@ -704,7 +703,7 @@ const BetController = {
   // },
   async getDeclaredSession(req, res) {
     try {
-      const userId = req.user.email.split("@")[0];
+      const userId = req.user.username;
       const { matchId } = req.params;
       const bets = await BetUserMap.find({
         company: userId,
@@ -751,7 +750,7 @@ const BetController = {
     }
   },
   async getMarketPosition(req, res) {
-    const userId = req.user.email.split("@")[0];
+    const userId = req.user.username;
     const { matchId } = req.params;
     const bets = await BetUserMap.find({
       company: userId,
@@ -762,7 +761,7 @@ const BetController = {
   },
   async getBetUsingUserId(req, res) {
     const { matchId } = req.params;
-    const userId = req.user.email.split("@")[0];
+    const userId = req.user.username;
     const data = await BetController.getMyPlayerSessionBets(matchId, userId);
     res.send(data);
   },
@@ -854,7 +853,7 @@ const BetController = {
     }
   },
   // async getAllTossBets(req, res) {
-  //   const level = removeNum(req.user.email.split("@")[0]);
+  //   const level = removeNum(req.user.username);
   //   if (level === "cc") {
   //     const bets = await TossBet.find({ settled: { $ne: true } });
   //     const arr = [];
@@ -872,7 +871,7 @@ const BetController = {
 
   async getAllMatchTossBets(req, res) {
     const { matchId } = req.params;
-    const userId = req.user.email.split("@")[0];
+    const userId = req.user.username;
     const data = await BetUserMap.find({
       matchId: matchId,
       company: userId,
@@ -882,7 +881,7 @@ const BetController = {
   },
   async myAgentBets(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const arr = await getMyAgents(username);
     const dataArr = [];
     for (var i = 0; i < arr.length; i++) {
@@ -1040,7 +1039,7 @@ const BetController = {
   },
   async playerCollection(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const arr = await getMyAgents(username);
     const dataArr = [];
     for (var i = 0; i < arr.length; i++) {
@@ -1057,7 +1056,7 @@ const BetController = {
   },
   async myPlayerBets(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const arr = await getMyAgents(username);
     const dataArr = [];
     for (var i = 0; i < arr.length; i++) {
@@ -1113,7 +1112,7 @@ const BetController = {
   },
   async myPlayerCollection(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const arr = await getMyAgents(username);
     const dataArr = [];
     for (var i = 0; i < arr.length; i++) {
@@ -1168,13 +1167,13 @@ const BetController = {
   async myAgentCollection(req, res) {
     try {
       const { matchId } = req.params;
-      const username = req.user.email.split("@")[0];
+      const username = req.user.username;
       const arr = await getMyAgents(username);
       const dataArr = [];
       for (var i = 0; i < arr.length; i++) {
         const arrData = arr[i];
         let inf;
-        if (removeNum(arrData.username) === "sp") {
+        if (arrData.level === 6) {
           inf = await BetController.getPlayerExposure(
             matchId,
             arrData.username
@@ -1195,7 +1194,7 @@ const BetController = {
   },
   async agentSessionEarning(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const arr = await getMyAgents(username);
     const dataArr = [];
     var share;
@@ -1203,7 +1202,7 @@ const BetController = {
       const arrData = arr[i];
       share = arrData.matchShare;
       var data = [];
-      if (removeNum(arrData.username) === "sp") {
+      if (arrData.level === 6) {
         data = await BetController.getAllMyClientBets(
           matchId,
           arrData.username
@@ -1218,7 +1217,7 @@ const BetController = {
       var sCom = 0;
       for (var j = 0; j < data.length; j++) {
         const val = data[j];
-        if (removeNum(arrData.username) === "sp") {
+        if (arrData.level === 6) {
           if (val.name === "sessionbet") {
             if (val.won && val.won === true) {
               var totalSSum = val.lossAmount;
@@ -1259,7 +1258,7 @@ const BetController = {
   },
   async myClientCollection(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     try {
       const docs = await BetUserMap.find({
         matchId,
@@ -1364,13 +1363,13 @@ const BetController = {
   },
   async getLiveBets(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const data = await BetDataMap.find({ matchId, userId: username });
     res.send(data);
   },
   async getMatchLedger(req, res) {
     const { matchId } = req.params;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const data = await MatchBetMap.find({
       matchId,
       userId: username,
@@ -1379,7 +1378,7 @@ const BetController = {
   },
   // async getTossLedger(req, res) {
   //   const { matchId } = req.params;
-  //   const username = req.user.email.split("@")[0];
+  //   const username = req.user.username;
   //   const data = await TossBetMap.find({
   //     matchId,
   //     userId: username,
@@ -1389,7 +1388,7 @@ const BetController = {
   // },
   // async getTossBets(req, res) {
   //   const { matchId } = req.params;
-  //   const username = req.user.email.split("@")[0];
+  //   const username = req.user.username;
   //   const data = await TossBetMap.find({ matchId, userId: username });
   //   res.send(data);
   // },
@@ -1398,8 +1397,8 @@ const BetController = {
     return nRate;
   },
   async placeMatchBet(req, res) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    const username = req.user.email.split("@")[0];
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    const username = req.user.username;
     const {
       stake,
       isBack,
@@ -1410,32 +1409,30 @@ const BetController = {
       matchId,
       sportId,
     } = req.body;
-    // if (
-    //   stake === undefined ||
-    //   isBack === undefined ||
-    //   isLay === undefined ||
-    //   priceValue === undefined ||
-    //   odds === undefined ||
-    //   selectionName === undefined ||
-    //   matchname === undefined ||
-    //   matchId === undefined ||
-    //   sportId === undefined ||
-    //   type
-    // ) {
-    //   console.log(
-    //     `${stake}=${stake === undefined}\n${isBack}=${
-    //       isBack === undefined
-    //     }\n${isLay}=${isLay === undefined}\n${priceValue}=${
-    //       priceValue === undefined
-    //     }\n${odds}=${odds === undefined}\n${selectionName}=${
-    //       selectionName === undefined
-    //     }\n${matchname}=${matchname === undefined}\n${matchId}=${
-    //       matchId === undefined
-    //     }\n${sportId}=${sportId === undefined}\n${type}=${type === undefined}\n
-    //    `
-    //   );
-    //   return res.send({ msg: "Insufficient data recieved!" });
-    // }
+    if (
+      stake === undefined ||
+      isBack === undefined ||
+      priceValue === undefined ||
+      odds === undefined ||
+      selectionName === undefined ||
+      matchname === undefined ||
+      matchId === undefined ||
+      sportId === undefined
+    ) {
+      console.log(
+        `${stake}=${stake === undefined}\n${isBack}=${
+          isBack === undefined
+        }\n${priceValue}=${priceValue === undefined}\n${odds}=${
+          odds === undefined
+        }\n${selectionName}=${selectionName === undefined}\n${matchname}=${
+          matchname === undefined
+        }\n${matchId}=${matchId === undefined}\n${sportId}=${
+          sportId === undefined
+        }\n
+       `
+      );
+      return res.send({ msg: "Insufficient data recieved!" });
+    }
     if (stake < 100) {
       return res.send({ msg: "The amount cannot be less than 100", status: 0 });
     }
@@ -1449,10 +1446,11 @@ const BetController = {
     const runnerArray = [];
     var selectionId;
     if (response.status) {
-      if (response.data.t1 && response.data.t1.length) {
-        selectionId = response.data.t1.filter((x) => x.nat === selectionName)[0]
-          .sid;
-        const resp = response.data.t1;
+      if (response.data.BMmarket && response.data.BMmarket.bm1) {
+        selectionId = response.data.BMmarket.bm1.filter(
+          (x) => x.nat === selectionName
+        )[0].sid;
+        const resp = response.data.BMmarket.bm1;
         for (var i = 0; i < resp.length; i++) {
           const object = {
             runner: resp[i].nat,
@@ -1461,9 +1459,8 @@ const BetController = {
           runnerArray.push(object);
         }
       }
-
-      if (response.data.t2 && response.data.t2.length) {
-        let resp = response.data.t2[0].bm1;
+      if (response.data.BMmarket && response.data.BMmarket.bm1) {
+        let resp = response.data.BMmarket.bm1;
         const matchBetData = await MatchBetMap.find({
           matchId: matchId,
           userId: username,
@@ -1523,7 +1520,7 @@ const BetController = {
             (x) => x.nat === runnerArray[i].runner
           )[0].l1;
         }
-        const currentData = response.data.t2[0].bm1.filter(
+        const currentData = response.data.BMmarket.bm1.filter(
           (x) => x.nat === selectionName
         );
         const filteredOdds = currentData.filter(
@@ -1532,7 +1529,7 @@ const BetController = {
             (!isBack && parseFloat(x.l1) === parseFloat(odds))
         );
         if (filteredOdds.length && odds > 0) {
-          const username = req.user.email.split("@")[0];
+          const username = req.user.username;
           const matchBetRef = await MatchBetMap.find({
             matchId: matchId,
             userId: username,
@@ -1732,7 +1729,7 @@ const BetController = {
   },
   async placeTossBet(req, res) {
     return;
-    const username = req.user.email.split("@")[0];
+    const username = req.user.username;
     const {
       stake,
       isBack,
@@ -1787,7 +1784,7 @@ const BetController = {
         matchDetails.eventName &&
         BetController.convertTimeStamp(matchDetails.eventName) > Date.now()
       ) {
-        const username = req.user.email.split("@")[0];
+        const username = req.user.username;
         const betData = await TossBet.find({
           matchId: matchId,
           userId: username,
@@ -1967,20 +1964,12 @@ const BetController = {
     }
   },
   async placeBet(req, res) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
     try {
-      const username = req.user.email.split("@")[0];
-      const {
-        stake,
-        isBack,
-        priceValue,
-        odds,
-        fancyName,
-        matchname,
-        matchId,
-        sportId,
-      } = req.body;
-      console.log(matchId);
+      const username = req.user.username;
+      const { stake, isBack, priceValue, odds, fancyName, matchId, sportId } =
+        req.body;
+
       const priceVal = parseFloat(priceValue).toFixed(2);
       if (stake < 100) {
         return res.send({
@@ -1994,11 +1983,20 @@ const BetController = {
           status: 0,
         });
       }
-
+      const matchDetails = await MatchList.findOne({
+        eventId: parseInt(matchId),
+      });
+      if (!matchDetails) {
+        return res.send({
+          msg: "Invalid match",
+          status: 0,
+        });
+      }
+      const { matchname } = matchDetails;
       const response = await getApiData(matchId);
       if (response.status) {
-        if (response.data && response.data.t3.length > 0) {
-          const currentData = response.data.t3.filter(
+        if (response.data && response.data.Fancymarket.length > 0) {
+          const currentData = response.data.Fancymarket.filter(
             (x) => x.nat === fancyName
           );
           const filteredOdds = currentData.filter(
@@ -2013,7 +2011,7 @@ const BetController = {
           );
           var docId;
           var sum = 0;
-          if (filterValue.length) {
+          if (filterValue.length > 0) {
             const liveBets = await BetDataMap.find({
               matchId: matchId,
               fancyName: fancyName,
@@ -2024,12 +2022,12 @@ const BetController = {
               const newObj = {
                 userId: username,
                 stake: parseInt(stake),
-                isBack: isBack,
+                isBack,
                 isLay: !isBack,
                 priceValue: priceVal,
-                odds: odds,
-                fancyName: fancyName,
-                matchname: matchname,
+                odds,
+                fancyName,
+                matchname,
                 matchId,
                 sportId,
                 settled: false,
@@ -2175,7 +2173,7 @@ const BetController = {
                   transactionId: docId,
                   stake: stake,
                   isBack: isBack,
-                  marketId,
+                  marketId: filterValue[0].mid,
                   isLay: !isBack,
                   pname: req.user.name,
                   priceValue: priceVal,
@@ -2207,15 +2205,13 @@ const BetController = {
     }
   },
   async getUserBets(req, res) {
-    const userId = req.user.email.split("@")[0];
-    const userInfo = getUserInformation(userId);
+    const userId = req.user.username;
     const data = await BetUserMap.find({ player: userId }).lean();
     const matchListId = [...new Set(data.map((item) => item.matchId))];
     const matchList = await MatchList.find({
       gameId: { $in: matchListId },
     }).lean();
-    const sessionCommission = userInfo.sessionCommission;
-    const matchCommission = userInfo.matchCommission;
+
     const arr = [];
     for (var i = 0; i < data.length; i++) {
       const row = data[i];
@@ -2250,6 +2246,7 @@ const BetController = {
     }
     res.send(arr);
   },
+  async getLedgerList(req, res) {},
 };
 
 module.exports = BetController;

@@ -68,10 +68,15 @@ const ListController = {
 
     const usersWithBalance = await Promise.all(
       users.map(async (user) => {
-        const downBalance = await CoinController.calculateDownBalance(
-          user.username
-        );
-        return { ...user.toObject(), downBalance: downBalance };
+        let downBalance;
+        if (user.level < 6 && user.level > 0) {
+          downBalance = await CoinController.calculateDownBalance(
+            user.username
+          );
+        } else if (user.level === 6) {
+          downBalance = await CoinController.calculateUsedLimit(user.username);
+        }
+        return { ...user.toObject(), downBalance };
       })
     );
 

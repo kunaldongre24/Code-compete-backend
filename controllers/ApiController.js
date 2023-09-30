@@ -1,32 +1,18 @@
 const axios = require("axios");
+const { scrapeDynamicContent } = require("../helper/scraptest");
+const modifyFormat = require("../helper/modifyFormat");
 let storedOdds = [];
-const scoreIds = [];
-let scoreData = [];
-const reddyScoreScrape = require("../helper/reddyScore");
+const ids = [];
+
 const ApiController = {
   async getMatchlist(req, res) {
     try {
-      const apiUrl = "https://111111.info/pad=82/listGames?sport=4&inplay=1";
+      const apiUrl = "https://111111.info/pad=82/listGames?sport=4";
       const apiResponse = await axios.get(apiUrl);
-      const filteredData = apiResponse.data.filter(
-        (x) => x.isFancy === true && isFancy === true
+      const filteredData = apiResponse.data.result.filter(
+        (x) => (x.isFancy || x.isBm) && x.isPremium
       );
       res.send(filteredData);
-    } catch (error) {
-      console.log(error);
-      res.send({ error });
-    }
-  },
-  async getMatchScore(req, res) {
-    const { eventId } = req.params;
-    try {
-      const data = { eventId };
-      if (!scoreIds.some((x) => x.eventId === eventId)) {
-        scoreIds.push(data);
-        reddyScoreScrape(eventId, ApiController.handleScore);
-      }
-      const cData = scoreData.filter((x) => x.eventId === eventId)[0];
-      res.send(cData);
     } catch (error) {
       console.log(error);
       res.send({ error });
@@ -35,44 +21,44 @@ const ApiController = {
 
   async getTOdds(req, res) {
     try {
-      const { eventId } = req.params;
-      const apiUrl = `https://api3.streamingtv.fun:3459/api/bm_fancy/${eventId}`;
-
-      const apiResponse = await axios.get(apiUrl, {
+      const { matchId } = req.params;
+      const url = `https://ssexch.io/exchangeapi/fancy/markets/v1/${matchId}`;
+      const response = await axios.get(url, {
         headers: {
-          origin: "https://www.lc247.live",
+          origin: "https://www.ssexch.io",
         },
       });
-
-      res.send(apiResponse.data);
+      const { bookMaker, fancy } = response.data;
+      const format = modifyFormat(bookMaker, fancy);
+      res.send(format);
     } catch (error) {
       console.error(error);
       res.send({ error: "An error occurred" });
     }
   },
-
-  async matchWebSocket(eventId, socket) {
-    try {
-      const data = { eventId };
-      if (!scoreIds.some((x) => x.eventId === eventId)) {
-        scoreIds.push(data);
-        reddyScoreScrape(eventId, ApiController.handleScore);
-      }
-      const cData = scoreData.filter((x) => x.eventId === eventId)[0];
-      socket.emit("matchScore", cData);
-    } catch (error) {
-      console.log(error);
-      socket.emit("error", "Internal Server error");
-    }
+  async getMatchOdds(data, socket) {
+    // try {
+    //   if (!data.matchId || typeof data.matchId !== "string") {
+    //     throw new Error("Invalid matchId");
+    //   }
+    //   if (!ids.some((x) => x.eventId === data.matchId)) {
+    //     ids.push({ eventId: data.matchId });
+    //     await scrapeDynamicContent(data.matchId, ApiController.handleOdds);
+    //   }
+    //   const filteredOdds = storedOdds.filter(
+    //     (x) => x.eventId === data.matchId
+    //   )[0];
+    //   socket.emit("matchOdds", filteredOdds);
+    // } catch (error) {
+    //   console.error(error);
+    //   socket.emit("error", "Internal server error");
+    // }
   },
   handleOdds(data) {
-    storedOdds = [
-      ...storedOdds.filter((x) => x.eventId !== data.eventId),
-      data,
-    ];
-  },
-  handleScore(data) {
-    scoreData = [...scoreData.filter((x) => x.eventId !== data.eventId), data];
+    // storedOdds = [
+    //   ...storedOdds.filter((x) => x.eventId !== data.eventId),
+    //   data,
+    // ];
   },
 };
 

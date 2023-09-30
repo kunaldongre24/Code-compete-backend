@@ -5,11 +5,11 @@ async function checkActiveSession(req, res, next) {
     const user = await User.findById(req.user._id);
     if (user.currentSession) {
       // Log out the old user by clearing their current session
-      user.currentSession = null;
-      await user.save();
-
+      if (user.level === 5) {
+        user.currentSession = null;
+        await user.save();
+      }
       // Optionally, you can notify the old user that they've been logged out
-
       return next();
     }
     next();

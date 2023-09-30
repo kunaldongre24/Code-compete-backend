@@ -10,7 +10,6 @@ const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const session = require("express-session");
 
-// const cron = require("node-cron");
 const server = require("http").createServer(app);
 const getMyPlayerBets = require("./helper/getMyPlayerBets");
 const origin = [
@@ -21,8 +20,8 @@ const origin = [
   "https://ma.fly247.in",
   "https://ng.fly247.in",
 ];
-const ApiController = require("./controllers/ApiController");
 const BetController = require("./controllers/BetController");
+const getMatchScore = require("./helper/getMatchScore");
 const getMatchOdds = require("./helper/getMatchOdds");
 require("./config/database.js");
 require("./strategy/LocalStrategy");
@@ -39,11 +38,11 @@ io.on("connection", (socket) => {
   socket.on("getMatchOdds", (data) => {
     intervalId = setInterval(async () => {
       await getMatchOdds(data, socket);
-    }, 500);
+    }, 1000);
   });
   socket.on("getMatchScore", (matchId) => {
     intervalId = setInterval(async () => {
-      await ApiController.matchWebSocket(matchId, socket);
+      await getMatchScore(matchId, socket);
     }, 500);
   });
   socket.on("getUnsettledMatch", () => {
@@ -66,7 +65,7 @@ io.on("connection", (socket) => {
     clearInterval(intervalId);
   });
 });
-
+app.use(logger("dev"));
 app.use(
   cors({
     origin,
@@ -75,17 +74,18 @@ app.use(
   })
 );
 app.use(cookieParser(process.env.COOKIE_SECRET));
-
+app.use(bodyParser.json());
 app.use(
   session({
     secret: process.env.SESSION_SECRET, // Replace with your own secret key
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to false in development
+      secure: true,
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 60000,
+      domain: ".fly247.in",
     },
   })
 );
@@ -94,18 +94,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.disable("etag");
 
-app.use(bodyParser.json());
-
 // cron.schedule("*/30 * * * * *", () => {
 //   console.log(`pages:${pages.size}`, pages.size > 0 ? [...pages.keys()] : "");
 // });
 // cron.schedule("0 */2 * * *", login);
-app.use("/static", express.static("static"));
 app.use(compression());
-app.use(logger("dev"));
-
 app.use("/api/v1/", indexRouter);
-// catch 404 and forward to erro  r handler
+app.use("/static", express.static("static"));
 
 const port = 8000;
 server.listen(port, () => {

@@ -68,8 +68,7 @@ const CoinController = {
       ) {
         return res.json({ error: "Missing Information" });
       }
-      const userEmail = req.user.email;
-      const user = userEmail.split("@")[0].toLowerCase();
+      const user = req.user.username;
       const getterInfo = await UserModel.findOne({ username: username });
       if (getterInfo.companyId !== user) {
         return;
@@ -164,13 +163,13 @@ const CoinController = {
     try {
       const agentArr = await UserModel.find(
         { companyId: id },
-        { username: 1 }
+        { username: 1, level: 1 }
       ).exec();
       const promises = agentArr.map(async (agent) => {
-        const { username } = agent;
+        const { username, level } = agent;
         const coins = await CoinController.countCoin(username);
         let downLine = 0;
-        if (CoinController.removeNum(username) !== "sp") {
+        if (level !== 6) {
           downLine = await CoinController.calculateDownBalance(username);
         }
         return coins + downLine;
@@ -187,10 +186,57 @@ const CoinController = {
       return 0;
     }
   },
+  async calculateUsedLimit(userId) {
+    try {
+      const pipeline = [
+        {
+          $match: {
+            userId,
+            settled: false,
+          },
+        },
+        {
+          $addFields: {
+            priceValue: { $toDouble: "$priceValue" }, // Convert priceValue to a number
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            sum: {
+              $sum: {
+                $cond: [
+                  { $gt: ["$priceValue", 1] },
+                  { $multiply: ["$stake", "$priceValue"] },
+                  "$stake",
+                ],
+              },
+            },
+          },
+        },
+      ];
+
+      const [result] = await BetDataMap.aggregate(pipeline);
+      const [matchResult] = await MatchBetMap.aggregate(pipeline);
+
+      const totalSum =
+        ((result && result.sum) || 0) + ((matchResult && matchResult.sum) || 0);
+
+      return totalSum;
+    } catch (error) {
+      console.error("Error calculating used limit:", error);
+      throw error;
+    }
+  },
   async getDownbalance(req, res) {
     const { id } = req.params;
     const downBalance = await CoinController.calculateDownBalance(id);
     res.send({ downBalance });
+  },
+  async getUsedLimit(req, res) {
+    const { userId } = req.params;
+    const usedLimit = await CoinController.calculateUsedLimit(userId);
+    res.send({ usedLimit });
   },
   async countCoin(username) {
     if (CoinController.removeNum(username) === "sp") {

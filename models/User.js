@@ -1,13 +1,5 @@
 const mongoose = require("mongoose"); // Erase if already required
-const Schema = mongoose.Schema;
 const passportLocalMongoose = require("passport-local-mongoose");
-
-const Session = new Schema({
-  refreshToken: {
-    type: String,
-    default: "",
-  },
-});
 
 var User = new mongoose.Schema({
   companyId: {
@@ -30,7 +22,7 @@ var User = new mongoose.Schema({
   refreshToken: {
     type: [{ refreshToken: String }],
   },
-  currentSession: { type: String },
+  currentSession: { type: String, unique: true },
   matchShare: {
     type: Number,
     required: true,

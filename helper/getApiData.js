@@ -1,28 +1,26 @@
 const axios = require("axios");
 const http = require("http");
 const https = require("https");
-
+const modifyFormat = require("./modifyFormat");
 const axiosInstance = axios.create({
   timeout: 5000,
   httpAgent: new http.Agent({ keepAlive: true }),
   httpsAgent: new https.Agent({ keepAlive: true }),
 });
-
 const getApiData = async (matchId) => {
   try {
-    if (!data.matchId || typeof data.matchId !== "string") {
-      throw new Error("Invalid matchId");
-    }
-    const url = `https://api3.streamingtv.fun:3459/api/bm_fancy/${matchId}`;
-    const response = await axiosInstance.get(url,{
+    const url = `https://ssexch.io/exchangeapi/fancy/markets/v1/${matchId}`;
+    const response = await axiosInstance.get(url, {
       headers: {
-        origin: 'https://www.lc247.live',
+        origin: "https://www.ssexch.io",
       },
     });
-    return {status:1, data:response.data};
+    const { bookMaker, fancy } = response.data;
+    const format = modifyFormat(bookMaker, fancy);
+    return { status: 1, data: format };
   } catch (error) {
-    console.error(error.code);
-    return {status:0}
+    console.error(error);
+    return { status: 0 };
   }
 };
 
