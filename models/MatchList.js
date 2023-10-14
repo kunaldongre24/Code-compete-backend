@@ -29,11 +29,21 @@ var matchListSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  lastUpdated: {
+    type: Date,
+    default: Date.now,
+    required: true,
+  },
   createdOn: {
     type: Date,
     default: Date.now,
     required: true,
   },
+});
+
+matchListSchema.pre("save", function (next) {
+  this.lastUpdated = new Date();
+  next();
 });
 
 module.exports = mongoose.model("MatchList", matchListSchema);

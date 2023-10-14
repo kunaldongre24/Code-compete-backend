@@ -10,6 +10,7 @@ const CoinSchema = new Schema({
   type: { type: Number, required: true },
   value: { type: Number, required: true },
   msg: { type: String, default: "-", required: true },
+  betId: { type: String },
   matchId: { type: String, required: false },
   newArr: { type: Array, required: false },
   lastUpdated: { type: Date, default: Date.now, require: false },

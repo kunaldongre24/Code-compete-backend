@@ -1,7 +1,7 @@
 const axios = require("axios");
 const http = require("http");
 const https = require("https");
-const modifyFormat = require("./modifyFormat");
+const modifyFormat3 = require("./modifyFormat3");
 
 // Create a cache to store the API responses for 1 second
 const cache = new Map();
@@ -12,7 +12,7 @@ const axiosInstance = axios.create({
   httpsAgent: new https.Agent({ keepAlive: true }),
 });
 
-const getApiData = async (matchId) => {
+const getApiData3 = async (matchId) => {
   // Check if data is available in the cache
   const cachedData = cache.get(matchId);
   if (cachedData && Date.now() - cachedData.timestamp < 1000) {
@@ -20,15 +20,28 @@ const getApiData = async (matchId) => {
   }
 
   try {
-    const url = `https://ssexch.io/exchangeapi/fancy/markets/v1/${matchId}`;
+    const url = `https://cf.iceexchange.com/exchange/v1/dashboard/getFancyEventDetails?eventId=${matchId}`;
     const response = await axiosInstance.get(url, {
       headers: {
-        origin: "https://www.ssexch.io",
+        origin: "https://www.iceexchange.com",
       },
     });
-    const { bookMaker, fancy } = response.data;
-    const format = modifyFormat(bookMaker, fancy);
+    const { data } = response.data;
+    if (data.length === 0) {
+      return { status: 0 };
+    }
+    const bookmaker = data.filter(
+      (x) => x.markets[0].fancyCategory === "Bookmaker_Market"
+    )[0].markets;
+    const fancy = data.filter(
+      (x) => x.markets[0].fancyCategory === "Fancy_Market"
+    )[0].markets;
 
+    const format = modifyFormat3(
+      bookmaker[0].runners,
+      fancy,
+      response.data.timestamp
+    );
     // Cache the response data with a timestamp
     cache.set(matchId, { data: format, timestamp: Date.now() });
     return { status: 1, data: format };
@@ -38,4 +51,4 @@ const getApiData = async (matchId) => {
   }
 };
 
-module.exports = getApiData;
+module.exports = getApiData3;

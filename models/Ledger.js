@@ -9,7 +9,7 @@ const ledgerSchema = new Schema({
   note: { type: String, default: "", require: true },
   setter: { type: String, required: true },
   getter: { type: String, required: true },
-  createdOn: { type: Number, required: true },
+  createdOn: { type: Date, default: Date.now, required: true },
 });
 
 module.exports = mongoose.model("Ledger", ledgerSchema);

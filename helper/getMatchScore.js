@@ -9,23 +9,27 @@ const axiosInstance = axios.create({
   httpAgent: new http.Agent({ keepAlive: true }),
   httpsAgent: new https.Agent({ keepAlive: true }),
 });
+const scoreCache = new Map();
 
 const getMatchScore = async (matchId, socket) => {
   try {
     if (!matchId || typeof matchId !== "string") {
       throw new Error("Invalid matchId");
     }
+    const cachedScoreData = scoreCache.get(matchId);
+    if (cachedScoreData && Date.now() - cachedScoreData.timestamp < 1000) {
+      socket.emit("matchScore", cachedScoreData.data);
+      return;
+    }
+
     const url = `https://odds.starcric.live/ws/getScoreData`;
-
     const requestData = querystring.stringify({ event_id: matchId });
-
     const response = await axiosInstance.post(url, requestData, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
 
-    // Use cheerio to parse the HTML response
     const $ = cheerio.load(response.data);
 
     // Extract data from HTML
@@ -57,7 +61,7 @@ const getMatchScore = async (matchId, socket) => {
       team1RunRate,
       team2RunRate,
     };
-
+    scoreCache.set(matchId, { data: matchData, timestamp: Date.now() });
     // Emit the matchScore event with the extracted data
     socket.emit("matchScore", matchData);
   } catch (error) {

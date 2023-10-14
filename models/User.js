@@ -22,7 +22,7 @@ var User = new mongoose.Schema({
   refreshToken: {
     type: [{ refreshToken: String }],
   },
-  currentSession: { type: String, unique: true },
+  currentSession: { type: String },
   matchShare: {
     type: Number,
     required: true,

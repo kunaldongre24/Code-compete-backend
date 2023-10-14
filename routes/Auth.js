@@ -28,6 +28,7 @@ router.get(
   AuthController.getSuperStockistCount
 );
 router.post("/changePassword", verifyUser, AuthController.changePassword);
+router.post("/editPassword", verifyUser, AuthController.editPassword);
 router.post("/checkAdminActive", AuthController.checkAdminActive);
 router.post("/checkUserActive", AuthController.checkUserActive);
 router.post("/checkManagerActive", AuthController.checkManagerActive);

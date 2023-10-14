@@ -1,10 +1,30 @@
 const axios = require("axios");
-const { scrapeDynamicContent } = require("../helper/scraptest");
-const modifyFormat = require("../helper/modifyFormat");
-let storedOdds = [];
-const ids = [];
+const { updateMessage, fetchMessage } = require("../models/Message");
+const modifyFormat3 = require("../helper/modifyFormat3");
 
 const ApiController = {
+  async setMessage(req, res) {
+    const { message } = req.body;
+    try {
+      if (req.user.level !== 1) {
+        return res.send({ status: false, msg: "Insufficient Permission." });
+      }
+      await updateMessage(message);
+      res.send({ status: true, msg: "Message Updated Successfully." });
+    } catch (err) {
+      console.log(err);
+      res.send({ status: false, err: "Message not published." });
+    }
+  },
+  async getMessage(req, res) {
+    try {
+      const message = await fetchMessage();
+      res.send(message);
+    } catch (err) {
+      console.error(err);
+      res.send({ status: false, err: "Error fetching message." });
+    }
+  },
   async getMatchlist(req, res) {
     try {
       const apiUrl = "https://111111.info/pad=82/listGames?sport=4";
@@ -22,43 +42,32 @@ const ApiController = {
   async getTOdds(req, res) {
     try {
       const { matchId } = req.params;
-      const url = `https://ssexch.io/exchangeapi/fancy/markets/v1/${matchId}`;
+      const url = `https://cf.iceexchange.com/exchange/v1/dashboard/getFancyEventDetails?eventId=${matchId}`;
       const response = await axios.get(url, {
         headers: {
-          origin: "https://www.ssexch.io",
+          origin: "https://www.iceexchange.com",
         },
       });
-      const { bookMaker, fancy } = response.data;
-      const format = modifyFormat(bookMaker, fancy);
-      res.send(format);
+      if (response.data.status !== "OK") {
+        return res.send({ msg: "Fetching Failed" });
+      }
+      const { data } = response.data;
+      const bookmaker = data.filter(
+        (x) => x.markets[0].fancyCategory === "Bookmaker_Market"
+      )[0].markets;
+      const fancy = data.filter(
+        (x) => x.markets[0].fancyCategory === "Fancy_Market"
+      )[0].markets;
+      const format = modifyFormat3(
+        bookmaker[0].runners,
+        fancy,
+        response.data.timestamp
+      );
+      res.send({ format });
     } catch (error) {
       console.error(error);
       res.send({ error: "An error occurred" });
     }
-  },
-  async getMatchOdds(data, socket) {
-    // try {
-    //   if (!data.matchId || typeof data.matchId !== "string") {
-    //     throw new Error("Invalid matchId");
-    //   }
-    //   if (!ids.some((x) => x.eventId === data.matchId)) {
-    //     ids.push({ eventId: data.matchId });
-    //     await scrapeDynamicContent(data.matchId, ApiController.handleOdds);
-    //   }
-    //   const filteredOdds = storedOdds.filter(
-    //     (x) => x.eventId === data.matchId
-    //   )[0];
-    //   socket.emit("matchOdds", filteredOdds);
-    // } catch (error) {
-    //   console.error(error);
-    //   socket.emit("error", "Internal server error");
-    // }
-  },
-  handleOdds(data) {
-    // storedOdds = [
-    //   ...storedOdds.filter((x) => x.eventId !== data.eventId),
-    //   data,
-    // ];
   },
 };
 

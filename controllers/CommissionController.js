@@ -22,7 +22,15 @@ const CommissionController = {
       res.send({ err: "An error occurred while fetching data" });
     }
   },
-  async coinDistribution(won, userId, company, amount, matchId, fancyName) {
+  async coinDistribution(
+    won,
+    userId,
+    company,
+    amount,
+    _id,
+    matchId,
+    fancyName
+  ) {
     let getter = company;
     let setter = userId;
     if (won) {
@@ -38,6 +46,7 @@ const CommissionController = {
           matchId,
           getter,
           selectionName: fancyName,
+          betId: _id,
           setter,
           createdOn: Date.now(),
         });
@@ -169,7 +178,6 @@ const CommissionController = {
       prevMatchCom = mc;
       id = setterId;
     }
-    arr.filter((x) => x.id === "cc0001")[0].commission += Math.abs(ccComAmount);
     arr.filter((x) => x.id === "cc0001")[0].commissionAmount =
       Math.abs(ccComAmount);
     arr.filter((x) => x.id === "cc0001")[0].commissionPercentage =
@@ -237,8 +245,9 @@ const CommissionController = {
   },
   async distributeCoin(req, res) {
     const { username, amount } = req.body;
-    if ((username === undefined, amount === undefined)) {
+    if (username === undefined || amount === undefined) {
       res.send({ err: "Missing Information" });
+      return;
     }
     const id = username.toLowerCase();
     const arr = await CommissionController.disburseMatchCoin(id, amount);

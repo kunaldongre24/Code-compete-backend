@@ -1,4 +1,4 @@
-const modifyFormat = (bm, fancy) => {
+const modifyFormat2 = (bm, fancy, marketTime, bookmakerStatus) => {
   const isExcluded = (marketName) => {
     const keywordsToExclude = [
       "even",
@@ -19,22 +19,22 @@ const modifyFormat = (bm, fancy) => {
       lowerCaseMarketName.includes(keyword)
     );
   };
-  const mapMarketItem = (item, i) => {
-    const isSuspended = item.selectionStatus !== "ACTIVE";
-    let back1 = Math.round((item.backOdds - 1) * 10000) / 100;
-    let lay1 = Math.round((item.layOdds - 1) * 10000) / 100;
-    back1 = back1 >= 100 ? 0 : back1;
-    lay1 = lay1 >= 100 ? 0 : lay1;
+  const mapMarketItem = (item) => {
+    const isSuspended = item.status !== "OPEN" || bookmakerStatus !== "OPEN";
+    const back = item.backPrices[0].price;
+    const lay = item.layPrices[0].price;
+    let back1 = back;
+    let lay1 = lay;
     return {
-      nat: item.selectionName,
+      nat: item.runnerName.trim(),
       b1: isSuspended ? 0 : back1,
       bs1: 1000000,
       l1: isSuspended ? 0 : lay1,
       ls1: 1000000,
-      s: item.selectionStatus,
-      sr: item.sortingOrder,
-      updatetime: item.marketTime,
-      sid: item.selectionId,
+      s: item.status,
+      sr: item.sort,
+      updatetime: marketTime,
+      sid: item.runnerId,
     };
   };
 
@@ -43,9 +43,9 @@ const modifyFormat = (bm, fancy) => {
   const Fancymarket = fancy
     .filter((item) => !isExcluded(item.marketName))
     .map((item) => {
-      const isSuspended = item.statusName !== "ACTIVE";
+      const isSuspended = item.status !== "ACTIVE";
       const gStatus =
-        item.statusName === "SUSPEND"
+        item.status === "SUSPEND"
           ? "Suspended"
           : item.statusName === "ACTIVE"
           ? item.statusName
@@ -53,13 +53,13 @@ const modifyFormat = (bm, fancy) => {
       return {
         sid: item.marketId,
         nat: item.marketName,
-        b1: isSuspended ? 0 : item.runsYes,
-        bs1: isSuspended ? 0 : item.oddsYes,
-        l1: isSuspended ? 0 : item.runsNo,
-        ls1: isSuspended ? 0 : item.oddsNo,
+        b1: isSuspended ? 0 : item.yesValue,
+        bs1: isSuspended ? 0 : item.yesRate,
+        l1: isSuspended ? 0 : item.noValue,
+        ls1: isSuspended ? 0 : item.noRate,
         gstatus: gStatus,
-        srno: item.sortingOrder,
-        updatetime: item.marketTime,
+        srno: item.marketId,
+        updatetime: marketTime,
       };
     });
 
@@ -69,4 +69,4 @@ const modifyFormat = (bm, fancy) => {
   };
 };
 
-module.exports = modifyFormat;
+module.exports = modifyFormat2;

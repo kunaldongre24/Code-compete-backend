@@ -1,7 +1,6 @@
 const Coin = require("../models/Coins");
 const BetUserMap = require("../models/BetUserMap");
 const MatchBetMap = require("../models/MatchBetMap");
-const MatchUserMap = require("../models/MatchUserMap");
 const BetDataMap = require("../models/BetDataMap");
 const UserModel = require("../models/User");
 const positionCalculator = require("../helper/positionCalculator");
@@ -215,9 +214,46 @@ const CoinController = {
           },
         },
       ];
+      const pipeline2 = [
+        {
+          $match: {
+            userId,
+            settled: false,
+          },
+        },
+        {
+          $addFields: {
+            priceValue: { $toDouble: "$priceValue" }, // Convert priceValue to a number
+            calculatedValue: {
+              $cond: [
+                {
+                  $eq: ["$isBack", true], // Check if isBack is true
+                },
+                "$stake", // If true, use stake
+                {
+                  $divide: [
+                    { $multiply: ["$stake", "$odds"] }, // Calculate (stake * odds) / 100
+                    100,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            sum: {
+              $sum: "$calculatedValue", // Sum the calculated values
+            },
+          },
+        },
+      ];
+
+      // Now you can use the pipelineWithCondition in your aggregation query
 
       const [result] = await BetDataMap.aggregate(pipeline);
-      const [matchResult] = await MatchBetMap.aggregate(pipeline);
+      const [matchResult] = await MatchBetMap.aggregate(pipeline2);
 
       const totalSum =
         ((result && result.sum) || 0) + ((matchResult && matchResult.sum) || 0);
@@ -361,8 +397,6 @@ const CoinController = {
       await Coin.deleteMany({ getter: id, value: { $lte: 10000 } });
       await Coin.deleteMany({ getter: id, type: 8 });
       await BetUserMap.deleteMany({ player: id });
-      await MatchUserMap.deleteMany({ company: id });
-
       await CoinController.countAndUpdateCoin(id);
 
       res.send({ msg: "Deleted coins" });

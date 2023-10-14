@@ -47,15 +47,19 @@ router.get(
   checkAdmin,
   BetController.getBetUsingUserId
 );
-router.get("/getCompanyLenDen", verifyUser, BetController.getCompanyLenDen);
+router.get(
+  "/getCompanyLenDen/:startDate/:endDate",
+  verifyUser,
+  BetController.getCompanyLenDen
+);
 router.get(
   "/getCompanyReportById/:userId",
-  verifyUser,
-  checkAdmin,
+  // verifyUser,
+  // checkAdmin,
   BetController.getReportByUserId
 );
 router.get("/getUserAllBets/", verifyUser, BetController.getUserBets);
-router.get("/getLedgerList/", verifyUser, BetController.getLedgerList);
+router.get("/getLedgerList/:userId", BetController.getLedgerList);
 router.get(
   "/getAllMatchBets/:matchId",
   verifyUser,
@@ -85,7 +89,7 @@ router.get(
 router.get(
   "/myAgentCollection/:matchId",
   verifyUser,
-  BetController.myAgentCollection
+  BetController.getCollectionReport
 );
 router.get(
   "/myPlayerCollection/:matchId",
@@ -100,6 +104,7 @@ router.get(
   checkAdmin,
   BetController.myClientCollection
 );
+router.get("/getAllCompanyExpo/:userId", BetController.getAllCompanyExpo);
 router.get("/getUserBets/:matchId", verifyUser, BetController.getLiveBets);
 router.get(
   "/getMatchLedger/:matchId",

@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 const matchBetSchema = new Schema({
   isBack: { type: Boolean, required: true },
   isLay: { type: Boolean, required: true },
-  marketId: { type: String, required: true },
   matchId: { type: String, required: true },
   matchname: { type: String, required: true },
   odds: { type: Number, required: true },

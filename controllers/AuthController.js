@@ -4,6 +4,8 @@ const User = require("../models/User");
 const CommissionModel = require("../models/CommissionMap");
 const CoinModel = require("../models/Coins");
 const Count = require("../models/Count");
+const { v4: uuidv4 } = require("uuid");
+
 const {
   getToken,
   COOKIE_OPTIONS,
@@ -11,6 +13,8 @@ const {
 } = require("../middleware/authenticate");
 const jwt = require("jsonwebtoken");
 const isTokenExpired = require("../helper/isTokenExpired");
+const { ObjectId } = require("mongodb");
+const isValidPassword = require("../helper/isValidPassword");
 
 const AuthController = {
   async getMyInfo(req, res) {
@@ -56,10 +60,14 @@ const AuthController = {
       throw error;
     }
   },
+  async getUserBy_id(_id) {
+    const user = await User.findById(_id);
+    return user;
+  },
   async getUserById(req, res) {
     const { id } = req.params;
-    // const response = await AuthController.getUserByUid(id);
-    // res.send(response);
+    const response = await AuthController.getUserBy_id(id);
+    res.send(response);
   },
   async getUserInformation(username) {
     const user = await User.findOne({ username: username });
@@ -208,13 +216,21 @@ const AuthController = {
     }
   },
   async UpdateUser(req, res) {
-    const { fname, lname } = req.body;
+    const { fname, lname, _id } = req.body;
     if (fname === undefined || lname === undefined) {
       return res.send({ err: "Missing Information" });
     }
+    const userDetails = await AuthController.getUserBy_id(new ObjectId(_id));
+    if (userDetails.companyId !== req.user.username) {
+      res.send({ userUpdated: false, msg: "Insufficient Permissions!" });
+    }
     const name = fname + " " + lname;
     try {
-      const user = await User.findOneAndUpdate({ name: name }, { new: true });
+      const user = await User.findOneAndUpdate(
+        { _id: new ObjectId(_id) },
+        { name: name },
+        { new: true }
+      );
       if (!user) {
         return res
           .status(404)
@@ -236,29 +252,38 @@ const AuthController = {
   },
   async signup(req, res) {
     try {
+      if (req.user.level < 2 && req.user.level === 6) {
+        res.send({ userCreated: false, msg: "Not Allowed!" });
+        return;
+      }
       const companyId = req.user.username;
-      var {
-        username,
-        password,
-        level,
-        name,
-        matchShare,
-        fixedLimit,
-        AgentMatchcommision,
-        AgentSessioncommision,
-      } = req.body;
+      var { username, password, level, name, matchShare, fixedLimit } =
+        req.body;
 
+      if (!isValidPassword(password)) {
+        return res
+          .status(400)
+          .json({ userCreated: false, msg: "Invalid Password Length." });
+      }
       username = username.toLowerCase();
       const userData = await User.findOne({ username: companyId });
       const totalCoins = await CoinController.countCoin(
         companyId.toLowerCase()
       );
       var mShare = 0;
+      if (level < 1 || level > 7) {
+        res.send({
+          userCreated: false,
+          msg: "Invalid Level!",
+        });
+        return;
+      }
       if (level <= userData.level) {
-        return res.send({
+        res.send({
           userCreated: false,
           msg: "Insufficient Permissions!",
         });
+        return;
       }
       if (level === 6) {
         mShare = userData.matchShare;
@@ -271,7 +296,8 @@ const AuthController = {
         return;
       }
       const share = userData.matchShare - mShare;
-
+      const AgentMatchcommision = level < 6 ? 3 : 0;
+      const AgentSessioncommision = level < 6 ? 3 : 0;
       User.register(
         new User({
           username,
@@ -280,6 +306,7 @@ const AuthController = {
           totalCoins: parseFloat(fixedLimit),
           companyId,
           matchShare: share,
+          currentSession: uuidv4(),
           matchCommission: AgentMatchcommision,
           sessionCommission: AgentSessioncommision,
           createdOn: Date.now(),
@@ -324,7 +351,7 @@ const AuthController = {
             countAndUpdateCoin(username);
             countAndUpdateCoin(userData.username);
 
-            res.send({
+            return res.send({
               userCreated: true,
               msg: "User has been created Successfully",
             });
@@ -334,6 +361,45 @@ const AuthController = {
     } catch (error) {
       console.error(error);
       res.send({ userCreated: false, msg: "Some error occurred" });
+      return;
+    }
+  },
+  async editPassword(req, res, next) {
+    try {
+      const { newPassword, username } = req.body;
+      if (!username || !newPassword) {
+        return res
+          .status(400)
+          .json({ status: false, msg: "Missing Information." });
+      }
+      // Check if the new password meets your criteria (e.g., minimum length)
+      if (!isValidPassword(newPassword)) {
+        return res
+          .status(400)
+          .json({ status: false, msg: "Invalid Password Length." });
+      }
+
+      // Find the user by ID and update the password
+      const user = await AuthController.getUserInformation(username);
+      if (!user) {
+        return res
+          .status(400)
+          .json({ status: false, msg: "Invalid Username." });
+      }
+      if (user.companyId !== req.user.username) {
+        return res
+          .status(400)
+          .json({ status: false, msg: "Insufficient Permission." });
+      }
+      user.setPassword(newPassword, async () => {
+        await user.save();
+        res
+          .status(200)
+          .json({ status: true, msg: "Password updated successfully." });
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ status: false, msg: "Internal server error." });
     }
   },
   async authLogin(req, res, next) {
@@ -520,6 +586,11 @@ const AuthController = {
   async changePassword(req, res, next) {
     try {
       const user = await User.findById(req.user._id);
+      if (!isValidPassword(req.body.newPassword)) {
+        return res
+          .status(400)
+          .json({ success: false, msg: "Invalid Password Length." });
+      }
 
       user
         .changePassword(req.body.oldPassword, req.body.newPassword)

@@ -10,14 +10,16 @@ const BetList = require("../models/BetList");
 const CoinMap = require("../models/Coins");
 const BetDataMap = require("../models/BetDataMap");
 const BetUserMap = require("../models/BetUserMap");
-const MatchUserMap = require("../models/MatchUserMap");
 const MatchBetMap = require("../models/MatchBetMap");
 const MatchList = require("../models/MatchList");
 const MatchBetList = require("../models/MatchBetList");
 const { ObjectId } = require("mongodb");
 const positionCalculator = require("../helper/positionCalculator");
 const { default: mongoose } = require("mongoose");
-const getApiData = require("../helper/getApiData");
+const User = require("../models/User");
+const apiSwitch = require("../helper/apiSwitch");
+const Ledger = require("../models/Ledger");
+const { x } = require("joi");
 
 const BetController = {
   didWon(isBack, value, odds) {
@@ -44,15 +46,13 @@ const BetController = {
       return;
     }
     const wonArr = [];
-    const betRef = BetUserMap.find({
-      fancyName: fancyName,
-      settled: false,
-    });
-    const data = await betRef;
-    const betRef2 = BetDataMap.find({
-      fancyName: fancyName,
-      settled: false,
-    });
+    const data = await BetUserMap.find({ fancyName, settled: false });
+    const resp = await BetDataMap.find({ fancyName, settled: false });
+
+    if (!resp.length) {
+      console.log("No matching documents.");
+      return;
+    }
     for (i = 0; i < data.length; i++) {
       const {
         lossAmount,
@@ -85,11 +85,7 @@ const BetController = {
       await countAndUpdateCoin(company.toLowerCase());
       await countAndUpdateCoin(player.toLowerCase());
     }
-    const resp = await betRef2;
-    if (!resp.length) {
-      console.log("No matching documents.");
-      return;
-    }
+
     const settledArr = [];
     var totalBetAmount = 0;
     var match_id;
@@ -270,12 +266,12 @@ const BetController = {
   //   });
   //   return;
   // },
-  async resolveMatchBet(sid, winnerSid, matchId) {
-    if (!sid || !winnerSid || !matchId) {
+  async resolveMatchBet(winnerSid, matchId) {
+    if (!winnerSid || !matchId) {
       return;
     }
     await MatchList.updateOne(
-      { gameId: matchId },
+      { eventId: matchId },
       { $set: { settled: true, winnerSid: winnerSid } }
     );
     var won = false;
@@ -292,9 +288,8 @@ const BetController = {
       return;
     }
     const coin = await CoinMap.findOne({ _id: matchInfo[0].transactionId });
-
     const transactionData = coin.toObject();
-
+    console.log(transactionData.newArr, winnerSid);
     let position = transactionData.newArr.filter((x) => x.sid === winnerSid)[0]
       .position;
     let playerId,
@@ -428,16 +423,9 @@ const BetController = {
         { settled: true, won: isWon, winner: winnerSid }
       );
     }
-    const agentArr = [];
-    let client = {};
     for (const bet of data) {
       const { selectionId, isBack, company, matchId, matchname, player } = bet;
-      if (!agentArr.some((agent) => agent.company === company)) {
-        client.company = player;
-        client.matchId = matchId;
-        client.matchname = matchname;
-        agentArr.push({ company, matchId, matchname });
-      }
+
       var isWon = false;
       if (isBack) {
         if (winnerSid === selectionId) {
@@ -463,45 +451,13 @@ const BetController = {
         }
       );
     }
-    agentArr.push(client);
     const resultDoc = new MatchBetList({
-      sid,
+      eventId: matchId,
       winnerSid,
       createdOn: Date.now(),
     });
     await resultDoc.save();
-    for (var i = 0; i < agentArr.length; i++) {
-      const { matchId, company, matchname } = agentArr[i];
-      let final;
-      if (removeNum(company) === "sp") {
-        const exposure = await BetController.getPlayerExposure(
-          matchId,
-          company
-        );
-        final = exposure.final;
-      } else {
-        const exposure = await BetController.getAgentExposure(matchId, company);
-        final = exposure.final;
-      }
-      let totalSum = 0;
-      const sumRef = await MatchUserMap.find({ company: company });
-      sumRef.forEach((doc) => {
-        const sum = doc.sum;
-        totalSum += parseFloat(sum);
-      });
-      const result = new MatchUserMap({
-        company,
-        matchId,
-        matchname,
-        sum: final,
-        type: "match",
-        total: totalSum + final,
-        sid,
-        winnerSid,
-        createdOn: Date.now(),
-      });
-      await result.save();
-    }
+
     return;
   },
   async checkDeleteFancyResult(req, res) {
@@ -585,22 +541,8 @@ const BetController = {
   },
   async deleteMatchBet(req, res) {
     const { marketId, pwd } = req.params;
-    if (!marketId || pwd !== "567Eight@") {
-      return res.send("<3");
-    }
-    const session = await mongoose.startSession();
+
     try {
-      await session.withTransaction(async () => {
-        const queryOptions = { session };
-        const queries = [
-          MatchBetMap.deleteMany({ marketId }, queryOptions),
-          BetUserMap.deleteMany({ marketId, name: "matchbet" }, queryOptions),
-          CoinMap.deleteMany({ "newArr.0.mid": marketId }, queryOptions),
-        ];
-        for await (const query of queries) {
-          // Do nothing
-        }
-      });
       res.send("Bet Deleted");
     } catch (err) {
       console.error(err);
@@ -614,8 +556,8 @@ const BetController = {
     res.send({ msg: "Bet Settled" });
   },
   async settleMatchBet(req, res) {
-    const { sid, winnerSid, matchId } = req.body;
-    BetController.resolveMatchBet(sid, winnerSid, matchId);
+    const { winnerSid, matchId } = req.body;
+    await BetController.resolveMatchBet(winnerSid, matchId);
     res.send({ msg: "Bet Settled" });
   },
   // async settleTossBet(req, res) {
@@ -637,10 +579,8 @@ const BetController = {
   },
   async fetchUnsettledMatches(socket) {
     try {
-      const currentTime = new Date().toISOString(); // Convert current time to ISO string format
       const unsettledMatches = await MatchList.find({
-        settled: false,
-        marketStartTime: { $lt: currentTime },
+        settled: { $ne: true },
       }).exec();
       socket.emit("unsettledMatches", unsettledMatches);
     } catch (error) {
@@ -650,18 +590,305 @@ const BetController = {
   },
   async getCompanyLenDen(req, res) {
     const userId = req.user.username;
-    const data = await BetController.getLedgerByUserId(userId);
-    res.send(data);
+    const { startDate, endDate } = req.params;
+    const resultArray = await BetController.getCompanyExp(
+      userId,
+      startDate,
+      endDate
+    );
+    res.send(resultArray ? resultArray : []);
+  },
+
+  async getCompanyExp(userId, startDate, endDate) {
+    try {
+      const user = await User.findOne({ username: userId }).exec();
+
+      if (!user) {
+        console.warn(`User with username '${userId}' not found.`);
+        return;
+      }
+      // Get the user's creation date
+      const userCreationDate = user.createdOn;
+
+      const last10Matches = await MatchList.find({
+        createdOn: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }).sort({ time: 1 });
+      const ledgerEntries = await Ledger.find({
+        $or: [{ setter: userId }, { getter: userId }],
+        createdOn: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      });
+
+      const combinedEntries = [...last10Matches, ...ledgerEntries].sort(
+        (a, b) => {
+          return a.createdOn - b.createdOn;
+        }
+      );
+      const resultArray = [];
+      let balance = 0;
+      let i = 0;
+      for (const match of combinedEntries) {
+        if (match.eventId) {
+          const matchObj = {
+            matchId: match.eventId,
+            matchName: match.eventName,
+            totalProfitLoss: 0,
+            startTime: match.time,
+          };
+          // Find all bets related to the current match and user
+          const bets = await BetUserMap.find({
+            matchId: match.eventId,
+            company: userId,
+            settled: true,
+          });
+          let totalBalance = 0;
+          if (match.createdOn > userCreationDate || bets.length > 0) {
+            // Calculate total profit/loss for the current match and user
+            for (const bet of bets) {
+              if (bet.settled) {
+                if (bet.won) {
+                  const maxLoss =
+                    bet.name === "matchbet"
+                      ? bet.isBack
+                        ? (bet.stake * bet.odds) / 100
+                        : bet.stake
+                      : bet.name === "sessionbet"
+                      ? bet.priceValue > 1
+                        ? bet.stake
+                        : bet.stake * bet.priceValue
+                      : 0;
+                  const companyShare = 100 - user.matchShare;
+                  const lossAmount = (maxLoss * companyShare) / 100;
+                  const companyCom =
+                    (((bet.stake * 3) / 100) * companyShare) / 100;
+
+                  totalBalance -=
+                    lossAmount +
+                    (bet.name === "sessionbet"
+                      ? companyCom + bet.sessionCommission
+                      : 0);
+                } else {
+                  const maxProfit =
+                    bet.name === "matchbet"
+                      ? bet.isBack
+                        ? bet.stake
+                        : (bet.stake * bet.odds) / 100
+                      : bet.name === "sessionbet"
+                      ? bet.priceValue > 1
+                        ? bet.stake * bet.priceValue
+                        : bet.stake
+                      : 0;
+                  const companyShare = 100 - user.matchShare;
+                  const profitAmount = (maxProfit * companyShare) / 100;
+                  const companyCom =
+                    (((bet.stake * 3) / 100) * companyShare) / 100;
+
+                  totalBalance +=
+                    profitAmount +
+                    (bet.name === "sessionbet"
+                      ? companyCom + bet.sessionCommission
+                      : -(profitAmount * bet.commissionPercentage) / 100);
+                }
+              }
+            }
+
+            // Update the balance for this match by adding the totalProfitLoss
+            matchObj.totalProfitLoss = totalBalance;
+            balance += totalBalance;
+            matchObj.balance = balance;
+            matchObj.i = i;
+            i++;
+            resultArray.push(matchObj);
+          }
+        } else {
+          let totalBalance = 0;
+          const matchObj = {
+            matchId: match._id,
+            matchName: match.getter === userId ? "Cash Received" : "Cash Paid",
+            totalProfitLoss: 0,
+            startTime: match.createdOn,
+            note: match.note,
+          };
+
+          // Determine if the entry is Cash Received or Cash Paid
+          if (match.getter === userId) {
+            totalBalance += match.value;
+          } else {
+            totalBalance -= match.value;
+          }
+          matchObj.totalProfitLoss = totalBalance;
+          balance += totalBalance;
+          matchObj.balance = balance;
+          matchObj.i = i;
+          i++;
+          resultArray.push(matchObj);
+        }
+      }
+
+      return resultArray;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
+
+  async matchLedger(userId, startDate, endDate) {
+    try {
+      const user = await User.findOne({ username: userId }).exec();
+
+      if (!user) {
+        console.warn(`User with username '${userId}' not found.`);
+        return;
+      }
+      // Get the user's creation date
+      const userCreationDate = user.createdOn;
+
+      const last10Matches = await MatchList.find({
+        createdOn: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }).sort({ time: 1 });
+
+      const resultArray = [];
+      let balance = 0;
+      let i = 0;
+      for (const match of last10Matches) {
+        const matchObj = {
+          matchId: match.eventId,
+          matchName: match.eventName,
+          totalProfitLoss: 0,
+          startTime: match.time,
+        };
+        // Find all bets related to the current match and user
+        const bets = await BetUserMap.find({
+          matchId: match.eventId,
+          company: userId,
+          settled: true,
+        });
+        let totalBalance = 0;
+        if (match.createdOn > userCreationDate || bets.length > 0) {
+          // Calculate total profit/loss for the current match and user
+          for (const bet of bets) {
+            if (bet.settled) {
+              if (bet.won) {
+                const maxLoss =
+                  bet.name === "matchbet"
+                    ? bet.isBack
+                      ? (bet.stake * bet.odds) / 100
+                      : bet.stake
+                    : bet.name === "sessionbet"
+                    ? bet.priceValue > 1
+                      ? bet.stake
+                      : bet.stake * bet.priceValue
+                    : 0;
+                const companyShare = 100 - user.matchShare;
+                const lossAmount = (maxLoss * companyShare) / 100;
+                const companyCom =
+                  (((bet.stake * 3) / 100) * companyShare) / 100;
+
+                totalBalance -=
+                  lossAmount +
+                  (bet.name === "sessionbet"
+                    ? companyCom + bet.sessionCommission
+                    : 0);
+              } else {
+                const maxProfit =
+                  bet.name === "matchbet"
+                    ? bet.isBack
+                      ? bet.stake
+                      : (bet.stake * bet.odds) / 100
+                    : bet.name === "sessionbet"
+                    ? bet.priceValue > 1
+                      ? bet.stake * bet.priceValue
+                      : bet.stake
+                    : 0;
+                const companyShare = 100 - user.matchShare;
+                const profitAmount = (maxProfit * companyShare) / 100;
+                const companyCom =
+                  (((bet.stake * 3) / 100) * companyShare) / 100;
+
+                totalBalance +=
+                  profitAmount +
+                  (bet.name === "sessionbet"
+                    ? companyCom + bet.sessionCommission
+                    : -(profitAmount * bet.commissionPercentage) / 100);
+              }
+            }
+          }
+
+          // Update the balance for this match by adding the totalProfitLoss
+          matchObj.totalProfitLoss = totalBalance;
+          balance += totalBalance;
+          matchObj.balance = balance;
+          matchObj.i = i;
+          i++;
+          resultArray.push(matchObj);
+        }
+      }
+      return resultArray;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
+  async cashLedger(userId, startDate, endDate) {
+    try {
+      const user = await User.findOne({ username: userId }).exec();
+
+      if (!user) {
+        console.warn(`User with username '${userId}' not found.`);
+        return;
+      }
+
+      const ledgerEntries = await Ledger.find({
+        $or: [{ setter: userId }, { getter: userId }],
+        createdOn: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      });
+
+      const resultArray = [];
+      let i = 0;
+      for (const match of ledgerEntries) {
+        let totalBalance = 0;
+        const matchObj = {
+          matchId: match._id,
+          matchName: match.getter === userId ? "Cash Received" : "Cash Paid",
+          totalProfitLoss: 0,
+          startTime: match.createdOn,
+          balance: match.getterPreviousLimit,
+          note: match.note,
+        };
+
+        // Determine if the entry is Cash Received or Cash Paid
+        if (match.getter === userId) {
+          totalBalance += match.value;
+        } else {
+          totalBalance -= match.value;
+        }
+        matchObj.totalProfitLoss = totalBalance;
+        matchObj.balance += totalBalance;
+        matchObj.i = i;
+        i++;
+        resultArray.push(matchObj);
+      }
+
+      return resultArray;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   },
   async getReportByUserId(req, res) {
     const { userId } = req.params;
-    const data = await BetController.getLedgerByUserId(userId);
-    res.send(data);
+    const resultArray = await BetController.getCompanyExp(userId);
+    res.send(resultArray);
   },
-  async getLedgerByUserId(userId) {
-    const data = await MatchUserMap.find({ company: userId }).lean();
-    return data;
-  },
+
   async getMatchAllBets(req, res) {
     const { matchId } = req.params;
     const userId = req.user.username;
@@ -1164,34 +1391,7 @@ const BetController = {
     }
     res.send(dataArr);
   },
-  async myAgentCollection(req, res) {
-    try {
-      const { matchId } = req.params;
-      const username = req.user.username;
-      const arr = await getMyAgents(username);
-      const dataArr = [];
-      for (var i = 0; i < arr.length; i++) {
-        const arrData = arr[i];
-        let inf;
-        if (arrData.level === 6) {
-          inf = await BetController.getPlayerExposure(
-            matchId,
-            arrData.username
-          );
-        } else {
-          inf = await BetController.getAgentExposure(matchId, arrData.username);
-        }
-        const cash = await countCash(arrData.username);
 
-        inf.final = inf.final + cash;
-        dataArr.push(inf);
-      }
-      res.send(dataArr);
-    } catch (err) {
-      console.error(err);
-      res.send("Internal Server Error");
-    }
-  },
   async agentSessionEarning(req, res) {
     const { matchId } = req.params;
     const username = req.user.username;
@@ -1289,7 +1489,7 @@ const BetController = {
             var sessionSum = 0;
             var matchStake = 0;
             var matchSum = 0;
-            const sessionStake = row.stake * rate;
+            const sessionStake = row.stake;
             if (row.won && row.won === true) {
               var totalSSum =
                 row.priceValue > 1 ? row.stake : row.stake * row.priceValue;
@@ -1397,7 +1597,7 @@ const BetController = {
     return nRate;
   },
   async placeMatchBet(req, res) {
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     const username = req.user.username;
     const {
       stake,
@@ -1442,23 +1642,30 @@ const BetController = {
         status: 0,
       });
     }
-    const response = await getApiData(matchId);
+    const response = await apiSwitch(matchId);
+    const matchInfo = await MatchList.findOne({ eventId: matchId }).exec();
+    const market = matchInfo.markets.filter(
+      (x) => x.marketName === "Match Odds"
+    )[0];
+    const runners = market.runners;
     const runnerArray = [];
     var selectionId;
+    if (runners.filter((x) => x.selectionName === selectionName).length === 0) {
+      return;
+    }
     if (response.status) {
-      if (response.data.BMmarket && response.data.BMmarket.bm1) {
-        selectionId = response.data.BMmarket.bm1.filter(
-          (x) => x.nat === selectionName
-        )[0].sid;
-        const resp = response.data.BMmarket.bm1;
-        for (var i = 0; i < resp.length; i++) {
+      if (response.data.BMmarket && response.data.BMmarket.bm1 && runners) {
+        selectionId = runners.filter(
+          (x) => x.selectionName === selectionName
+        )[0].selectionId;
+        for (var i = 0; i < runners.length; i++) {
           const object = {
-            runner: resp[i].nat,
-            sid: resp[i].sid,
+            runner: runners[i].selectionName,
+            sid: runners[i].selectionId,
           };
           runnerArray.push(object);
         }
-      }
+      } else return;
       if (response.data.BMmarket && response.data.BMmarket.bm1) {
         let resp = response.data.BMmarket.bm1;
         const matchBetData = await MatchBetMap.find({
@@ -1486,7 +1693,6 @@ const BetController = {
           isBack: isBack,
           selectionId: selectionId,
           isLay: !isBack,
-          marketId: resp[0].mid,
           priceValue: priceValue,
           odds: odds,
           selectionName: selectionName,
@@ -1544,7 +1750,6 @@ const BetController = {
               isBack: isBack,
               selectionId: selectionId,
               isLay: !isBack,
-              marketId: resp[0].mid,
               transactionId: betData[0].transactionId,
               priceValue: priceValue,
               odds: odds,
@@ -1573,8 +1778,7 @@ const BetController = {
                 }
               }
             }
-            newArr = resp.map(({ mid, nat, position }) => ({
-              mid,
+            newArr = resp.map(({ nat, position }) => ({
               nat,
               position,
             }));
@@ -1606,7 +1810,6 @@ const BetController = {
               isLay: !isBack,
               transactionId: docId.toString(),
               priceValue: priceValue,
-              marketId: resp[0].mid,
               odds: odds,
               selectionId: selectionId,
               runnerArray: runnerArray,
@@ -1627,8 +1830,7 @@ const BetController = {
             }).lean();
             resp = positionCalculator(matchBetData, resp);
 
-            newArr = resp.map(({ mid, nat, position }) => ({
-              mid,
+            newArr = resp.map(({ nat, position }) => ({
               nat,
               position,
             }));
@@ -1680,7 +1882,6 @@ const BetController = {
                 selectionId,
                 stake: stake,
                 isBack: isBack,
-                marketId: resp[0].mid,
                 isLay: !isBack,
                 priceValue: priceValue,
                 odds: odds,
@@ -1964,7 +2165,7 @@ const BetController = {
     }
   },
   async placeBet(req, res) {
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     try {
       const username = req.user.username;
       const { stake, isBack, priceValue, odds, fancyName, matchId, sportId } =
@@ -1992,8 +2193,8 @@ const BetController = {
           status: 0,
         });
       }
-      const { matchname } = matchDetails;
-      const response = await getApiData(matchId);
+      const { eventName } = matchDetails;
+      const response = await apiSwitch(matchId);
       if (response.status) {
         if (response.data && response.data.Fancymarket.length > 0) {
           const currentData = response.data.Fancymarket.filter(
@@ -2017,7 +2218,6 @@ const BetController = {
               fancyName: fancyName,
               userId: username,
             }).exec();
-
             if (liveBets.length > 0) {
               const newObj = {
                 userId: username,
@@ -2027,7 +2227,7 @@ const BetController = {
                 priceValue: priceVal,
                 odds,
                 fancyName,
-                matchname,
+                matchname: eventName,
                 matchId,
                 sportId,
                 settled: false,
@@ -2127,7 +2327,7 @@ const BetController = {
               priceValue: priceVal,
               odds: odds,
               fancyName: fancyName,
-              matchname: matchname,
+              matchname: eventName,
               matchId: matchId,
               sportId: sportId,
               settled: false,
@@ -2154,11 +2354,16 @@ const BetController = {
                 lossList.filter((x) => x.id === id)[0].commission
               );
               const myComm = Math.abs(
-                lossList.filter((x) => x.id === id)[0].myComm
+                priceVal > 1
+                  ? profitList.filter((x) => x.id === id)[0].myComm
+                  : lossList.filter((x) => x.id === id)[0].myComm
               );
               const commissionAmount = Math.abs(
-                lossList.filter((x) => x.id === id)[0].commissionAmount
+                priceVal > 1
+                  ? profitList.filter((x) => x.id === id)[0].commissionAmount
+                  : lossList.filter((x) => x.id === id)[0].commissionAmount
               );
+              console.log(profitList, lossList);
               if (id !== username) {
                 const betUserMap = new BetUserMap({
                   name: "sessionbet",
@@ -2173,13 +2378,12 @@ const BetController = {
                   transactionId: docId,
                   stake: stake,
                   isBack: isBack,
-                  marketId: filterValue[0].mid,
                   isLay: !isBack,
                   pname: req.user.name,
                   priceValue: priceVal,
                   odds: odds,
                   fancyName: fancyName,
-                  matchname: matchname,
+                  matchname: eventName,
                   matchId,
                   sportId,
                   settled: false,
@@ -2246,7 +2450,343 @@ const BetController = {
     }
     res.send(arr);
   },
-  async getLedgerList(req, res) {},
+  async getPlayerExp(userId) {
+    try {
+      const user = await User.findOne({ username: userId }).exec();
+
+      if (!user) {
+        console.warn(`User with username '${userId}' not found.`);
+        return;
+      }
+
+      // Get the user's creation date
+      const userCreationDate = user.createdOn;
+
+      const last10Matches = await MatchList.find().sort({ time: 1 });
+
+      const resultArray = [];
+      let totalBalance = 0;
+      // Iterate through each match
+      for (const match of last10Matches) {
+        const matchObj = {
+          matchId: match.eventId,
+          matchName: match.eventName,
+          totalProfitLoss: 0,
+          balance: 0,
+          startTime: match.time,
+        };
+        // Find all bets related to the current match and user
+        const bets = await BetUserMap.find({
+          matchId: match.eventId,
+          player: userId,
+        });
+        if (match.createdOn > userCreationDate || bets.length > 0) {
+          // Calculate total profit/loss for the current match and user
+          for (const bet of bets) {
+            if (bet.settled) {
+              if (bet.won) {
+                matchObj.totalProfitLoss += bet.lossAmount;
+              } else {
+                matchObj.totalProfitLoss -= bet.profitAmount;
+              }
+            }
+          }
+          // Find all coins related to the current match, user, and before the match
+          totalBalance += matchObj.totalProfitLoss;
+          matchObj.balance = totalBalance;
+          resultArray.push(matchObj);
+        }
+      }
+
+      return resultArray;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
+  async getAllCompanyExpo(req, res) {
+    const { userId } = req.params;
+    const users = await User.find({ companyId: userId });
+    for (const user in users) {
+      const response = await BetController.companyExpoByMatch(user);
+    }
+  },
+  async getCollectionReport(req, res) {
+    try {
+      const { matchId } = req.params;
+      const userId = req.user.username;
+
+      // Fetch users from the database using a single query.
+      const users = await User.find({ companyId: userId });
+
+      const dataArr = await Promise.all(
+        users.map(async (user) => {
+          let balance = 0;
+          if (user.level < 6) {
+            if (matchId === "all") {
+              balance = await BetController.getIndivisualCompanyExpo(user);
+            } else {
+              const inf = await BetController.companyExpoByMatch(
+                user.username,
+                matchId
+              );
+              balance = inf.balance;
+            }
+          } else if (user.level === 6) {
+            if (matchId === "all") {
+              balance = await BetController.getIndivisualPlayerExpo(user);
+            } else {
+              const inf = await BetController.playerExposureByMatch(
+                user.username,
+                matchId
+              );
+              balance = inf.balance;
+            }
+          } else {
+            // No action needed for other user levels.
+            return null;
+          }
+
+          // Calculate cash separately and add it to the balance.
+          const cash = await countCash(user.username);
+          balance += cash;
+
+          return {
+            username: user.username,
+            name: user.name,
+            balance,
+          };
+        })
+      );
+
+      // Filter out null values from the result (for user levels >= 7).
+      const filteredData = dataArr.filter((userObj) => userObj !== null);
+
+      res.send(filteredData);
+    } catch (err) {
+      console.error(err); // Corrected variable name to 'err' from 'error'.
+      res.status(500).send({ error: "Internal Server Error" });
+    }
+  },
+  async getIndivisualPlayerExpo(user) {
+    try {
+      // Find all bets related to the current match and user
+      const bets = await BetUserMap.find({
+        player: user.username,
+        settled: true,
+      });
+      let totalBalance = 0;
+      if (bets.length > 0) {
+        // Calculate total profit/loss for the current match and user
+        for (const bet of bets) {
+          if (bet.settled) {
+            if (bet.won) {
+              totalBalance -= bet.lossAmount;
+            } else {
+              totalBalance += bet.profitAmount;
+            }
+          }
+        }
+      }
+
+      return Math.round(totalBalance * 100) / 100;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
+  async getIndivisualCompanyExpo(user) {
+    try {
+      const userShare = user.matchShare;
+      // Find all bets related to the current match and user
+      const bets = await BetUserMap.find({
+        company: user.username,
+        settled: true,
+      });
+      let totalBalance = 0;
+      if (bets.length > 0) {
+        // Calculate total profit/loss for the current match and user
+        for (const bet of bets) {
+          if (bet.settled) {
+            if (bet.won) {
+              const maxLoss =
+                bet.name === "matchbet"
+                  ? bet.isBack
+                    ? (bet.stake * bet.odds) / 100
+                    : bet.stake
+                  : bet.name === "sessionbet"
+                  ? bet.priceValue > 1
+                    ? bet.stake
+                    : bet.stake * bet.priceValue
+                  : 0;
+              const companyShare = 100 - userShare;
+              const lossAmount = (maxLoss * companyShare) / 100;
+              const companyCom = (((bet.stake * 3) / 100) * companyShare) / 100;
+              totalBalance -=
+                lossAmount + (bet.name === "sessionbet" ? companyCom : 0);
+            } else {
+              const maxProfit =
+                bet.name === "matchbet"
+                  ? bet.isBack
+                    ? bet.stake
+                    : (bet.stake * bet.odds) / 100
+                  : bet.name === "sessionbet"
+                  ? bet.priceValue > 1
+                    ? bet.stake * bet.priceValue
+                    : bet.stake
+                  : 0;
+              const companyShare = 100 - userShare;
+              const profitAmount = (maxProfit * companyShare) / 100;
+              const companyCom = (((bet.stake * 3) / 100) * companyShare) / 100;
+              totalBalance +=
+                profitAmount -
+                (bet.name === "sessionbet"
+                  ? companyCom
+                  : (profitAmount * bet.commissionPercentage) / 100);
+            }
+          }
+        }
+      }
+      return Math.round(totalBalance * 100) / 100;
+    } catch (err) {
+      console.error(err);
+    }
+  },
+  async companyExpoByMatch(userId, matchId) {
+    try {
+      const user = await User.findOne({ username: userId }).exec();
+
+      if (!user) {
+        console.warn(`User with username '${userId}' not found.`);
+        return;
+      }
+
+      // Get the user's creation date
+      const userCreationDate = user.createdOn;
+      const userShare = user.matchShare;
+      const match = await MatchList.findOne({ eventId: matchId });
+
+      // Iterate through each match
+      const matchObj = {
+        matchId: match.eventId,
+        username: user.username,
+        balance: 0,
+        company: user.companyId,
+        username: userId,
+        name: user.name,
+        startTime: match.time,
+      };
+      // Find all bets related to the current match and user
+      const bets = await BetUserMap.find({
+        matchId: match.eventId,
+        company: userId,
+        settled: true,
+      });
+      let totalBalance = 0;
+      if (match.createdOn > userCreationDate || bets.length > 0) {
+        // Calculate total profit/loss for the current match and user
+        for (const bet of bets) {
+          if (bet.settled) {
+            if (bet.won) {
+              const maxLoss =
+                bet.name === "matchbet"
+                  ? bet.isBack
+                    ? (bet.stake * bet.odds) / 100
+                    : bet.stake
+                  : bet.name === "sessionbet"
+                  ? bet.priceValue > 1
+                    ? bet.stake
+                    : bet.stake * bet.priceValue
+                  : 0;
+              const companyShare = 100 - userShare;
+              const lossAmount = (maxLoss * companyShare) / 100;
+              const companyCom = (((bet.stake * 3) / 100) * companyShare) / 100;
+              totalBalance -=
+                lossAmount + (bet.name === "sessionbet" ? companyCom : 0);
+            } else {
+              const maxProfit =
+                bet.name === "matchbet"
+                  ? bet.isBack
+                    ? bet.stake
+                    : (bet.stake * bet.odds) / 100
+                  : bet.name === "sessionbet"
+                  ? bet.priceValue > 1
+                    ? bet.stake * bet.priceValue
+                    : bet.stake
+                  : 0;
+              const companyShare = 100 - userShare;
+              const profitAmount = (maxProfit * companyShare) / 100;
+              const companyCom = (((bet.stake * 3) / 100) * companyShare) / 100;
+              totalBalance +=
+                profitAmount -
+                (bet.name === "sessionbet"
+                  ? companyCom
+                  : (profitAmount * bet.commissionPercentage) / 100);
+            }
+          }
+        }
+
+        matchObj.balance = totalBalance;
+      }
+
+      return matchObj;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
+  async playerExposureByMatch(userId, matchId) {
+    try {
+      const user = await User.findOne({ username: userId }).exec();
+
+      if (!user) {
+        console.warn(`User with username '${userId}' not found.`);
+        return;
+      }
+
+      // Get the user's creation date
+      const userCreationDate = user.createdOn;
+
+      const match = await MatchList.findOne({ eventId: matchId });
+      if (!match) {
+        console.warn(`Match with '${matchId}' not found.`);
+        return;
+      }
+      const matchObj = {
+        matchId: match.eventId,
+        balance: 0,
+        username: userId,
+        name: user.name,
+        startTime: match.time,
+      };
+      // Find all bets related to the current match and user
+      const bets = await BetUserMap.find({
+        matchId: match.eventId,
+        player: userId,
+      });
+      let totalBalance = 0;
+
+      if (match.createdOn > userCreationDate || bets.length > 0) {
+        // Calculate total profit/loss for the current match and user
+        for (const bet of bets) {
+          if (bet.settled) {
+            if (bet.won) {
+              totalBalance -= bet.lossAmount;
+            } else {
+              totalBalance += bet.profitAmount;
+            }
+          }
+        }
+        matchObj.balance = totalBalance;
+      }
+
+      return matchObj;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
+  async getLedgerList(req, res) {
+    const { userId } = req.params;
+    const resultArray = await BetController.getPlayerExp(userId);
+    res.send(resultArray);
+  },
 };
 
 module.exports = BetController;

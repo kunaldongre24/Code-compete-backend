@@ -12,7 +12,6 @@ const betUserMapSchema = new Schema({
   company: { type: String, required: true },
   lossAmount: { type: Number, required: true },
   profitAmount: { type: Number, required: true },
-  marketId: { type: String, required: true },
   fancyName: { type: String, required: false },
   name: { type: String, required: true },
   isBack: { type: Boolean, required: true },

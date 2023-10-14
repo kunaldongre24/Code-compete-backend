@@ -1,8 +1,6 @@
 const BetController = require("../controllers/BetController");
-const getApiData = require("./getApiData");
+const apiSwitch = require("./apiSwitch");
 const passport = require("passport");
-
-const User = require("../models/User");
 
 // Function to get user information from a token
 const getUserFromToken = (token) => {
@@ -21,7 +19,7 @@ const getMyPlayerBets = async (pData, socket) => {
   try {
     const userdata = await getUserFromToken(pData.token);
     const userId = userdata.username;
-    const cData = await getApiData(pData.matchId);
+    const cData = await apiSwitch(pData.matchId);
     const data = await BetController.getMyPlayerBets(pData.matchId, userId);
     const betData = { odds: cData, betData: data };
     socket.emit("myPlayerBets", betData);

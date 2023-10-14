@@ -1,19 +1,23 @@
 const BetController = require("./BetController");
 const { removeNum } = require("./CoinController");
 const Ledger = require("../models/Ledger");
-const MatchUserMap = require("../models/MatchUserMap");
+const User = require("../models/User");
 
 const LedgerController = {
   async cashExposure(req, res) {
     const { username } = req.params;
     const cash = await LedgerController.countCash(username);
-    var exposure = 0;
-    if (removeNum(username) === "sp") {
-      exposure = await BetController.getPlayerExposure("all", username);
-    } else {
-      exposure = await BetController.getAgentExposure("all", username);
+    const user = await User.findOne({ username }).exec();
+    if (!user) {
+      return res.send({ status: 0, msg: "User not found!" });
     }
-    res.send({ exposure: exposure.final, cash });
+    var exposure = 0;
+    if (user.level === 6) {
+      exposure = await BetController.getIndivisualPlayerExpo(user);
+    } else {
+      exposure = await BetController.getIndivisualCompanyExpo(user);
+    }
+    res.send({ exposure, cash });
   },
   async receiveCash(req, res) {
     try {
@@ -31,24 +35,6 @@ const LedgerController = {
       const p1Cash = await LedgerController.countCash(userId);
       const p2Cash = await LedgerController.countCash(username);
 
-      let totalSum = 0;
-      const matchUserMap = await MatchUserMap.find({ company: username });
-      matchUserMap.forEach((doc) => {
-        const sum = doc.sum;
-        totalSum += parseFloat(sum);
-      });
-
-      const resultRef = new MatchUserMap({
-        company: username,
-        sum: parseFloat(ledger) * -1,
-        total: totalSum - parseFloat(ledger),
-        createdOn: Date.now(),
-        matchname: "Cash Paid",
-        type: "cash",
-        note,
-      });
-      await resultRef.save();
-
       res.send({ status: 1, msg: "Cash Received Successfully!" });
     } catch (err) {
       console.error(err);
@@ -59,6 +45,20 @@ const LedgerController = {
     const { username } = req.params;
     const cash = await LedgerController.countCash(username);
     res.send({ totalCash: Math.round(cash * 100) / 100 });
+  },
+  async getUserExposure(username) {
+    const cash = await LedgerController.countCash(username);
+    const user = await User.findOne({ username }).exec();
+    if (!user) {
+      return res.send({ status: 0, msg: "User not found!" });
+    }
+    var exposure = 0;
+    if (user.level === 6) {
+      exposure = await BetController.getIndivisualPlayerExpo(user);
+    } else {
+      exposure = await BetController.getIndivisualCompanyExpo(user);
+    }
+    return exposure + cash;
   },
   async countCash(username) {
     let sum = 0;
@@ -79,8 +79,9 @@ const LedgerController = {
         sum -= val ? val : 0;
       }
     });
-    return sum;
+    return Math.round(sum * 100) / 100;
   },
+
   async getExpoLedger(req, res) {
     const { username } = req.params;
     const response = await LedgerController.getLedger(username);
@@ -103,13 +104,40 @@ const LedgerController = {
     });
     return arr;
   },
+  async ledgerShow(req, res) {
+    const { startDate, endDate, userId } = req.params;
+    const resultArray = await BetController.getCompanyExp(
+      userId,
+      startDate,
+      endDate
+    );
+    res.send(resultArray ? resultArray : []);
+  },
+  async getCashLedger(req, res) {
+    const { startDate, endDate, userId } = req.params;
+    const resultArray = await BetController.cashLedger(
+      userId,
+      startDate,
+      endDate
+    );
+    res.send(resultArray ? resultArray : []);
+  },
+  async getMatchLedger(req, res) {
+    const { startDate, endDate, userId } = req.params;
+    const resultArray = await BetController.matchLedger(
+      userId,
+      startDate,
+      endDate
+    );
+    res.send(resultArray ? resultArray : []);
+  },
   async payCash(req, res) {
     try {
       const userId = req.user.username;
       const { username, ledger, note } = req.body;
-      const p1Cash = await Ledger.countCash(username);
-      const p2Cash = await Ledger.countCash(userId);
-      const ledgerDoc = await Ledger.create({
+      const p1Cash = await LedgerController.getUserExposure(username);
+      const p2Cash = await LedgerController.getUserExposure(userId);
+      await Ledger.create({
         value: parseFloat(ledger),
         note: note,
         getter: username,
@@ -118,24 +146,7 @@ const LedgerController = {
         setterPreviousLimit: p2Cash,
         createdOn: Date.now(),
       });
-      let totalSum = 0;
-      const matchUserMaps = await MatchUserMap.find({ company: username });
-      matchUserMaps.forEach((matchUserMap) => {
-        const sum = matchUserMap.sum;
-        totalSum += parseFloat(sum);
-      });
-      const matchUserMapDoc = await MatchUserMap.create({
-        company: username,
-        sum: parseFloat(ledger),
-        total: totalSum + parseFloat(ledger),
-        createdOn: Date.now(),
-        matchName: "Cash Received",
-        type: "cash",
-        note,
-        winner: userId,
-        matchId: ledgerDoc._id,
-        sid: 1, // You might want to update this value based on your logic
-      });
+
       res.send({ status: 1, msg: "Cash Paid Successfully!" });
     } catch (err) {
       console.error(err);
