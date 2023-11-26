@@ -229,10 +229,15 @@ const CoinController = {
                 {
                   $eq: ["$isBack", true], // Check if isBack is true
                 },
-                "$stake", // If true, use stake
                 {
                   $divide: [
-                    { $multiply: ["$stake", "$odds"] }, // Calculate (stake * odds) / 100
+                    { $multiply: ["$stake", "$odds", -1] }, // Calculate (stake * odds) / 100
+                    100,
+                  ],
+                }, // If true, use stake
+                {
+                  $divide: [
+                    { $multiply: ["$stake", "$odds", 1] }, // Calculate (stake * odds) / 100
                     100,
                   ],
                 },

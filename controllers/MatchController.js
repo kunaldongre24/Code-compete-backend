@@ -92,7 +92,7 @@ const MatchController = {
           // Calculate total profit/loss for the current match and user
           for (const bet of bets) {
             if (bet.settled) {
-              if (bet.name === "matchbet") {
+              if (bet.name === "matchbet" || bet.name === "tossbet") {
                 if (bet.won) {
                   matchObj.totalProfitLoss -= bet.lossAmount;
                 } else {

@@ -43,17 +43,17 @@ io.on("connection", (socket) => {
   socket.on("getMatchScore", (matchId) => {
     intervalId = setInterval(async () => {
       await getMatchScore(matchId, socket);
-    }, 500);
+    }, 1000);
   });
   socket.on("getUnsettledMatch", () => {
     intervalId = setInterval(async () => {
       await BetController.fetchUnsettledMatches(socket);
-    }, 500);
+    }, 1000);
   });
   socket.on("getAllBets", () => {
     intervalId = setInterval(async () => {
       await BetController.getAllBets(socket);
-    }, 500);
+    }, 1000);
   });
   socket.on("getMyPlayerBets", (data) => {
     intervalId = setInterval(async () => {

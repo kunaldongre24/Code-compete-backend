@@ -30,15 +30,19 @@ const getApiData3 = async (matchId) => {
     if (data.length === 0) {
       return { status: 0 };
     }
-    const bookmaker = data.filter(
+    const bookmaker =  data.filter(
       (x) => x.markets[0].fancyCategory === "Bookmaker_Market"
-    )[0].markets;
+    ).length?data.filter(
+      (x) => x.markets[0].fancyCategory === "Bookmaker_Market"
+    )[0].markets:[];
     const fancy = data.filter(
       (x) => x.markets[0].fancyCategory === "Fancy_Market"
-    )[0].markets;
+    ).length?data.filter(
+      (x) => x.markets[0].fancyCategory === "Fancy_Market"
+    )[0].markets:[];
 
     const format = modifyFormat3(
-      bookmaker[0].runners,
+      bookmaker.length?bookmaker[0].runners:[],
       fancy,
       response.data.timestamp
     );

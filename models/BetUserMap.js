@@ -32,5 +32,6 @@ const betUserMapSchema = new Schema({
   player: { type: String, required: true },
   won: { type: Boolean, default: false, required: true },
   createdOn: { type: Date, default: Date.now, required: true },
+  lastUpdated: { type: Date, default: Date.now, required: true },
 });
 module.exports = mongoose.model("BetUserMap", betUserMapSchema);

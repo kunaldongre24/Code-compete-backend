@@ -23,7 +23,12 @@ router.post(
   BetController.settleMatchBet
 );
 router.post("/getCompanyReport", verifyUser, BetController.getCompanyReport);
-// router.post("/settleTossBet", verifyUser, BetController.settleTossBet);
+router.post(
+  "/settleTossBet",
+  verifyUser,
+  checkManager,
+  BetController.settleTossBet
+);
 router.get(
   "/getMatchBets/:matchId",
   verifyUser,
@@ -35,12 +40,16 @@ router.get(
   BetController.getMatchBetPosition
 );
 router.get(
+  "/getTossPosition/:matchId",
+  verifyUser,
+  BetController.getTossBetPosition
+);
+router.get(
   "/getDeclaredSession/:matchId",
   verifyUser,
   checkAdmin,
   BetController.getDeclaredSession
 );
-// router.get("/getTossPosition/:matchId", verifyUser, BetController.getTossBetPosition);
 router.get(
   "/getMyPlayerBets/:matchId",
   verifyUser,
@@ -59,7 +68,7 @@ router.get(
   BetController.getReportByUserId
 );
 router.get("/getUserAllBets/", verifyUser, BetController.getUserBets);
-router.get("/getLedgerList/:userId", BetController.getLedgerList);
+router.get("/getLedgerList/:userId", verifyUser, BetController.getLedgerList);
 router.get(
   "/getAllMatchBets/:matchId",
   verifyUser,
@@ -70,10 +79,10 @@ router.get(
   verifyUser,
   BetController.getDetailedMatchBets
 );
-router.post("/deleteFancyBets", BetController.checkDeleteFancyResult);
-router.post("/deleteMatchResult", BetController.checkDeleteMatchResult);
-router.get("/deleteMatchBets/:marketId/:pwd", BetController.deleteMatchBet);
-// router.get("/getAllTossBets", verifyUser, BetController.getAllTossBets);
+// router.post("/deleteFancyBets", BetController.checkDeleteFancyResult);
+// router.post("/deleteMatchResult", BetController.checkDeleteMatchResult);
+// router.get("/deleteMatchBets/:matchId", BetController.deleteMatchBet);
+// router.post("/deleteSessionBets/", BetController.deleteSbets);
 router.get(
   "/getAllMatchTossBets/:matchId",
   verifyUser,
@@ -112,6 +121,7 @@ router.get(
   BetController.getMatchLedger
 );
 // router.get("/getTossLedger/:matchId", verifyUser, BetController.getTossLedger);
-// router.get("/getTossBets/:matchId", verifyUser, BetController.getTossBets);
+router.get("/getTossBets/:matchId", verifyUser, BetController.getTossBets);
+router.get("/getUnsettledToss", BetController.fetchUnsettledToss);
 
 module.exports = router;

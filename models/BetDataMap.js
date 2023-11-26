@@ -18,6 +18,7 @@ const betDataMapSchema = new Schema({
   userId: { type: String, required: true },
   won: { type: Boolean, default: false, required: true },
   createdOn: { type: Date, default: Date.now, required: true },
+  lastUpdated: { type: Date, default: Date.now, required: true },
 });
 
 module.exports = mongoose.model("BetDataMap", betDataMapSchema);

@@ -1,5 +1,5 @@
 const { getUserInformation } = require("../controllers/AuthController");
-const BetUserMap = require("../models/BetUserMap")
+const BetUserMap = require("../models/BetUserMap");
 const clientCollection = async (matchId, username) => {
   try {
     const userDocs = await BetUserMap.find({
@@ -44,7 +44,7 @@ const clientCollection = async (matchId, username) => {
           };
           arr.push(inf);
         }
-      } else if (row.name === "matchbet") {
+      } else if (row.name === "matchbet" || row.name === "tossbet") {
         const { isBack } = row;
         const amount = isBack ? row.stake : (row.stake * row.priceValue) / 100;
         if (arr.some((x) => x.player === row.player)) {

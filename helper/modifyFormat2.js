@@ -20,7 +20,8 @@ const modifyFormat2 = (bm, fancy, marketTime, bookmakerStatus) => {
     );
   };
   const mapMarketItem = (item) => {
-    const isSuspended = item.status !== "OPEN" || bookmakerStatus !== "OPEN";
+    const isSuspended =
+      item.status !== "OPEN" || bookmakerStatus !== "OPEN" || item.suspended;
     const back = item.backPrices[0].price;
     const lay = item.layPrices[0].price;
     let back1 = back;
@@ -40,28 +41,33 @@ const modifyFormat2 = (bm, fancy, marketTime, bookmakerStatus) => {
 
   const bm1 = bm.map(mapMarketItem);
 
-  const Fancymarket = fancy
-    .filter((item) => !isExcluded(item.marketName))
-    .map((item) => {
-      const isSuspended = item.status !== "ACTIVE";
-      const gStatus =
-        item.status === "SUSPEND"
-          ? "Suspended"
-          : item.statusName === "ACTIVE"
-          ? item.statusName
-          : "Ball Running";
-      return {
-        sid: item.marketId,
-        nat: item.marketName,
-        b1: isSuspended ? 0 : item.yesValue,
-        bs1: isSuspended ? 0 : item.yesRate,
-        l1: isSuspended ? 0 : item.noValue,
-        ls1: isSuspended ? 0 : item.noRate,
-        gstatus: gStatus,
-        srno: item.marketId,
-        updatetime: marketTime,
-      };
-    });
+  const Fancymarket = Array.isArray(fancy)
+    ? fancy
+        .filter((item) => !isExcluded(item.marketName))
+        .map((item) => {
+          const isSuspended =
+            item.status !== "ACTIVE" ||
+            item.suspended ||
+            item.categorySuspended;
+          const gStatus =
+            item.status === "SUSPEND"
+              ? "Suspended"
+              : item.statusName === "ACTIVE"
+              ? item.statusName
+              : "Ball Running";
+          return {
+            sid: item.marketId,
+            nat: item.marketName,
+            b1: isSuspended ? 0 : item.yesValue,
+            bs1: isSuspended ? 0 : item.yesRate,
+            l1: isSuspended ? 0 : item.noValue,
+            ls1: isSuspended ? 0 : item.noRate,
+            gstatus: gStatus,
+            srno: item.marketId,
+            updatetime: marketTime,
+          };
+        })
+    : [];
 
   return {
     BMmarket: { bm1 },

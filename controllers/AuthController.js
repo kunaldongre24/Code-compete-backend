@@ -7,7 +7,6 @@ const Count = require("../models/Count");
 const { v4: uuidv4 } = require("uuid");
 
 const {
-  getToken,
   COOKIE_OPTIONS,
   getRefreshToken,
 } = require("../middleware/authenticate");
@@ -15,6 +14,7 @@ const jwt = require("jsonwebtoken");
 const isTokenExpired = require("../helper/isTokenExpired");
 const { ObjectId } = require("mongodb");
 const isValidPassword = require("../helper/isValidPassword");
+const { getManagerRefreshToken } = require("../middleware/managerAuthenticate");
 
 const AuthController = {
   async getMyInfo(req, res) {
@@ -32,7 +32,7 @@ const AuthController = {
       });
       res.send(user);
     } catch (err) {
-      res.send(err);
+      res.send({ msg: "Internal server error" });
     }
   },
   async getLiveTime(req, res) {
@@ -41,7 +41,10 @@ const AuthController = {
   },
   async getMyAgents(username) {
     try {
-      const users = await User.find({ companyId: username }).exec();
+      const users = await User.find({
+        companyId: username,
+        level: { $ne: 7 },
+      }).exec();
       return users;
     } catch (error) {
       console.error(error);
@@ -252,20 +255,51 @@ const AuthController = {
   },
   async signup(req, res) {
     try {
-      if (req.user.level < 2 && req.user.level === 6) {
-        res.send({ userCreated: false, msg: "Not Allowed!" });
-        return;
-      }
-      const companyId = req.user.username;
-      var { username, password, level, name, matchShare, fixedLimit } =
-        req.body;
+      const levelName = [
+        "superCompany",
+        "superStockist",
+        "stockist",
+        "agent",
+        "player",
+        "manager",
+      ];
+      const levelArray = ["sc", "sst", "ss", "sa", "sp", "ma"];
 
+      const companyId = req.user.username;
+      var { password, level, name, matchShare, fixedLimit } = req.body;
+      if (name.trim() === "") {
+        return res.send({ userCreated: false, msg: "Name cannot be empty" });
+      }
       if (!isValidPassword(password)) {
         return res
           .status(400)
           .json({ userCreated: false, msg: "Invalid Password Length." });
       }
-      username = username.toLowerCase();
+      const currentLevelName = levelName[level - 2];
+
+      const countData = await Count.findOne({
+        name: currentLevelName,
+      });
+      if (!countData) {
+        return res.send({ userCreated: false, msg: "Invalid User" });
+      }
+      var username =
+        levelArray[level - 2] +
+        countData.count.toLocaleString("en-US", {
+          minimumIntegerDigits: 4,
+          useGrouping: false,
+        });
+      const newUser = await User.find({ username });
+      if (newUser.length) {
+        const count = countData.count + 1;
+        username =
+          levelArray[level - 2] +
+          count.toLocaleString("en-US", {
+            minimumIntegerDigits: 4,
+            useGrouping: false,
+          });
+      }
+
       const userData = await User.findOne({ username: companyId });
       const totalCoins = await CoinController.countCoin(
         companyId.toLowerCase()
@@ -276,6 +310,10 @@ const AuthController = {
           userCreated: false,
           msg: "Invalid Level!",
         });
+        return;
+      }
+      if (req.user.level === 1 && level === 6) {
+        res.send({ userCreated: false, msg: "Not Allowed!" });
         return;
       }
       if (level <= userData.level) {
@@ -291,9 +329,7 @@ const AuthController = {
         mShare = matchShare;
       }
       if (parseInt(userData.level) !== 1 && totalCoins < fixedLimit) {
-        console.log("Insufficient Balance");
-        res.send({ userCreated: false, msg: "Insufficient Balance" });
-        return;
+        return res.send({ userCreated: false, msg: "Insufficient Balance" });
       }
       const share = userData.matchShare - mShare;
       const AgentMatchcommision = level < 6 ? 3 : 0;
@@ -404,7 +440,7 @@ const AuthController = {
   },
   async authLogin(req, res, next) {
     try {
-      const token = getToken({
+      const token = getRefreshToken({
         _id: req.user._id,
         username: req.user.username,
       });
@@ -424,7 +460,7 @@ const AuthController = {
   },
   async userLogin(req, res, next) {
     try {
-      const token = getToken({
+      const token = getRefreshToken({
         _id: req.user._id,
         username: req.user.username,
       });
@@ -444,11 +480,11 @@ const AuthController = {
   },
   async managerLogin(req, res, next) {
     try {
-      const token = getToken({
+      const token = getRefreshToken({
         _id: req.user._id,
         username: req.user.username,
       });
-      const refreshToken = getRefreshToken({ _id: req.user._id });
+      const refreshToken = getManagerRefreshToken({ _id: req.user._id });
 
       const user = await User.findById(req.user._id);
       user.currentSession = refreshToken; // Set the current session
@@ -489,7 +525,7 @@ const AuthController = {
     } catch (err) {
       console.error(err);
       res.statusCode = 500;
-      res.send(err);
+      res.send({ msg: "Internal server error" });
     }
   },
   async userLogout(req, res, next) {
@@ -519,9 +555,10 @@ const AuthController = {
     } catch (err) {
       console.error(err);
       res.statusCode = 500;
-      res.send(err);
+      res.send({ msg: "Internal server error" });
     }
   },
+
   async managerLogout(req, res, next) {
     try {
       const { signedCookies = {} } = req;
@@ -549,40 +586,10 @@ const AuthController = {
     } catch (err) {
       console.error(err);
       res.statusCode = 500;
-      res.send(err);
+      res.send({ msg: "Internal server error" });
     }
   },
-  async userLogout(req, res, next) {
-    try {
-      const { signedCookies = {} } = req;
-      const { usession } = signedCookies;
-      const user = await User.findById(req.user._id);
 
-      if (!user) {
-        // Handle the case where the user is not found
-        res.statusCode = 404;
-        return res.send({ error: "User not found" });
-      }
-
-      const tokenIndex = user.refreshToken.findIndex(
-        (item) => item.refreshToken === usession
-      );
-
-      if (tokenIndex !== -1) {
-        // Remove the token using $pull
-        user.refreshToken.pull({ _id: user.refreshToken[tokenIndex]._id });
-      }
-
-      await user.save(); // Use await to save the user document
-
-      res.clearCookie("refreshToken", COOKIE_OPTIONS);
-      res.send({ success: true });
-    } catch (err) {
-      console.error(err);
-      res.statusCode = 500;
-      res.send(err);
-    }
-  },
   async changePassword(req, res, next) {
     try {
       const user = await User.findById(req.user._id);
@@ -632,11 +639,12 @@ const AuthController = {
 
         await user.save();
 
-        const newAccessToken = getToken({ _id: userId });
-
+        const newAccessToken = getRefreshToken({ _id: userId });
+        res.cookie("jsession", newAccessToken, COOKIE_OPTIONS);
         res.status(200).json({ success: true, token: newAccessToken });
       } catch (err) {
         console.error(err);
+        res.clearCookie("jsession", COOKIE_OPTIONS);
         res.status(401).send("Unauthorized");
       }
     } else {
@@ -671,11 +679,12 @@ const AuthController = {
 
         await user.save();
 
-        const newAccessToken = getToken({ _id: userId });
-
+        const newAccessToken = getRefreshToken({ _id: userId });
+        res.cookie("usession", newAccessToken, COOKIE_OPTIONS);
         res.status(200).json({ success: true, token: newAccessToken });
       } catch (err) {
         console.error(err);
+        res.clearCookie("usession", COOKIE_OPTIONS);
         res.status(401).send("Unauthorized");
       }
     } else {
@@ -710,17 +719,19 @@ const AuthController = {
 
         await user.save();
 
-        const newAccessToken = getToken({ _id: userId });
-
+        const newAccessToken = getManagerRefreshToken({ _id: userId });
+        res.cookie("msession", newAccessToken, COOKIE_OPTIONS);
         res.status(200).json({ success: true, token: newAccessToken });
       } catch (err) {
         console.error(err);
+        res.clearCookie("msession", COOKIE_OPTIONS);
         res.status(401).send("Unauthorized");
       }
     } else {
       res.status(401).send("Unauthorized");
     }
   },
+  async blockUser(req, res) {},
 };
 
 module.exports = AuthController;

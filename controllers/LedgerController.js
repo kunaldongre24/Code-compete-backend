@@ -23,17 +23,19 @@ const LedgerController = {
     try {
       const userId = req.user.username;
       const { username, ledger, note } = req.body;
+
+      const p1Cash = await LedgerController.countCash(userId);
+      const p2Cash = await LedgerController.countCash(username);
       const ledgerDb = new Ledger({
         value: parseFloat(ledger),
         note: note,
         getter: userId,
         setter: username,
+        getterPreviousLimit: p1Cash,
+        setterPreviousLimit: p2Cash,
         createdOn: Date.now(),
       });
       await ledgerDb.save();
-
-      const p1Cash = await LedgerController.countCash(userId);
-      const p2Cash = await LedgerController.countCash(username);
 
       res.send({ status: 1, msg: "Cash Received Successfully!" });
     } catch (err) {

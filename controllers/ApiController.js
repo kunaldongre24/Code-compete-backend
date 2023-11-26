@@ -1,6 +1,10 @@
 const axios = require("axios");
 const { updateMessage, fetchMessage } = require("../models/Message");
 const modifyFormat3 = require("../helper/modifyFormat3");
+const BetDataMap = require("../models/BetDataMap");
+const MatchBet = require("../models/MatchBetMap");
+const TossBet = require("../models/TossBetMap");
+const getApiData4 = require("../helper/getApiData4");
 
 const ApiController = {
   async setMessage(req, res) {
@@ -38,32 +42,60 @@ const ApiController = {
       res.send({ error });
     }
   },
+  async getUserMatchList(req, res) {
+    try {
+      const userId = req.user.username;
+      const apiUrl = "https://111111.info/pad=82/listGames?sport=4";
 
+      // Fetch data from the API
+      const apiResponse = await axios.get(apiUrl);
+      const apiData = apiResponse.data.result.filter(
+        (x) => (x.isFancy || x.isBm) && x.isPremium
+      );
+      // Create an array of promises for database queries
+      const betDataPromises = apiData.map(async (row) => {
+        const matchBetCountPromise = MatchBet.countDocuments({
+          matchId: row.eventId,
+          userId,
+        }).exec();
+        const tossBetCountPromise = TossBet.countDocuments({
+          matchId: row.eventId,
+          userId,
+        }).exec();
+        const sessionBetCountPromise = BetDataMap.countDocuments({
+          matchId: row.eventId,
+          userId,
+        }).exec();
+
+        // Wait for all promises to resolve
+        const [matchBetCount, tossBetCount, sessionBetCount] =
+          await Promise.all([
+            matchBetCountPromise,
+            tossBetCountPromise,
+            sessionBetCountPromise,
+          ]);
+
+        // Update the row with counts
+        row.matchBetCount = matchBetCount + tossBetCount;
+        row.sessionBetCount = sessionBetCount;
+
+        return row;
+      });
+
+      // Wait for all promises to resolve
+      const filteredData = await Promise.all(betDataPromises);
+
+      res.send(filteredData);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ error: "An error occurred" });
+    }
+  },
   async getTOdds(req, res) {
     try {
       const { matchId } = req.params;
-      const url = `https://cf.iceexchange.com/exchange/v1/dashboard/getFancyEventDetails?eventId=${matchId}`;
-      const response = await axios.get(url, {
-        headers: {
-          origin: "https://www.iceexchange.com",
-        },
-      });
-      if (response.data.status !== "OK") {
-        return res.send({ msg: "Fetching Failed" });
-      }
-      const { data } = response.data;
-      const bookmaker = data.filter(
-        (x) => x.markets[0].fancyCategory === "Bookmaker_Market"
-      )[0].markets;
-      const fancy = data.filter(
-        (x) => x.markets[0].fancyCategory === "Fancy_Market"
-      )[0].markets;
-      const format = modifyFormat3(
-        bookmaker[0].runners,
-        fancy,
-        response.data.timestamp
-      );
-      res.send({ format });
+      const response = await getApiData4(matchId);
+      res.send(response.data);
     } catch (error) {
       console.error(error);
       res.send({ error: "An error occurred" });

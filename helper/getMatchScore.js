@@ -21,12 +21,16 @@ const getMatchScore = async (matchId, socket) => {
       socket.emit("matchScore", cachedScoreData.data);
       return;
     }
-
-    const url = `https://odds.starcric.live/ws/getScoreData`;
+    const randomParam = `random=${Math.random()}`;
+    if (matchId === "1811210210") {
+      matchId = "1700517141";
+    }
+    const url = `https://odds.star99.live/ws/getScoreData?${randomParam}`;
     const requestData = querystring.stringify({ event_id: matchId });
     const response = await axiosInstance.post(url, requestData, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        Origin: "https://lotus365.win",
       },
     });
 
@@ -48,6 +52,13 @@ const getMatchScore = async (matchId, socket) => {
     const team1Over = $(".team:first-child .curr_inn span:nth-child(2)").text();
     const team2Over = $(".team:last-child .curr_inn span:nth-child(2)").text();
 
+    // Extract score-over as an array
+    const scoreOverArray = [];
+    $(".six-balls").each(function () {
+      const runText = $(this).text().trim();
+      scoreOverArray.push(runText);
+    });
+
     // Create an object to store the extracted data
     const matchData = {
       team1,
@@ -60,13 +71,14 @@ const getMatchScore = async (matchId, socket) => {
       status,
       team1RunRate,
       team2RunRate,
+      scoreOver: scoreOverArray, // Add the score-over array
     };
     scoreCache.set(matchId, { data: matchData, timestamp: Date.now() });
     // Emit the matchScore event with the extracted data
     socket.emit("matchScore", matchData);
   } catch (error) {
-    console.error(error);
-    socket.emit("error", "Internal server error");
+    console.error("error fetching score");
+    socket.emit("matchScore", {});
   }
 };
 
