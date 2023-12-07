@@ -3,6 +3,7 @@ const Count = require("../models/Count");
 const MatchList = require("../models/MatchList");
 const BetUserMap = require("../models/BetUserMap");
 const User = require("../models/User");
+const BetController = require("./BetController");
 
 const MatchController = {
   async getLiveTime(req, res) {
@@ -11,6 +12,12 @@ const MatchController = {
   async setMatchInfo(req, res) {
     try {
       const { matchId } = req.params;
+      const existingMatch = await MatchList.findOne({
+        eventId: parseInt(matchId),
+      });
+      if (existingMatch) {
+        return res.send({ status: true });
+      }
       const url = "https://111111.info/pad=82/listGames?sport=4";
       const response = await axios.get(url);
       const data = response.data.result;
@@ -18,9 +25,6 @@ const MatchController = {
       if (data.length === 0) {
         return res.send({ status: true });
       }
-      const existingMatch = await MatchList.findOne({
-        eventId: parseInt(matchId),
-      });
       if (!existingMatch) {
         // If a record with the same event ID does not exist, create a new one.
         const singleMatch = data.find((x) => x.eventId === parseInt(matchId));
@@ -55,7 +59,14 @@ const MatchController = {
     try {
       const { userId, startDate, endDate } = req.params;
       const user = await User.findOne({ username: userId }).exec();
-
+      if (user.level === 6) {
+        const resultArray = await BetController.getPlayerPnl(
+          userId,
+          startDate,
+          endDate
+        );
+        return res.send(resultArray);
+      }
       if (!user) {
         console.warn(`User with username '${userId}' not found.`);
         return;

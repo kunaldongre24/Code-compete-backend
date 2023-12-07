@@ -3,6 +3,8 @@ const http = require("http");
 const https = require("https");
 const querystring = require("querystring");
 const cheerio = require("cheerio"); // Import the cheerio library for parsing HTML
+const MatchList = require("../models/MatchList");
+const getTeamIcon = require("./getTeamIcon");
 
 const axiosInstance = axios.create({
   timeout: 5000,
@@ -10,6 +12,32 @@ const axiosInstance = axios.create({
   httpsAgent: new https.Agent({ keepAlive: true }),
 });
 const scoreCache = new Map();
+const eventIdMap = {};
+const iconMap = {};
+async function mapTeamIcon(teamName) {
+  const iconUrl = await getTeamIcon(teamName.trim());
+  iconMap[teamName] = iconUrl;
+}
+async function mapEventId(matchId) {
+  const matchInfo = await MatchList.findOne({ eventId: matchId });
+  const url = `https://api.datareddybook.club/api/guest/event_list`;
+  const response = await axios.get(url, {
+    headers: {
+      Origin: "https://reddybook.win",
+    },
+  });
+  const data = response.data.data;
+  const events = data.events;
+  const eventId =
+    events.filter(
+      (x) => x.name.toLowerCase() === matchInfo.eventName.toLowerCase()
+    ).length > 0
+      ? events.filter(
+          (x) => x.name.toLowerCase() === matchInfo.eventName.toLowerCase()
+        )[0].event_id
+      : matchId;
+  eventIdMap[matchId] = eventId;
+}
 
 const getMatchScore = async (matchId, socket) => {
   try {
@@ -22,15 +50,17 @@ const getMatchScore = async (matchId, socket) => {
       return;
     }
     const randomParam = `random=${Math.random()}`;
-    if (matchId === "1811210210") {
-      matchId = "1700517141";
+
+    if (!eventIdMap[matchId]) {
+      await mapEventId(matchId);
     }
-    const url = `https://odds.star99.live/ws/getScoreData?${randomParam}`;
-    const requestData = querystring.stringify({ event_id: matchId });
+    const url = `https://odds.starcric.live/ws/getScoreData?${randomParam}`;
+    const requestData = querystring.stringify({
+      event_id: eventIdMap[matchId],
+    });
     const response = await axiosInstance.post(url, requestData, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Origin: "https://lotus365.win",
       },
     });
 
@@ -39,8 +69,18 @@ const getMatchScore = async (matchId, socket) => {
     // Extract data from HTML
     const team1 = $(".team:first-child .team_name").text();
     const team2 = $(".team:last-child .team_name").text();
-    const score1 = $(".team:first-child .curr_inn .run").text();
-    const score2 = $(".team:last-child .curr_inn .run").text();
+    const score1 = $(".team:first-child .curr_inn .run")
+      .map(function () {
+        return $(this).text();
+      })
+      .get()
+      .join(" ");
+    const score2 = $(".team:last-child .curr_inn .run")
+      .map(function () {
+        return $(this).text();
+      })
+      .get()
+      .join(" ");
     const message = $(".target").text();
     const status = $(".commantry").text();
     const team1RunRate = $(
@@ -60,6 +100,12 @@ const getMatchScore = async (matchId, socket) => {
     });
 
     // Create an object to store the extracted data
+    if (!iconMap[team1]) {
+      await mapTeamIcon(team1);
+    }
+    if (!iconMap[team2]) {
+      await mapTeamIcon(team2);
+    }
     const matchData = {
       team1,
       team2,
@@ -71,15 +117,17 @@ const getMatchScore = async (matchId, socket) => {
       status,
       team1RunRate,
       team2RunRate,
+      team1Icon: iconMap[team1],
+      team2Icon: iconMap[team2],
       scoreOver: scoreOverArray, // Add the score-over array
     };
     scoreCache.set(matchId, { data: matchData, timestamp: Date.now() });
     // Emit the matchScore event with the extracted data
     socket.emit("matchScore", matchData);
   } catch (error) {
-    console.error("error fetching score");
+    console.error(error);
     socket.emit("matchScore", {});
   }
 };
 
-module.exports = getMatchScore;
+module.exports = { getMatchScore, iconMap };

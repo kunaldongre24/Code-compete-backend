@@ -1,10 +1,11 @@
 const axios = require("axios");
 const { updateMessage, fetchMessage } = require("../models/Message");
-const modifyFormat3 = require("../helper/modifyFormat3");
 const BetDataMap = require("../models/BetDataMap");
 const MatchBet = require("../models/MatchBetMap");
 const TossBet = require("../models/TossBetMap");
-const getApiData4 = require("../helper/getApiData4");
+const getApiData6 = require("../helper/getApiData6");
+const TeamIcon = require("../models/TeamIcon");
+const { iconMap } = require("../helper/getMatchScore");
 
 const ApiController = {
   async setMessage(req, res) {
@@ -94,11 +95,32 @@ const ApiController = {
   async getTOdds(req, res) {
     try {
       const { matchId } = req.params;
-      const response = await getApiData4(matchId);
-      res.send(response.data);
+      const response = await getApiData6(matchId);
+      res.send(response);
     } catch (error) {
       console.error(error);
       res.send({ error: "An error occurred" });
+    }
+  },
+  async setTeamIcon(req, res) {
+    try {
+      var { imageUrl, teamName } = req.body;
+      if (!(imageUrl && imageUrl.length) || !(teamName && teamName.length)) {
+        return res.send({ status: 0, msg: "Unknown Exception!" });
+      }
+      const filter = { teamName: teamName.toLowerCase() };
+      const update = { imageUrl, lastUpdate: Date.now() };
+
+      const result = await TeamIcon.findOneAndUpdate(filter, update, {
+        new: true, // Return the updated document
+        upsert: true, // Create a new document if no match is found
+      });
+
+      delete iconMap[teamName.toLowerCase()];
+      res.send({ status: 1, msg: "Image has been set." });
+    } catch (err) {
+      console.log(err);
+      res.send({ msg: "Some error occurred", status: 0 });
     }
   },
 };

@@ -480,7 +480,7 @@ const AuthController = {
   },
   async managerLogin(req, res, next) {
     try {
-      const token = getRefreshToken({
+      const token = getManagerRefreshToken({
         _id: req.user._id,
         username: req.user.username,
       });

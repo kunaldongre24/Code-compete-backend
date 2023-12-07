@@ -9,6 +9,7 @@ router.get("/getMessage", ApiController.getMessage);
 router.get("/getMatchList", ApiController.getMatchlist);
 router.get("/getUserMatchList", verifyUser, ApiController.getUserMatchList);
 router.get("/getTOdds/:matchId", ApiController.getTOdds);
+router.post("/setTeamIcon", ApiController.setTeamIcon);
 // router.get("/getMatchOdds/:eventId", ApiController.getMatchOdds);
 
 module.exports = router;

@@ -3162,6 +3162,63 @@ const BetController = {
     const resultArray = await BetController.getPlayerExp(userId);
     res.send(resultArray);
   },
+  async getPlayerPnl(userId, startDate, endDate) {
+    try {
+      const user = await User.findOne({ username: userId }).exec();
+
+      if (!user) {
+        console.warn(`User with username '${userId}' not found.`);
+        return;
+      }
+
+      // Get the user's creation date
+      const userCreationDate = user.createdOn;
+
+      const last10Matches = await MatchList.find({
+        createdOn: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      })
+        .sort({ createdOn: -1 })
+        .exec();
+      const resultArray = [];
+      let totalBalance = 0;
+
+      for (const match of last10Matches) {
+        const matchObj = {
+          matchId: match.eventId,
+          matchName: match.eventName,
+          totalProfitLoss: 0,
+          balance: 0,
+          startTime: match.time,
+        };
+
+        const bets = await BetUserMap.find({
+          matchId: match.eventId,
+          player: userId,
+        });
+
+        if (match.createdOn > userCreationDate || bets.length > 0) {
+          for (const bet of bets) {
+            if (bet.settled) {
+              if (bet.won) {
+                matchObj.totalProfitLoss += bet.lossAmount;
+              } else {
+                matchObj.totalProfitLoss -= bet.profitAmount;
+              }
+            }
+          }
+          matchObj.balance = matchObj.totalProfitLoss;
+          matchObj.totalCommission = 0;
+          resultArray.push(matchObj);
+        }
+      }
+      return resultArray;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
 };
 
 module.exports = BetController;

@@ -79,10 +79,10 @@ router.get(
   verifyUser,
   BetController.getDetailedMatchBets
 );
-// router.post("/deleteFancyBets", BetController.checkDeleteFancyResult);
+router.post("/deleteFancyBets", BetController.checkDeleteFancyResult);
 // router.post("/deleteMatchResult", BetController.checkDeleteMatchResult);
 // router.get("/deleteMatchBets/:matchId", BetController.deleteMatchBet);
-// router.post("/deleteSessionBets/", BetController.deleteSbets);
+router.post("/deleteSessionBets/", BetController.deleteSbets);
 router.get(
   "/getAllMatchTossBets/:matchId",
   verifyUser,

@@ -75,7 +75,7 @@ const getApiData4 = async (matchId) => {
       data,
     };
   } catch (error) {
-    console.error(error);
+    console.error(error && error.code ? error.code : "Error fetching odds");
     return { status: 0 };
   }
 };

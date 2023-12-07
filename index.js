@@ -21,7 +21,7 @@ const origin = [
   "https://ng.fly247.in",
 ];
 const BetController = require("./controllers/BetController");
-const getMatchScore = require("./helper/getMatchScore");
+const { getMatchScore } = require("./helper/getMatchScore");
 const getMatchOdds = require("./helper/getMatchOdds");
 require("./config/database.js");
 require("./strategy/LocalStrategy");
