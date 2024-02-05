@@ -11,6 +11,7 @@ passport.use(
   new JwtStrategy(opts, function (jwt_payload, done) {
     // Find the user by _id in the JWT payload
     User.findOne({ _id: jwt_payload._id })
+      .select("_id role email rating name username verified createdOn")
       .then((user) => {
         if (user) {
           return done(null, user);

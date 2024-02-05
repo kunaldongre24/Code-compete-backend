@@ -1,41 +1,32 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const mongoose = require("mongoose"); // Erase if already required
 
-const messageSchema = new Schema({
-  message: { type: String, required: true },
-  createdOn: { type: Date, default: Date.now, required: true },
-});
-
-const Message = mongoose.model("Message", messageSchema);
-
-// Function to update or create a new message
-async function updateMessage(newMessage) {
-  try {
-    // Find the existing message and update it, or create a new one if it doesn't exist
-    const result = await Message.findOneAndUpdate(
-      {},
-      { message: newMessage, createdOn: Date.now() },
-      { upsert: true, new: true }
-    );
-
-    return result;
-  } catch (error) {
-    throw error;
+var Message = new mongoose.Schema(
+  {
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    content: {
+      type: String,
+      trim: true,
+    },
+    roomId: {
+      type: "String",
+    },
+    type: {
+      type: String,
+      default: "text",
+    },
+    isCritical: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
   }
-}
-async function fetchMessage() {
-  try {
-    // Use findOne to retrieve the message
-    const message = await Message.findOne().select("message");
+);
 
-    return message;
-  } catch (error) {
-    throw error;
-  }
-}
+//Export the model
 
-module.exports = {
-  Message,
-  updateMessage,
-  fetchMessage,
-};
+module.exports = mongoose.model("Message", Message);

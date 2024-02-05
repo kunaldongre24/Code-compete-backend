@@ -2,28 +2,24 @@ const mongoose = require("mongoose"); // Erase if already required
 const passportLocalMongoose = require("passport-local-mongoose");
 
 var User = new mongoose.Schema({
-  companyId: {
+  role: {
     type: String,
-    required: false,
-  },
-  level: {
-    type: Number,
     required: true,
-  },
-  matchCommission: {
-    type: Number,
-    required: true,
-    default: 0,
   },
   authStrategy: {
     type: String,
     default: "local",
+    required: true,
   },
   refreshToken: {
     type: [{ refreshToken: String }],
   },
   currentSession: { type: String },
-  matchShare: {
+  profile_url: {
+    type: String,
+  },
+  email: { type: String, required: true, unique: true },
+  rating: {
     type: Number,
     required: true,
     default: 0,
@@ -32,21 +28,17 @@ var User = new mongoose.Schema({
     type: String,
     required: true,
   },
-  sessionCommission: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  totalCoins: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
   username: {
     type: String,
     required: true,
     unique: true,
   },
+  verified: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+
   createdOn: { type: Date, default: Date.now, required: true },
 });
 

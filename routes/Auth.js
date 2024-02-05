@@ -4,8 +4,7 @@ const router = express.Router();
 const passport = require("passport");
 const { verifyUser } = require("../middleware/authenticate");
 const checkAdmin = require("../middleware/checkAdmin");
-const checkPlayer = require("../middleware/checkPlayer");
-const checkManager = require("../middleware/checkManager");
+const checkUser = require("../middleware/checkUser");
 
 router.get("/getUser/:id", AuthController.getUserById);
 router.get("/me", verifyUser, AuthController.getMyInfo);
@@ -16,23 +15,14 @@ router.get(
 );
 router.get("/adminLogout", verifyUser, AuthController.adminLogout);
 router.get("/userLogout", verifyUser, AuthController.userLogout);
-router.get("/managerLogout", verifyUser, AuthController.managerLogout);
-router.get("/getPlayerCount", verifyUser, AuthController.getPlayerCount);
-router.get("/getAgentCount", verifyUser, AuthController.getAgentCount);
-router.get("/getManagerCount", verifyUser, AuthController.getManagerCount);
-router.get("/getStockistCount", verifyUser, AuthController.getStockistCount);
-router.get("/getScCount", verifyUser, AuthController.getScCount);
-router.get(
-  "/getSuperStockistCount",
-  verifyUser,
-  AuthController.getSuperStockistCount
-);
+router.get("/verified", AuthController.verified);
+router.get("/verify/:userId/:uniqueString", AuthController.verifyEmail);
 router.post("/changePassword", verifyUser, AuthController.changePassword);
 router.post("/editPassword", verifyUser, AuthController.editPassword);
 router.post("/checkAdminActive", AuthController.checkAdminActive);
 router.post("/checkUserActive", AuthController.checkUserActive);
-router.post("/checkManagerActive", AuthController.checkManagerActive);
-router.post("/signup", verifyUser, AuthController.signup);
+router.post("/signup", AuthController.signup);
+router.post("/adminSignup", AuthController.adminSignup);
 router.post(
   "/authLogin",
   passport.authenticate("local"),
@@ -42,16 +32,9 @@ router.post(
 router.post(
   "/userLogin",
   passport.authenticate("local"),
-  checkPlayer,
+  checkUser,
   AuthController.userLogin
 );
-router.post(
-  "/managerLogin",
-  passport.authenticate("local"),
-  checkManager,
-  AuthController.managerLogin
-);
 router.post("/editUser", verifyUser, AuthController.UpdateUser);
-router.post("/createManager", verifyUser, AuthController.createManager);
 
 module.exports = router;

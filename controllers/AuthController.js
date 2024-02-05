@@ -1,10 +1,4 @@
-const CoinController = require("./CoinController");
-const { countAndUpdateCoin } = require("./CoinController");
 const User = require("../models/User");
-const CommissionModel = require("../models/CommissionMap");
-const CoinModel = require("../models/Coins");
-const Count = require("../models/Count");
-const { v4: uuidv4 } = require("uuid");
 
 const {
   COOKIE_OPTIONS,
@@ -14,55 +8,45 @@ const jwt = require("jsonwebtoken");
 const isTokenExpired = require("../helper/isTokenExpired");
 const { ObjectId } = require("mongodb");
 const isValidPassword = require("../helper/isValidPassword");
-const { getManagerRefreshToken } = require("../middleware/managerAuthenticate");
+const nodemailer = require("nodemailer");
+const { v4: uuidv4 } = require("uuid");
+const UserOTPVerification = require("../models/UserOTPVerification");
+const bcrypt = require("bcrypt");
+const path = require("path");
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.AUTH_EMAIL,
+    pass: process.env.AUTH_PASS,
+  },
+});
+transporter.verify((error, success) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log("Ready for messages");
+  }
+});
 
 const AuthController = {
   async getMyInfo(req, res) {
     try {
       const user = await User.findById(req.user._id).select({
-        level: 1,
-        name: 1,
-        sessionCommission: 1,
-        totalCoins: 1,
-        matchCommission: 1,
         username: 1,
-        matchShare: 1,
-        companyId: 1,
+        name: 1,
+        rating: 1,
+        createdOn: 1,
+        role: 1,
         _id: 1,
       });
       res.send(user);
     } catch (err) {
+      console.error(err);
       res.send({ msg: "Internal server error" });
     }
   },
-  async getLiveTime(req, res) {
-    const time = Date.now();
-    res.send({ time });
-  },
-  async getMyAgents(username) {
-    try {
-      const users = await User.find({
-        companyId: username,
-        level: { $ne: 7 },
-      }).exec();
-      return users;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-  async getMyClients(username) {
-    try {
-      const users = await User.find({
-        companyId: username,
-        level: 6,
-      }).exec();
-      return users;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
+
   async getUserBy_id(_id) {
     const user = await User.findById(_id);
     return user;
@@ -97,137 +81,22 @@ const AuthController = {
   //   });
   //   res.send({ msg: "Users deleted" });
   // },
-  async getPlayerCount(req, res) {
-    try {
-      const updatedCount = await Count.findOneAndUpdate(
-        { name: "player" },
-        { $inc: { count: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      res.json(updatedCount);
-    } catch (error) {
-      res.json({ message: error.message });
-    }
-  },
-  async getAgentCount(req, res) {
-    try {
-      const updatedCount = await Count.findOneAndUpdate(
-        { name: "agent" },
-        { $inc: { count: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      res.json(updatedCount);
-    } catch (error) {
-      res.json({ message: error.message });
-    }
-  },
-  async getManagerCount(req, res) {
-    try {
-      const updatedCount = await Count.findOneAndUpdate(
-        { name: "manager" },
-        { $inc: { count: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      res.json(updatedCount);
-    } catch (error) {
-      res.json({ message: error.message });
-    }
-  },
-  async getStockistCount(req, res) {
-    try {
-      const updatedCount = await Count.findOneAndUpdate(
-        { name: "stockist" },
-        { $inc: { count: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      res.json(updatedCount);
-    } catch (error) {
-      res.json({ message: error.message });
-    }
-  },
-  async getScCount(req, res) {
-    try {
-      const updatedCount = await Count.findOneAndUpdate(
-        { name: "superCompany" },
-        { $inc: { count: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      res.json(updatedCount);
-    } catch (error) {
-      console.error(error);
-      res.json({ message: error });
-    }
-  },
-  async getSuperStockistCount(req, res) {
-    try {
-      const updatedCount = await Count.findOneAndUpdate(
-        { name: "superStockist" },
-        { $inc: { count: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      res.json(updatedCount);
-    } catch (error) {
-      res.json({ message: error.message });
-    }
-  },
 
-  async createManager(req, res) {
-    try {
-      const companyId = req.user.username;
-
-      const result = await Count.findOne({ name: "manager" });
-      const username = `ma${result.count + 1}`;
-      const { password, level, name } = req.body;
-      if (!username || !password || !name || !companyId) {
-        return res.send({ err: "Missing Information" });
-      }
-
-      const userData = await User.findOne({ username: companyId });
-      if (userData.level !== 1) {
-        return res.send({
-          userCreated: false,
-          msg: "Insufficient Permissions!",
-        });
-      }
-
-      User.register(
-        new User({
-          username,
-          name,
-          level,
-          companyId,
-          createdOn: Date.now(),
-        }),
-        password,
-        async (err, user) => {
-          if (err) {
-            res.statusCode = 500;
-            console.error(err);
-            return res.send({ userCreated: false, msg: "Err" });
-          } else {
-            res.send({
-              userCreated: true,
-              msg: "User has been created Successfully",
-            });
-          }
-        }
-      );
-      res.send({ userCreated: true });
-    } catch (error) {
-      console.error(error);
-      res.send({ userCreated: false, err: "Failed to create user" });
-    }
-  },
   async UpdateUser(req, res) {
-    const { fname, lname, _id } = req.body;
-    if (fname === undefined || lname === undefined) {
+    const { name, _id } = req.body;
+    if (name === undefined) {
       return res.send({ err: "Missing Information" });
+    }
+    if (name.length > 20) {
+      return res.send({
+        userCreated: false,
+        msg: "Name cannot be more than 20 characters",
+      });
     }
     const userDetails = await AuthController.getUserBy_id(new ObjectId(_id));
     if (userDetails.companyId !== req.user.username) {
       res.send({ userUpdated: false, msg: "Insufficient Permissions!" });
     }
-    const name = fname + " " + lname;
     try {
       const user = await User.findOneAndUpdate(
         { _id: new ObjectId(_id) },
@@ -255,96 +124,102 @@ const AuthController = {
   },
   async signup(req, res) {
     try {
-      const levelName = [
-        "superCompany",
-        "superStockist",
-        "stockist",
-        "agent",
-        "player",
-        "manager",
-      ];
-      const levelArray = ["sc", "sst", "ss", "sa", "sp", "ma"];
-
-      const companyId = req.user.username;
-      var { password, level, name, matchShare, fixedLimit } = req.body;
+      var { password, name, username, email } = req.body;
       if (name.trim() === "") {
         return res.send({ userCreated: false, msg: "Name cannot be empty" });
       }
       if (!isValidPassword(password)) {
-        return res
-          .status(400)
-          .json({ userCreated: false, msg: "Invalid Password Length." });
-      }
-      const currentLevelName = levelName[level - 2];
-
-      const countData = await Count.findOne({
-        name: currentLevelName,
-      });
-      if (!countData) {
-        return res.send({ userCreated: false, msg: "Invalid User" });
-      }
-      var username =
-        levelArray[level - 2] +
-        countData.count.toLocaleString("en-US", {
-          minimumIntegerDigits: 4,
-          useGrouping: false,
+        return res.json({
+          userCreated: false,
+          msg: "Password should be greater than 6 characters",
         });
+      }
+      if (name.length > 20) {
+        return res.send({
+          userCreated: false,
+          msg: "Name cannot be more than 20 characters",
+        });
+      }
+      if (username.length > 20 || username.length < 4) {
+        return res.send({
+          userCreated: false,
+          msg: "Username cannot be more than 20 characters",
+        });
+      }
+      const usernameRegex = /^[a-zA-Z0-9_]+$/;
+      if (!usernameRegex.test(username)) {
+        // Handle invalid characters in the username
+        res.status(400).json({ error: "Invalid characters in the username" });
+        return;
+      }
       const newUser = await User.find({ username });
       if (newUser.length) {
-        const count = countData.count + 1;
-        username =
-          levelArray[level - 2] +
-          count.toLocaleString("en-US", {
-            minimumIntegerDigits: 4,
-            useGrouping: false,
-          });
+        return res.send({ userCreated: false, msg: "Username already taken!" });
       }
 
-      const userData = await User.findOne({ username: companyId });
-      const totalCoins = await CoinController.countCoin(
-        companyId.toLowerCase()
-      );
-      var mShare = 0;
-      if (level < 1 || level > 7) {
-        res.send({
-          userCreated: false,
-          msg: "Invalid Level!",
-        });
-        return;
-      }
-      if (req.user.level === 1 && level === 6) {
-        res.send({ userCreated: false, msg: "Not Allowed!" });
-        return;
-      }
-      if (level <= userData.level) {
-        res.send({
-          userCreated: false,
-          msg: "Insufficient Permissions!",
-        });
-        return;
-      }
-      if (level === 6) {
-        mShare = userData.matchShare;
-      } else {
-        mShare = matchShare;
-      }
-      if (parseInt(userData.level) !== 1 && totalCoins < fixedLimit) {
-        return res.send({ userCreated: false, msg: "Insufficient Balance" });
-      }
-      const share = userData.matchShare - mShare;
-      const AgentMatchcommision = level < 6 ? 3 : 0;
-      const AgentSessioncommision = level < 6 ? 3 : 0;
       User.register(
         new User({
           username,
           name,
-          level,
-          totalCoins: parseFloat(fixedLimit),
-          companyId,
-          matchShare: share,
-          currentSession: uuidv4(),
-          matchCommission: AgentMatchcommision,
-          sessionCommission: AgentSessioncommision,
+          email,
+          role: "user",
+          createdOn: Date.now(),
+        }),
+        password,
+        async (err, user) => {
+          if (err) {
+            res.statusCode = 500;
+            console.error(err);
+            return res.send({
+              userCreated: false,
+              msg: "Internal server error",
+            });
+          } else {
+            AuthController.sendOtpVerificationEmail(user, res);
+          }
+        }
+      );
+    } catch (error) {
+      console.error(error);
+      res.send({ userCreated: false, msg: "Some error occurred" });
+      return;
+    }
+  },
+  async adminSignup(req, res) {
+    try {
+      var { password, name, username } = req.body;
+      if (name.trim() === "") {
+        return res.send({ userCreated: false, msg: "Name cannot be empty" });
+      }
+      if (!isValidPassword(password)) {
+        return res.json({
+          userCreated: false,
+          msg: "Invalid Password Length.",
+        });
+      }
+      if (name.length > 20) {
+        return res.send({
+          userCreated: false,
+          msg: "Name cannot be more than 20 characters",
+        });
+      }
+      if (username.length > 20) {
+        return res.send({
+          userCreated: false,
+          msg: "Username cannot be more than 20 characters",
+        });
+      }
+      const newUser = await User.find({ username });
+      if (newUser.length) {
+        return res.send({ userCreated: false, msg: "Username already taken!" });
+      }
+
+      User.register(
+        new User({
+          username,
+          name,
+          email,
+          role: "admin",
           createdOn: Date.now(),
         }),
         password,
@@ -354,39 +229,6 @@ const AuthController = {
             console.error(err);
             return res.send({ userCreated: false, msg: "Err" });
           } else {
-            const p1Coins = await CoinController.countCoin(userData.username);
-            const p2Coins = await CoinController.countCoin(username);
-
-            const msg = `Opening Balance By ${userData.username} (${userData.name}) To ${username} (${name})`;
-            const commisionData = {
-              setter: companyId,
-              getter: username,
-              matchShare: mShare,
-              getterPreviousLimit: p2Coins ? p2Coins : 0,
-              setterPreviousLimit: p1Coins ? p1Coins : 0,
-              matchCommission: AgentMatchcommision,
-              sessionCommission: AgentSessioncommision,
-              createdOn: Date.now(),
-            };
-
-            await CommissionModel.create(commisionData);
-
-            const coinData = {
-              value: parseFloat(fixedLimit),
-              msg: msg,
-              type: 1,
-              getter: username.toLowerCase(),
-              setter: userData.username.toLowerCase(),
-              setterPreviousLimit: p1Coins ? p1Coins : 0,
-              getterPreviousLimit: 0,
-              createdOn: Date.now(),
-            };
-
-            await CoinModel.create(coinData);
-
-            countAndUpdateCoin(username);
-            countAndUpdateCoin(userData.username);
-
             return res.send({
               userCreated: true,
               msg: "User has been created Successfully",
@@ -458,7 +300,7 @@ const AuthController = {
       res.json({ success: false, err });
     }
   },
-  async userLogin(req, res, next) {
+  async userLogin(req, res) {
     try {
       const token = getRefreshToken({
         _id: req.user._id,
@@ -467,10 +309,9 @@ const AuthController = {
       const refreshToken = getRefreshToken({ _id: req.user._id });
 
       const user = await User.findById(req.user._id);
-      user.currentSession = refreshToken; // Set the current session
+      user.currentSession = refreshToken;
       user.refreshToken.push({ refreshToken });
       await user.save();
-
       res.cookie("usession", refreshToken, COOKIE_OPTIONS);
       res.status(200).json({ success: true, token });
     } catch (err) {
@@ -478,25 +319,7 @@ const AuthController = {
       res.json({ success: false, err });
     }
   },
-  async managerLogin(req, res, next) {
-    try {
-      const token = getManagerRefreshToken({
-        _id: req.user._id,
-        username: req.user.username,
-      });
-      const refreshToken = getManagerRefreshToken({ _id: req.user._id });
 
-      const user = await User.findById(req.user._id);
-      user.currentSession = refreshToken; // Set the current session
-      user.refreshToken.push({ refreshToken });
-      await user.save();
-      res.cookie("msession", refreshToken, COOKIE_OPTIONS);
-      res.status(200).json({ success: true, token });
-    } catch (err) {
-      console.error({ err });
-      res.json({ success: false, err });
-    }
-  },
   async adminLogout(req, res, next) {
     try {
       const { signedCookies = {} } = req;
@@ -551,37 +374,6 @@ const AuthController = {
       await user.save(); // Use await to save the user document
 
       res.clearCookie("usession", COOKIE_OPTIONS);
-      res.send({ success: true });
-    } catch (err) {
-      console.error(err);
-      res.statusCode = 500;
-      res.send({ msg: "Internal server error" });
-    }
-  },
-
-  async managerLogout(req, res, next) {
-    try {
-      const { signedCookies = {} } = req;
-      const { msession } = signedCookies;
-      const user = await User.findById(req.user._id);
-
-      if (!user) {
-        res.statusCode = 404;
-        return res.send({ error: "User not found" });
-      }
-
-      const tokenIndex = user.refreshToken.findIndex(
-        (item) => item.refreshToken === msession
-      );
-
-      if (tokenIndex !== -1) {
-        // Remove the token using $pull
-        user.refreshToken.pull({ _id: user.refreshToken[tokenIndex]._id });
-      }
-
-      await user.save(); // Use await to save the user document
-
-      res.clearCookie("msession", COOKIE_OPTIONS);
       res.send({ success: true });
     } catch (err) {
       console.error(err);
@@ -658,15 +450,14 @@ const AuthController = {
       try {
         const payload = jwt.verify(usession, process.env.REFRESH_TOKEN_SECRET);
         const userId = payload._id;
-
         const user = await User.findById(userId);
-
         if (!user) {
           res.status(401).send("Unauthorized");
           return;
         }
-        if (user.level !== 6) {
+        if (user.role !== "user") {
           res.status(401).send("Unauthorized");
+          return;
         }
 
         // Filter out the expired refresh tokens
@@ -691,47 +482,100 @@ const AuthController = {
       res.status(401).send("Unauthorized");
     }
   },
-  async checkManagerActive(req, res, next) {
-    const { signedCookies = {} } = req;
-    const { msession } = signedCookies;
-    if (msession) {
-      try {
-        const payload = jwt.verify(msession, process.env.REFRESH_TOKEN_SECRET);
-        const userId = payload._id;
-
-        const user = await User.findById(userId);
-
-        if (!user) {
-          res.status(401).send("Unauthorized");
-          return;
-        }
-        if (user.level !== 6) {
-          res.status(401).send("Unauthorized");
-        }
-
-        // Filter out the expired refresh tokens
-        user.refreshToken = user.refreshToken.filter((tokenItem) => {
-          if (isTokenExpired(tokenItem.refreshToken)) {
-            return false; // Remove expired token
-          }
-          return true; // Keep non-expired tokens
+  async blockUser(req, res) {},
+  async sendOtpVerificationEmail({ _id, email }, res) {
+    try {
+      const currentUrl = "http://localhost:8000";
+      const uniqueString = uuidv4() + _id;
+      const link = `${currentUrl}/api/v1/auth/verify/${_id}/${uniqueString}`;
+      const mailOptions = {
+        from: process.env.AUTH_EMAIL,
+        to: email,
+        subject: "Verify Your Email.",
+        html: `<p>Verify Your Email to complete signup and login into your account.</p><p>This link expires in 1 hours.</p> 
+          <p>Click <a href="${link}">here</a> to verify.</p>`,
+      };
+      const saltRounds = 10;
+      bcrypt.hash(uniqueString, saltRounds).then((hashedUniqueString) => {
+        const newVerification = new UserOTPVerification({
+          userId: _id,
+          uniqueString: hashedUniqueString,
+          createdOn: Date.now(),
+          expiresOn: Date.now() + 3600000, //1 hour
         });
-
-        await user.save();
-
-        const newAccessToken = getManagerRefreshToken({ _id: userId });
-        res.cookie("msession", newAccessToken, COOKIE_OPTIONS);
-        res.status(200).json({ success: true, token: newAccessToken });
-      } catch (err) {
-        console.error(err);
-        res.clearCookie("msession", COOKIE_OPTIONS);
-        res.status(401).send("Unauthorized");
-      }
-    } else {
-      res.status(401).send("Unauthorized");
+        newVerification
+          .save()
+          .then(() => {
+            transporter.sendMail(mailOptions).then(() => {
+              return res.json({
+                status: "1",
+                userCreated: true,
+                msg: "Verification email send successfully. Please check your email to verify.",
+              });
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+            return res.json({
+              status: 0,
+              userCreated: false,
+              msg: "An error occurred while sending email.",
+            });
+          });
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({ msg: "Internal server error" });
     }
   },
-  async blockUser(req, res) {},
+  async verifyEmail(req, res) {
+    try {
+      const { userId, uniqueString } = req.params;
+      const result = await UserOTPVerification.find({ userId });
+
+      if (result.length > 0) {
+        const { expiresOn } = result[0];
+        const hashedUniqueString = result[0].uniqueString;
+        if (expiresOn < Date.now()) {
+          await UserOTPVerification.deleteOne({ userId });
+          let message = "Verification link expired. Please sign up or log in.";
+          return res.redirect(
+            `/api/v1/auth/verified/?error=true&message=${message}`
+          );
+        } else {
+          const match = await bcrypt.compare(uniqueString, hashedUniqueString);
+
+          if (match) {
+            const resp = await User.findOneAndUpdate(
+              { _id: new ObjectId(userId) },
+              { verified: true },
+              { new: true }
+            );
+            await UserOTPVerification.deleteOne({ userId });
+
+            return res.sendFile(path.join(__dirname, "../views/verified.html"));
+          } else {
+            let message = "Invalid verification link.";
+            return res.redirect(
+              `/api/v1/auth/verified/?error=true&message=${message}`
+            );
+          }
+        }
+      } else {
+        let message =
+          "Account record doesn't exist or has been verified already. Please sign up or log in.";
+        return res.redirect(
+          `/api/v1/auth/verified/?error=true&message=${message}`
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      res.send({ msg: "Internal server error" });
+    }
+  },
+  async verified(req, res) {
+    return res.sendFile(path.join(__dirname, "../views/verified.html"));
+  },
 };
 
 module.exports = AuthController;

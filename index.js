@@ -9,9 +9,17 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const session = require("express-session");
+const {
+  addUser,
+  getUser,
+  deleteUser,
+  getUsers,
+  updateStatus,
+  handleMute,
+  handleKickUser,
+} = require("./helper/users.js");
 
 const server = require("http").createServer(app);
-const getMyPlayerBets = require("./helper/getMyPlayerBets");
 const origin = [
   "http://localhost:3000",
   "http://localhost:3001",
@@ -20,9 +28,6 @@ const origin = [
   "https://ma.fly247.in",
   "https://ng.fly247.in",
 ];
-const BetController = require("./controllers/BetController");
-const { getMatchScore } = require("./helper/getMatchScore");
-const getMatchOdds = require("./helper/getMatchOdds");
 require("./config/database.js");
 require("./strategy/LocalStrategy");
 require("./strategy/JWTStrategy");
@@ -33,38 +38,68 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("Client connected", socket.id);
-  let intervalId;
-  socket.on("getMatchOdds", (data) => {
-    intervalId = setInterval(async () => {
-      await getMatchOdds(data, socket);
-    }, 1000);
+  socket.on("login", async ({ userId, room }, callback) => {
+    const { user, error } = await addUser(socket.id, userId, room);
+    if (error) return callback(error);
+    socket.join(user.roomId);
+    socket.join(userId);
+    socket.in(room).emit("notification", {
+      title: "Someone's here",
+      type: 1,
+      description: `${user.userId.username} entered the room`,
+    });
+    const users = await getUsers(room);
+    io.in(room).emit("users", users);
+    callback();
   });
-  socket.on("getMatchScore", (matchId) => {
-    intervalId = setInterval(async () => {
-      await getMatchScore(matchId, socket);
-    }, 1000);
+  socket.on("updateStatus", async (status) => {
+    const users = await updateStatus(socket.id, status);
+    io.in(users[0].roomId).emit("users", users);
   });
-  socket.on("getUnsettledMatch", () => {
-    intervalId = setInterval(async () => {
-      await BetController.fetchUnsettledMatches(socket);
-    }, 1000);
+  socket.on("handleMute", async ({ userId, status }) => {
+    const user = await handleMute(userId, status);
+    if (user) {
+      io.in(userId).emit("notification", {
+        type: !status,
+        description: `You have been ${status ? "muted" : "unmuted"}!`,
+      });
+      const users = await getUsers(user.roomId);
+      io.in(users[0].roomId).emit("users", users);
+    }
   });
-  socket.on("getAllBets", () => {
-    intervalId = setInterval(async () => {
-      await BetController.getAllBets(socket);
-    }, 1000);
+  socket.on("kickUser", async (userId) => {
+    const user = await handleKickUser(userId);
+    if (user) {
+      io.in(user.roomId).emit("notification", {
+        type: 0,
+        description: `${user.userId.username} has been kicked!`,
+      });
+      const users = await getUsers(user.roomId);
+      io.in(users[0].roomId).emit("users", users);
+    }
   });
-  socket.on("getMyPlayerBets", (data) => {
-    intervalId = setInterval(async () => {
-      await getMyPlayerBets(data, socket);
-    }, 1000);
+  socket.on("sendMessage", async (message) => {
+    const user = await getUser(socket.id);
+    io.in(user.roomId).emit("message", {
+      user: user.userId.username,
+      text: message,
+    });
   });
-  socket.on("disconnect", () => {
-    console.log("Client Disconnected", socket.id);
-    clearInterval(intervalId);
+
+  socket.on("disconnect", async () => {
+    console.log("User disconnected");
+    const user = await deleteUser(socket.id);
+    if (user) {
+      io.in(user.roomId).emit("notification", {
+        type: 0,
+        description: `${user.userId.username} left the room`,
+      });
+      const users = await getUsers(user.roomId);
+      io.in(user.roomId).emit("users", users);
+    }
   });
 });
+
 app.use(logger("dev"));
 app.use(
   cors({
@@ -81,11 +116,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,
       httpOnly: true,
       sameSite: "None",
       maxAge: 60000,
-      domain: ".fly247.in",
     },
   })
 );
@@ -94,10 +127,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.disable("etag");
 
-// cron.schedule("*/30 * * * * *", () => {
-//   console.log(`pages:${pages.size}`, pages.size > 0 ? [...pages.keys()] : "");
-// });
-// cron.schedule("0 */2 * * *", login);
 app.use(compression());
 app.use("/api/v1/", indexRouter);
 app.use("/static", express.static("static"));
