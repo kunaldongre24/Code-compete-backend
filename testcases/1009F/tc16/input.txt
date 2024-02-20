@@ -1,0 +1,5 @@
+fce
+3
+3 abdecf
+1 efdcba
+2 ac

@@ -1,0 +1,7 @@
+cdccc
+5
+2 fae
+1 dabc
+4 dcfabe
+3 abc
+5 bdcafe

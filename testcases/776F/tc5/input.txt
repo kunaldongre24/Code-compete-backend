@@ -1,0 +1,12 @@
+q s
+10
+q b
+b j
+s g
+j f
+f m
+g c
+c a
+m d
+d z
+z o

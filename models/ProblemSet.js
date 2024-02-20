@@ -5,38 +5,43 @@ var ProblemSet = new mongoose.Schema({
     type: String,
     required: true,
   },
+  timeLimit: {
+    type: Number,
+    required: false,
+  },
+  memoryLimit: { type: Number, required: false },
+  uniqueId: {
+    type: String,
+    uniqueId: true,
+    required: true,
+  },
+  contestId: {
+    type: String,
+    required: true,
+  },
+  problemId: { type: String, required: true },
   description: {
     type: String,
-    required: true,
   },
-  input_format: {
+  input_specification: {
     type: String,
-    required: true,
   },
-  output_format: {
+  output_specification: {
     type: String,
-    required: true,
   },
-  constraints: {
-    type: String,
-    required: true,
-  },
-  sample_input: [
+  samples: [
     {
-      explanation: {
-        type: String,
-      },
-      content: String,
+      input: { type: String, required: true },
+      output: { type: String, required: true },
     },
   ],
-  sample_output: [
-    {
-      explanation: {
-        type: String,
-      },
-      content: String,
-    },
-  ],
+  testcases_count: {
+    type: Number,
+    default: 0,
+  },
+  note: {
+    type: String,
+  },
   rating: {
     type: Number,
     required: true,
@@ -52,10 +57,6 @@ var ProblemSet = new mongoose.Schema({
   updated_at: {
     type: Date,
     default: Date.now,
-  },
-  created_by: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
   },
 });
 

@@ -1,8 +1,40 @@
+const checkPid = require("../helper/checkPID");
 const makeId = require("../helper/makeId");
-const Message = require("../models/Message");
+const { getUsers, handleKickUser } = require("../helper/users");
 const Room = require("../models/Room");
+const RoomUserMap = require("../models/RoomUserMap");
+const CF_TC = require("../utils/CF_TC");
+const scrapeProblemDetails = require("../utils/cf_scrapper");
 
 const RoomController = {
+  async check(req, res) {
+    try {
+      const { cid, pid } = req.params;
+      const output = await scrapeProblemDetails(cid, pid);
+      res.send(output);
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error!" });
+    }
+  },
+  async check2(req, res) {
+    try {
+      let { cid, pid } = req.params;
+      const pvcodes = new CF_TC();
+      pid = checkPid(pid);
+      pvcodes
+        .get_testcases(cid, pid)
+        .then((response) => {
+          console.log(response[1].length);
+          res.send({ status: 1, output: response });
+        })
+        .catch((err) => console.error(err));
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+
   async createRoom(req, res) {
     try {
       const userId = req.user._id;
@@ -27,31 +59,153 @@ const RoomController = {
       res.send({ status: 0, msg: "Server Error" });
     }
   },
-
-  async handleRemoveUserFromRoom(req, res) {
+  async handleSendMessage(req, res) {
     try {
-      const userId = req.user._id;
-      const userIdToRemove = req.body.userId;
-      const roomId = req.body.roomId;
-
-      const updatedRoom = await Room.findOneAndUpdate(
-        { _id: roomId, admin: userId },
-        { $pull: { users: userIdToRemove } },
-        { new: true }
+      const io = req.app.get("socket");
+      const user = await RoomUserMap.findOne({ userId: req.user._id }).populate(
+        "userId",
+        "-hash -salt -currentSession -authStrategy -verified -createdOn -role"
       );
-
-      if (!updatedRoom) {
-        return res
-          .status(404)
-          .json({ msg: "Room doesn't exist or insufficient permissions!" });
-      }
-
-      res
-        .status(200)
-        .json({ msg: "User removed from the room successfully", updatedRoom });
+      io.in(user.roomId).emit("message", {
+        user: user.userId.username,
+        text: message,
+      });
+      res.send({ status: 1, msg: "Message Sent" });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ msg: "Internal Server Error" });
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async handleUpdateStatus(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { userId, status } = req.body;
+      const users = await updateStatus(userId, status);
+      io.in(users[0].roomId).emit("users", users);
+      res.send({ status: 1, msg: "Updated Status" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async handleUpdateSpectate(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { userId, status } = req.body;
+      const users = await updateSpectate(userId, status);
+      io.in(users[0].roomId).emit("notification", {
+        type: 2,
+        description: `${
+          users.filter((x) => x.socketId === socket.id)[0].userId.username
+        } ${status ? "is now spectating." : "has joined the race."}`,
+      });
+      io.in(users[0].roomId).emit("users", users);
+      res.send({ status: 1, msg: "Updated Spectate!" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async kickUser(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { userId } = req.body;
+      const user = await handleKickUser(userId);
+      if (user) {
+        io.in(user.roomId).emit("notification", {
+          type: 0,
+          description: `${user.userId.username} has been kicked!`,
+        });
+        const users = await getUsers(user.roomId);
+        io.in(users[0].roomId).emit("users", users);
+      }
+      res.send({ status: 1, msg: "User has been kicked!" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async muteUser(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { userId, status } = req.body;
+      const user = await handleMute(userId, status);
+      if (user) {
+        io.in(userId).emit("notification", {
+          type: !status,
+          description: `You have been ${status ? "muted" : "unmuted"}!`,
+        });
+        const users = await getUsers(user.roomId);
+        io.in(users[0].roomId).emit("users", users);
+      }
+      res.send({ status: 1, msg: "User has been muted!" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async updateTpp(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { roomId, val } = req.body;
+      const room = await updateTpp(roomId, val);
+      io.in(room.roomId).emit("room", room);
+      io.in(room.roomId).emit("notification", {
+        type: 2,
+        description: `Tpp changed to ${val}.`,
+      });
+      res.send({ status: 1, msg: "Tpp Updated" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async updateRounds(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { roomId, val } = req.body;
+      const room = await updateRounds(roomId, val);
+      io.in(room.roomId).emit("room", room);
+      io.in(room.roomId).emit("notification", {
+        type: 2,
+        description: `No. of rounds changed to ${val}.`,
+      });
+      res.send({ status: 1, msg: "Rounds Updated" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async updateMinRating(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { roomId, val } = req.body;
+      const room = await updateMinRating(roomId, val);
+      io.in(room.roomId).emit("room", room);
+      io.in(room.roomId).emit("notification", {
+        type: 2,
+        description: `Min Rating changed to ${val}.`,
+      });
+      res.send({ status: 1, msg: "Min Rating Updated" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
+    }
+  },
+  async updateMaxRating(req, res) {
+    try {
+      const io = req.app.get("socket");
+      const { val } = req.body;
+      const room = await updateMaxRating(roomId, val);
+      io.in(room.roomId).emit("room", room);
+      io.in(room.roomId).emit("notification", {
+        type: 2,
+        description: `Max Rating changed to ${val}.`,
+      });
+      res.send({ status: 1, msg: "Max Rating Updated" });
+    } catch (err) {
+      console.error(err);
+      res.send({ status: 0, msg: "Internal Server Error" });
     }
   },
   async getRoomInfo(req, res) {

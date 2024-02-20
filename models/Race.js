@@ -1,12 +1,6 @@
 const mongoose = require("mongoose"); // Erase if already required
 
 var Race = new mongoose.Schema({
-  users: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
   problemSets: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,11 +10,21 @@ var Race = new mongoose.Schema({
   admin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    unique: true,
   },
   roomId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Room",
     required: true,
+  },
+  tpp: { type: Number, required: true },
+  maxRating: { type: Number, required: true },
+  minRating: {
+    type: Number,
+    required: true,
+  },
+  isFinished: {
+    type: Boolean,
+    default: false,
   },
   createdOn: { type: Date, default: Date.now, required: true },
   lastUpdated: { type: Date, default: Date.now, required: true },
@@ -28,4 +32,4 @@ var Race = new mongoose.Schema({
 
 //Export the model
 
-module.exports = mongoose.model("Room", Race);
+module.exports = mongoose.model("Race", Race);

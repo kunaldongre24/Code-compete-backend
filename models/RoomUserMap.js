@@ -20,6 +20,16 @@ var RoomUserMap = new mongoose.Schema({
     required: true,
     default: false,
   },
+  isAdmin: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  isSpectator: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
   isMuted: {
     type: Boolean,
     required: true,

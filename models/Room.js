@@ -10,6 +10,26 @@ var Room = new mongoose.Schema({
     ref: "User",
     unique: true,
   },
+  tpp: {
+    type: Number,
+    required: true,
+    default: 80,
+  },
+  rounds: {
+    type: Number,
+    required: true,
+    default: 3,
+  },
+  minRating: {
+    type: Number,
+    required: true,
+    default: 800,
+  },
+  maxRating: {
+    type: Number,
+    required: true,
+    default: 1200,
+  },
   roomId: {
     type: String,
     required: true,

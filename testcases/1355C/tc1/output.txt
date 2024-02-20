@@ -1,0 +1,2 @@
+OK game 0, answer = 2, output = 8, 17 queries
+OK game 1, answer = 23, output = 46, 18 queries

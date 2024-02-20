@@ -18,6 +18,7 @@ const addUser = async (id, userId, roomId) => {
     }
     const newRoom = new RoomUserMap({
       userId,
+      isAdmin: room.admin == userId,
       roomId,
       socketId: id,
     });
@@ -50,7 +51,27 @@ const updateStatus = async (id, status) => {
       { isReady },
       { new: true }
     );
-    console.log(roomUserMap);
+    if (!roomUserMap) {
+      return [];
+    }
+    const users = await getUsers(roomUserMap.roomId);
+    return users;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};
+const updateSpectate = async (id, status) => {
+  try {
+    const isSpectator = status ? true : false;
+    const roomUserMap = await RoomUserMap.findOneAndUpdate(
+      { socketId: id },
+      { isSpectator },
+      { new: true }
+    );
+    if (!roomUserMap) {
+      return [];
+    }
     const users = await getUsers(roomUserMap.roomId);
     return users;
   } catch (err) {
@@ -66,6 +87,9 @@ const handleMute = async (userId, status) => {
       { isMuted },
       { new: true }
     );
+    if (!roomUserMap) {
+      return [];
+    }
     return roomUserMap;
   } catch (err) {
     console.error(err);
@@ -80,6 +104,7 @@ const handleKickUser = async (id) => {
       "userId",
       "-hash -salt -currentSession -authStrategy -verified -createdOn -role"
     );
+
     return deletedUser;
   } catch (err) {
     console.log(err);
@@ -115,6 +140,7 @@ module.exports = {
   updateStatus,
   addUser,
   getUser,
+  updateSpectate,
   deleteUser,
   getUsers,
 };

@@ -1,0 +1,16 @@
+abcde
+acdef
+acefg
+acefh
+acfgi
+abcdef
+abcdeg
+abcefh
+abcd
+acde
+acdf
+adeg
+a
+b
+c
+d
