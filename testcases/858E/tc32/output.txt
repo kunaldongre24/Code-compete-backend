@@ -1,0 +1,4 @@
+3
+move 1 2
+move 6a2egk 1
+move dr1lp8 3

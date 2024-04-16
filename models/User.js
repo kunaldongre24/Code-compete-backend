@@ -5,6 +5,7 @@ var User = new mongoose.Schema({
   role: {
     type: String,
     required: true,
+    default: "user",
   },
   authStrategy: {
     type: String,
@@ -15,8 +16,9 @@ var User = new mongoose.Schema({
     type: [{ refreshToken: String }],
   },
   currentSession: { type: String },
-  profile_url: {
+  svg: {
     type: String,
+    require: true,
   },
   email: { type: String, required: true, unique: true },
   rating: {
@@ -49,5 +51,8 @@ User.set("toJSON", {
   },
 });
 User.plugin(passportLocalMongoose);
+User.methods.verifyPassword = function (password) {
+  return this.authenticate(password);
+};
 //Export the model
 module.exports = mongoose.model("User", User);

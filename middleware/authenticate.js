@@ -2,9 +2,10 @@ const passport = require("passport");
 const jwt = require("jsonwebtoken");
 
 exports.COOKIE_OPTIONS = {
+  secure: true,
   signed: true,
-  httpOnly: true,
   maxAge: eval(process.env.REFRESH_TOKEN_EXPIRY) * 1000,
+  sameSite: "None",
 };
 
 exports.getRefreshToken = (user) => {

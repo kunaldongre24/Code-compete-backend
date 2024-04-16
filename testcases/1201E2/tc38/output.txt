@@ -1,0 +1,9 @@
+BLACK
+jury 3 5
+player 6 2
+jury 2 7
+player 5 4
+jury 3 9
+player 7 5
+jury 2 7
+player 5 6

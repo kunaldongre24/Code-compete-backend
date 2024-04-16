@@ -1,2 +1,1 @@
-30
-ToBeOrNotToBeThatIsTheQuestion
+2 10

@@ -1,0 +1,9 @@
+YES
+Ca+Ti->Mo
+Cr+Cr->Cd
+Sb->Sb
+Sb->Sb
+Cu+Se->Eu
+Si+La->Lu
+F+V+Cs->Fr
+Br+Pr->Pu

@@ -1,0 +1,9 @@
+5
+xy
+yx
+x
+x
+xyx
+xyx
+yxyx
+xyxy

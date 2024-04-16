@@ -1,0 +1,4 @@
+2
+aaaaaab
+aaaaabb
+abcdefg

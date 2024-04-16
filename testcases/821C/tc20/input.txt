@@ -1,0 +1,17 @@
+8
+add 1
+add 2
+add 3
+add 7
+add 8
+remove
+remove
+remove
+add 6
+add 5
+add 4
+remove
+remove
+remove
+remove
+remove

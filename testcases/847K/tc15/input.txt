@@ -1,0 +1,9 @@
+8 2 1 11 1
+dacdD cdDAA
+cdDAA dacdD
+dacdD bcCA
+bcCA B
+DDAA B
+DDAA daC
+AbCAc B
+dacdD daC

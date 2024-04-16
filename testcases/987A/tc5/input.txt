@@ -1,0 +1,4 @@
+3
+blue
+orange
+purple

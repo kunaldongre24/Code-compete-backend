@@ -1,0 +1,6 @@
+30 4
+eaaddabedcbbcccddbabdecadcecce
+2 17 c a
+16 29 e e
+16 21 c b
+7 11 b c

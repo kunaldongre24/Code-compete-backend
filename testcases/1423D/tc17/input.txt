@@ -1,0 +1,14 @@
+6 6
+7 5 54
+S M S S S S
+S L L S L S
+S S L S S S
+S L P L L S
+S S S S L L
+S S S S S S
+E S E E E W W C E E S S W W N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N
+2 1 7
+5 5 3
+0 3 35
+2 3 7
+5 0 13

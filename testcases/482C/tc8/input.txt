@@ -1,0 +1,11 @@
+10
+aabbbcbacaccbadabdcc
+abdbbdacbdbdabdbacac
+acacabbcbdaacccddbcb
+bdbaaccbbdbddaadadda
+bdcbdbdccddddcdbcaad
+caacbcaabbbdadcbcada
+ccbcdacdccdbadaaccad
+cdaaddacbabddababbbd
+cdadbabbcabccddcddab
+dbacadbdbdabacdadbcc

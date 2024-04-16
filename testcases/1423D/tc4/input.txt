@@ -1,0 +1,10 @@
+6 6
+4 1 15
+M S S S S S
+S S S S S S
+S S S S S S
+S S S S S S
+S S S S P S
+S S S S S S
+C C C C S S E E C C C C C C C
+0 1 4

@@ -1,0 +1,3 @@
+17 10
+Sc Ti C Cr Ne C F Ne He C K Be V Ar O Si He
+O Pb Sc Ca V Be O Be Ca Si

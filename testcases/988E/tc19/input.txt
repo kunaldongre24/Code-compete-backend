@@ -1,11 +1,1 @@
-10
-a
-b
-c
-d
-ab
-bc
-cd
-abc
-bcd
-abcd
+101

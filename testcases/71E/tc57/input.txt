@@ -1,0 +1,3 @@
+16 6
+Br Nd Mn Li Li Br Na Mo Sb Ne Mn Cr V N Ne Cr
+Cu Yb Nd Mo Ac Cf

@@ -1,0 +1,21 @@
+20
+VBox hykl
+VBox enwv
+enwv.pack(hykl)
+VBox dlepf
+dlepf.pack(hykl)
+enwv.set_border(30)
+Widget mjrrik(54,21)
+hykl.set_border(2)
+dlepf.set_border(22)
+enwv.set_border(3)
+enwv.pack(dlepf)
+dlepf.pack(mjrrik)
+hykl.set_spacing(96)
+enwv.set_border(32)
+dlepf.set_border(72)
+Widget j(54,86)
+hykl.pack(j)
+enwv.set_border(54)
+hykl.set_border(88)
+hykl.set_border(86)

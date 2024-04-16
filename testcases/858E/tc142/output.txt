@@ -1,0 +1,4 @@
+3
+move 3 0
+move 6 3
+move 0 6

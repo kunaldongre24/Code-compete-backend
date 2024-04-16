@@ -1,18 +1,1 @@
-k d
-l d
-l v
-l z
-r z
-r i
-s i
-p i
-w i
-j i
-h i
-h c
-m c
-q c
-q o
-q g
-x g
-n g
+2 3 2 3 2 1 3

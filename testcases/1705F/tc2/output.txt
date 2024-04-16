@@ -1,0 +1,5 @@
+4
+TTTT 3
+FTFT 1
+FFTT 3
+TFTT 4

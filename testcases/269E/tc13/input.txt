@@ -1,0 +1,17 @@
+6 10
+L T 6 10
+T B 9 10
+B T 9 8
+B R 8 6
+L T 5 7
+T B 6 7
+B T 6 5
+B R 5 5
+R T 1 1
+R B 2 1
+L T 1 4
+L B 2 4
+R T 4 2
+R B 3 2
+L T 4 3
+L B 3 3

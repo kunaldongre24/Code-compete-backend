@@ -1,0 +1,5 @@
+4
+BGB
+GGR
+GRB
+RBB

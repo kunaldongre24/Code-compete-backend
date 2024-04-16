@@ -1,2 +1,11 @@
+7 3
+a
 aa
-aa
+ab
+?aaab
+-2
+?aaab
+-3
+?aaab
++2
+?aabbaa

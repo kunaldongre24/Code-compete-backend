@@ -1,0 +1,11 @@
+100 50
+D....L.UD.UD........L.L.DUD.D.RDL....D..RR..LD....
+.....R.U....RU..U.DDRU.......U.RD....RU.U.LR.....D
+U.DL....L.D.RR..L...U.D.....UL..D..LD.R.D...DR...U
+D...ULU.D......LU.L..URU.....R.URDLUR...........R.
+.D..U..LLR..UD...L..LDU..R..RDR..UU.U.LDD...D..R..
+R...L.....R..U.RDDL...D.UR.LU.LLLUD...LR..D...R...
+....RR...L..UU....DL..UL..U..UUU.R......DD.D..U.L.
+URLRL..D...RRL.R..D.R..R.L.DULU.U.DL.DD.R...U..U..
+...U....D..D.LDDU...........URU....U...U..D....R.D
+.RLDRD..LL.L..D.....D.D.L..U..L.D.....

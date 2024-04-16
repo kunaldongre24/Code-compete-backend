@@ -1,0 +1,4 @@
+x..o
+xo.x
+o.xo
+xoox

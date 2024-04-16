@@ -1,0 +1,12 @@
+10 10
+10 103
+###UU#U###
+##UDD#DU#U
+##D#LR#D#D
+##LRULRLRU
+#ULRDU###D
+#DUU#D#LRU
+##DD####UD
+##LR#U##D#
+####.D##LR
+####LRLRLR

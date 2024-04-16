@@ -1,4 +1,2 @@
-3
-baa
-baaaaaaaab
-aaaaaa
+2
+1 0

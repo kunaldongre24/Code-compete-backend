@@ -1,0 +1,3 @@
+14 8
+S Br Sc Pd Ga Ga C Fe Zr Ga Li Cu Pd Sn
+Pm Au Te Y Sm Ag Li Er

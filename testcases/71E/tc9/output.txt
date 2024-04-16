@@ -1,0 +1,6 @@
+YES
+Lu->Lu
+Ta->Ta
+W->W
+Re->Re
+Os->Os

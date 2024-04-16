@@ -1,0 +1,4 @@
+YES
+aab
+aaab
+aaaab

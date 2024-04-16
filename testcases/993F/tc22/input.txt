@@ -1,0 +1,3 @@
+4 4 4
+and xx.. and x.x. nand ..xx or xx..
+or .x.x nand .x.x nand x..x nor x..x

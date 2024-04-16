@@ -1,0 +1,3 @@
+17 10
+Cd Nb Li Rb Tc Sn V Nb Cr Mo Sr Ga C Cd Rh Kr Tc
+Bk Te V U Ta Es Be I Es N

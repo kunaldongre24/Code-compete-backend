@@ -1,0 +1,9 @@
+8 1000000
+abbca
+abcbc
+bc
+cb
+bcbc
+c
+b
+abc

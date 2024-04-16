@@ -1,0 +1,64 @@
+63
+add
+add
+for 21
+add
+for 39
+add
+add
+end
+for 73
+for 75
+end
+add
+for 83
+add
+for 28
+for 79
+for 83
+end
+add
+for 66
+end
+add
+for 89
+end
+add
+add
+add
+end
+end
+for 26
+add
+end
+end
+end
+for 25
+add
+end
+end
+add
+add
+for 27
+for 40
+for 72
+add
+end
+end
+add
+add
+end
+add
+add
+add
+add
+add
+for 23
+end
+add
+add
+for 66
+end
+for 86
+add
+end

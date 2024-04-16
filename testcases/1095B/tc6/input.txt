@@ -1,2 +1,2 @@
-21
-coodddeeeecccccoooooo
+3
+1 2 4

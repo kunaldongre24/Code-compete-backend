@@ -1,0 +1,5 @@
+4
+XO|XX
+XX|XO
+OX|XX
+XO|XO

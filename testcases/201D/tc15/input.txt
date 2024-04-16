@@ -1,0 +1,4 @@
+15
+a b c d e f g h i j k l m n o
+1
+109 i h g f e b c d e f g h i j k l m n b c d e f g h i j k l m n b c d e f g h i j k l m n a n m l k j i h g f e d c b a i o i f e d o c i h g l n j f c i d k n o g m f c e m i d k n g j b c d e f a g h q j k a l a m n a

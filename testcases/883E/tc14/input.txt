@@ -1,0 +1,6 @@
+4
+a*b*
+3
+abbc
+adbd
+acbd

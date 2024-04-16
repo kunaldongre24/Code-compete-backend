@@ -1,0 +1,21 @@
+20
+10 CA
+1 CB
+10 BC
+4 AC
+4 BA
+6 CB
+10 CB
+8 BC
+9 BC
+1 BA
+10 AB
+9 AB
+9 BA
+5 BA
+6 CA
+10 BA
+2 CA
+7 CA
+6 BA
+7 AC

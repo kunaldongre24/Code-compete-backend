@@ -1,9 +1,4 @@
-NO
-NO
-YES
-YES
-YES
-YES
-NO
-NO
-YES
+29
+6
+1
+256

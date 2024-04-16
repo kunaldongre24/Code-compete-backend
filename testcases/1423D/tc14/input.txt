@@ -1,0 +1,9 @@
+6 6
+9 0 15
+S M S S S S
+S L L S L S
+S S L S S S
+S L P L L S
+S S S S L L
+S S S S S S
+E S E E E W W C E E S S W N N

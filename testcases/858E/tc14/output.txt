@@ -1,0 +1,4 @@
+3
+move 2 0
+move 5 2
+move 0 5

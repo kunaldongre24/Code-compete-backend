@@ -1,0 +1,4 @@
+3
+a=res
+res=x^y
+res=a

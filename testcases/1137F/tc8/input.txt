@@ -1,0 +1,28 @@
+8 20
+2 7
+2 4
+4 6
+2 3
+1 5
+1 2
+3 8
+compare 6 5
+compare 8 1
+compare 6 3
+compare 7 8
+compare 6 5
+up 5
+up 8
+compare 6 5
+up 2
+compare 7 2
+compare 4 6
+compare 5 8
+up 3
+compare 1 5
+compare 5 4
+up 3
+compare 7 3
+up 6
+compare 5 3
+compare 6 5

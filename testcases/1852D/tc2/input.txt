@@ -1,0 +1,57 @@
+28
+2 0
+BB
+2 1
+BB
+2 2
+BB
+2 3
+BB
+2 4
+BB
+2 5
+BB
+2 6
+BB
+2 0
+AB
+2 1
+AB
+2 2
+AB
+2 3
+AB
+2 4
+AB
+2 5
+AB
+2 6
+AB
+2 0
+BA
+2 1
+BA
+2 2
+BA
+2 3
+BA
+2 4
+BA
+2 5
+BA
+2 6
+BA
+2 0
+AA
+2 1
+AA
+2 2
+AA
+2 3
+AA
+2 4
+AA
+2 5
+AA
+2 6
+AA

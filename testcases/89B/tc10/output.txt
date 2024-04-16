@@ -1,0 +1,9 @@
+border 0 0
+hbox 10 10
+pack 10 10
+s 0 0
+se 0 0
+set 0 0
+spacing 0 0
+vbox 10 10
+widget 10 10

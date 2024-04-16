@@ -1,0 +1,66 @@
+65
+add
+for 2
+for 2
+for 3
+add
+for 100
+for 100
+end
+end
+for 4
+for 5
+for 6
+for 7
+for 8
+for 9
+for 10
+for 11
+for 12
+for 13
+for 14
+for 15
+for 16
+for 17
+for 18
+for 19
+for 20
+end
+end
+end
+end
+end
+end
+end
+end
+end
+end
+end
+add
+add
+for 25
+add
+end
+end
+end
+end
+end
+end
+end
+end
+end
+add
+end
+add
+for 100
+for 1
+add
+add
+end
+for 1
+end
+end
+for 100
+end
+for 100
+end

@@ -1,0 +1,2 @@
+WHITE
+player 4 6

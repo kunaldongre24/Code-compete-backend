@@ -1,2 +1,4 @@
-3 1 4 4
-+--+
+aabbaaabbbbbaaaaababbaabbabbaabbabbbaabbbbaabaabab
+2
+3 abbaabb
+1 aaaababbaab

@@ -1,0 +1,7 @@
+YES
+S->S
+N+N+Ne+S+Br->Re
+P+Mn+Rh->At
+Ar+Zn+Y->Fr
+Sr+Sn->Ra
+Pd+Sn->Cm

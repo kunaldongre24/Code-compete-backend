@@ -1,0 +1,4 @@
+aabbcca
+bbaabba
+accddcc
+abbaabb

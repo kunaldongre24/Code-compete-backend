@@ -1,0 +1,12 @@
+xxo xoo xxo
+ooo ooo xxx
+oox oxo oxx
+
+oxo oxo xxx
+xoo oxx oxo
+xxx oxx ooo
+
+oxx xoo xxo
+xxx oox xox
+xxo o.o oxo
+9 6

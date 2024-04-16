@@ -1,3 +1,1 @@
-YES
-abaab
-ababaab
+1

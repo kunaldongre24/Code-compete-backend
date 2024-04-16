@@ -1,0 +1,5 @@
+4
+BGR
+RGB
+GBB
+RGG

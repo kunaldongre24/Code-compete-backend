@@ -1,0 +1,16 @@
+59 14
+fbebcfabdefbaaedcefdeecababcabebadfbccaaedaebfdaefdbbcbebbe
+5 32 e f
+8 46 e e
+31 43 e f
+3 10 e a
+53 54 f d
+55 59 d a
+39 58 e b
+54 56 f a
+9 40 b e
+28 37 d a
+7 35 e b
+7 56 c f
+23 26 e a
+15 44 e d

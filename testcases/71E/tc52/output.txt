@@ -1,0 +1,17 @@
+YES
+Li->Li
+C->C
+Na->Na
+Ca->Ca
+Ti->Ti
+Cu->Cu
+Cu->Cu
+Br->Br
+Br->Br
+Sr->Sr
+Y->Y
+Ru->Ru
+Rh->Rh
+Rh->Rh
+Ag->Ag
+C+Pd->Te

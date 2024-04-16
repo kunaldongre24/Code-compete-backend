@@ -1,0 +1,6 @@
+5 3
+aba
+aba
+ccc
+baa
+baa

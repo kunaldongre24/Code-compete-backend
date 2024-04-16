@@ -1,0 +1,5 @@
+3 yyx
+2 yx
+3 zyx
+2 yx
+1 x

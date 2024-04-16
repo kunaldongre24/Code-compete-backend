@@ -1,0 +1,31 @@
+10
+429
+41 20
+left left
+977
+606 92
+left left
+874
+742 866
+right right
+774
+61 573
+right right
+315
+160 287
+right left
+985
+871 814
+left right
+73
+0 45
+right left
+880
+358 535
+right left
+842
+457 592
+right left
+599
+509 542
+right left

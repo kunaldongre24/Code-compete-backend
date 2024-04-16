@@ -1,0 +1,4 @@
+3
+move 1 2
+move fr4033 1
+move sc7czx 4

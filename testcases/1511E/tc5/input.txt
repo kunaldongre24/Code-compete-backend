@@ -1,0 +1,6 @@
+5 4
+oooo
+o*oo
+oooo
+**oo
+ooo*

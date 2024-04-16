@@ -1,8 +1,1 @@
-bbcbbc
-6
-1 c
-2 c
-3 b
-4 ab
-5 ab
-6 ab
+1

@@ -1,0 +1,3 @@
+17 6
+Ni Mn H Cr P Ca Cu Sc Be P Be P C Ne He Zn Ti
+Pd Ta Fm Ti He Ni

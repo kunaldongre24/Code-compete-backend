@@ -1,1 +1,12 @@
-.v.m.b.p.m.c.m.m.d.c.l.f.l.l.s.j.d.w.q.r.x.r.d.g.k.m.x.j.x.j.h.x.v.z.d.r.z.w.v.w.j.r.k.f.r.r.n.s.w.k.k.d.p.z.z.l.f.l.n.s.g.n.v.j.f.b.q.s.m.d.h.s.b.j.v.d.t.c.s.c.g.z.w.w.k.v.z.z.n
+1 7
+7 4
+4 1
+1 3
+3 6
+6 5
+5 3
+3 2
+2 1
+2 9
+9 8
+8 2

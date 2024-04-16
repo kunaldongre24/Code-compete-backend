@@ -1,2 +1,6 @@
 5
-0 1 1 -2 1
+a
+abcdfdcecba
+abbaxyzyx
+codeforces
+acbba

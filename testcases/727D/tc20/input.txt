@@ -1,0 +1,22 @@
+9 8 1 7 2 3
+20
+L,XL
+M,L
+S
+XL,XXL
+M,L
+XL,XXL
+S
+L,XL
+S,M
+S,M
+XXL,XXXL
+S,M
+S,M
+S,M
+XL,XXL
+L
+XXL,XXXL
+S,M
+XL,XXL
+M,L

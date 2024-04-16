@@ -1,0 +1,3 @@
+14 6
+H C Ca S Fe Na H S F V C Sc Ne B
+Fe Sc P O Es He

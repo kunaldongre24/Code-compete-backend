@@ -1,1 +1,10 @@
-YES
+5
+AbabA
+3
+asa
+3
+ace
+0
+
+2
+ea

@@ -1,0 +1,5 @@
+32767
+int f(int n)
+{
+return n;
+}

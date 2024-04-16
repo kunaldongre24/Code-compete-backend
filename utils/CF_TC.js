@@ -7,6 +7,8 @@ class CF_TC {
     let chromeOptions = new Options();
     chromeOptions.addArguments("--disable-extensions");
     chromeOptions.addArguments("--headless");
+    chromeOptions.addArguments("--no-sandbox");
+    chromeOptions.addArguments("--disable-dev-shm-usage");
     chromeOptions.excludeSwitches("enable-logging");
 
     // Disable logging
@@ -17,33 +19,30 @@ class CF_TC {
     this.base_url = "https://codeforces.com/";
     this.close = () => this.driver.quit();
   }
-
   async _getSubmissionID(contest_id, problem_index) {
-    await this.driver.get(`${this.base_url}contest/${contest_id}/status`);
+    await this.driver.get(
+      `${this.base_url}contest/${contest_id}/status/${problem_index}?order=BY_CONSUMED_TIME_ASC`
+    );
 
-    if (await this.wait_till_load('//*[@id="frameProblemIndex"]')) {
-      let select = new Select(
-        await this.driver.findElement(By.xpath('//*[@id="frameProblemIndex"]'))
+    try {
+      await this.driver.wait(
+        until.elementLocated(By.css(".verdict-accepted")),
+        10000
       );
-      await select.selectByIndex(
-        problem_index.charCodeAt(0) - "A".charCodeAt(0) + 1
+      let submissionIdElement = await this.driver.findElement(
+        By.css(".verdict-accepted")
       );
-    } else {
-      return [null, "Error while filtering problem index"];
-    }
+      let submissionRow = await submissionIdElement.findElement(
+        By.xpath("./ancestor::tr")
+      );
+      let submissionLink = await submissionRow.findElement(
+        By.css(".view-source")
+      );
+      let submissionId = await submissionLink.getAttribute("submissionid");
 
-    if (
-      await this.wait_till_load(
-        `//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]/a`
-      )
-    ) {
-      let content = await this.driver.findElement(
-        By.xpath(
-          `//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]/a`
-        )
-      );
-      return [true, await content.getText()];
-    } else {
+      return [true, submissionId];
+    } catch (error) {
+      console.error(error);
       return [null, "Error while finding Submission ID "];
     }
   }
@@ -71,58 +70,64 @@ class CF_TC {
   }
 
   async get_testcases(contest_id, problem_num) {
-    let problem_exist = await this._isProblemExists(contest_id, problem_num);
-    if (!problem_exist[0]) {
-      return problem_exist;
-    }
-    console.log("Found the problem");
-    let submission_id = await this._getSubmissionID(contest_id, problem_num);
-    if (!submission_id[0]) {
-      return submission_id;
-    }
-    console.log(
-      `https://codeforces.com/contest/${contest_id}/submission/${submission_id[1]}`
-    );
-    await this.driver.get(
-      `https://codeforces.com/contest/${contest_id}/submission/${submission_id[1]}`
-    );
-
-    if (
-      await this.wait_till_load(
-        "/html/body/div[6]/div[4]/div/div[4]/div[2]/a",
-        10
-      )
-    ) {
-      let click_btn = await this.driver.findElement(
-        By.xpath("/html/body/div[6]/div[4]/div/div[4]/div[2]/a")
-      );
-      await click_btn.click();
-    }
-    if (await this.wait_till_load('//*[@id="pageContent"]/div[4]/div[3]', 10)) {
-      let inputs = await this.driver.findElements(By.className("input"));
-      let outputs = await this.driver.findElements(By.className("output"));
-      let tc = [];
-      for (let i = 0; i < inputs.length; i++) {
-        let inputText = await inputs[i].getText();
-        let outputText = await outputs[i].getText();
-        if (!inputText.includes("...") && !outputText.includes("...")) {
-          tc.push([inputText, outputText]);
-        }
+    try {
+      let problem_exist = await this._isProblemExists(contest_id, problem_num);
+      if (!problem_exist[0]) {
+        return problem_exist;
       }
-      tc = tc.slice(1);
-      console.log(`Total test cases found : ${tc.length}`);
+      let submission_id = await this._getSubmissionID(contest_id, problem_num);
+      if (!submission_id[0]) {
+        return submission_id;
+      }
+      await this.driver.get(
+        `https://codeforces.com/contest/${contest_id}/submission/${submission_id[1]}`
+      );
+
+      if (
+        await this.wait_till_load(
+          "/html/body/div[6]/div[4]/div/div[4]/div[2]/a",
+          10
+        )
+      ) {
+        let click_btn = await this.driver.findElement(
+          By.xpath("/html/body/div[6]/div[4]/div/div[4]/div[2]/a")
+        );
+        await click_btn.click();
+      }
+      if (
+        await this.wait_till_load('//*[@id="pageContent"]/div[4]/div[3]', 3)
+      ) {
+        let inputs = await this.driver.findElements(By.className("input"));
+        let outputs = await this.driver.findElements(By.className("output"));
+        let tc = [];
+        for (let i = 0; i < inputs.length; i++) {
+          let inputText = await inputs[i].getText();
+          let outputText = await outputs[i].getText();
+          const inputCount = (inputText.match(/\.\.\./g) || []).length;
+
+          const outputCount = (outputText.match(/\.\.\./g) || []).length;
+
+          if (inputCount !== 1 && outputCount !== 1) {
+            tc.push([inputText, outputText]);
+          }
+        }
+        tc = tc.slice(1);
+        await this.close();
+        return [true, tc];
+      }
       await this.close();
-      return [true, tc];
+      return [false, "Error while finding test cases"];
+    } catch (err) {
+      console.error(err);
+      return [false, "Error while finding test cases"];
     }
-    await this.close();
-    return [false, "Error while finding test cases"];
   }
 
   async wait_till_load(xpath_value, delay = 3) {
     try {
       await this.driver.wait(
         until.elementLocated(By.xpath(xpath_value)),
-        100 * 1000
+        3 * 1000
       );
       return true;
     } catch (error) {

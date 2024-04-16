@@ -1,0 +1,5 @@
+YES
+aabb
+aaab
+aaa.
+aaa.

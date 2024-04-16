@@ -1,0 +1,6 @@
+WHITE
+player 16 6
+jury 18 1
+player 18 7
+jury 17 3
+player 17 5

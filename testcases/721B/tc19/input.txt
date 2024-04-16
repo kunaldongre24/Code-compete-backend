@@ -1,0 +1,8 @@
+6 3
+ab
+ac
+ad
+abc
+abd
+abe
+abc

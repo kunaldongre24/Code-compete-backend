@@ -1,0 +1,23 @@
+11 2
+UU
+DD
+UU
+DD
+UU
+DD
+UU
+DD
+LR
+LR
+LR
+LR
+LR
+UU
+DD
+UU
+DD
+UU
+DD
+UU
+DD
+LR

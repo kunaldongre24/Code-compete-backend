@@ -1,6 +1,1 @@
-YES
-a
-ba
-aba
-aba
-abacaba
+4

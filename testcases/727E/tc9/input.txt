@@ -1,0 +1,15 @@
+10 2
+afeaaefacagaabbaadac
+12
+ab
+af
+fa
+ad
+ag
+ea
+ca
+ae
+ba
+ga
+da
+ac

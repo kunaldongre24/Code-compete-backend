@@ -1,0 +1,11 @@
+10
+ab
+bc
+cd
+de
+ef
+gh
+hi
+ij
+ik
+mn

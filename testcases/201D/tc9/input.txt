@@ -1,0 +1,13 @@
+10
+a b c d e f g h i j
+10
+10 e a f b h c d j i g
+10 f e g c j h a d i b
+10 e i f c b h d a g j
+10 j e d a f i c h b g
+10 d e g a c h f i j b
+10 c h g b i f e j a d
+10 f i c g h e a d j b
+10 f b j c a d g i e h
+10 d i c a e f b h g j
+10 g f h e j c d b i a

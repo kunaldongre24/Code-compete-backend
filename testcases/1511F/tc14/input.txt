@@ -1,0 +1,9 @@
+8 1000000
+a
+ccdc
+dac
+b
+bdad
+c
+adbdd
+badbd

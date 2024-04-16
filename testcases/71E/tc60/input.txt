@@ -1,0 +1,3 @@
+17 7
+Sc Ti Kr Cr Zr C F Ne Ge Kr In Se I Cd Sr Ru He
+Br Ra Bi Tc Np Hf Th

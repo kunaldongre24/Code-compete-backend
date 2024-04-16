@@ -1,0 +1,3 @@
+8 8
+Tc Ru Ce Pr Pd Ba Ag Cs
+Cd In Sn Sb Sb Te I Xe

@@ -1,0 +1,3 @@
+2
+move 1 3
+move omitxh 1

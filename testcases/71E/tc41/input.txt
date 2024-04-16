@@ -1,0 +1,3 @@
+13 4
+Na Br V N Cu Nb Se Zn Zn Al C B Cu
+Fr Gd Ce Po

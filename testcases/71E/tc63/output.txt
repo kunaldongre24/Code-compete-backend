@@ -1,0 +1,6 @@
+YES
+H+F->Ne
+Li+Li+B+Si->Mn
+S+Ni->Ru
+Mg+Ar+Ar->Cd
+Ca+Ca+Mn+Cu->Pu

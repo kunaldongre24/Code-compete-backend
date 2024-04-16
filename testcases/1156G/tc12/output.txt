@@ -1,0 +1,4 @@
+3
+aaag=b^c
+aaaf=r#e
+res=aaag$aaaf

@@ -1,0 +1,8 @@
+YES
+Pd->Pd
+Pd->Pd
+Na+In->Nd
+He+O+Mn+Ga->Dy
+Br+Br->Yb
+Y+In->Ra
+Ar+Kr+Rb->Pa

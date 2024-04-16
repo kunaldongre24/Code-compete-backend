@@ -1,0 +1,5 @@
+4
+move 4 2
+move 1 4
+move 73xpqz 1
+move xpteku 3

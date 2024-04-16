@@ -1,1 +1,2 @@
-6 31
+100 5
+aababababbaaaaaaaabbbabaaaabbabaaaabbaabaaaaabababbabaabaaabaaaaaaaabaababbabbaaabaabbabbaaaaabbabba

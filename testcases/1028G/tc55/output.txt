@@ -1,0 +1,2 @@
+type: -1 L: 1 R: 10004205361450474 possible_n: 7046231719871427
+used 5 queries

@@ -1,0 +1,3 @@
+10 5
+Na F Li Zn Sr Kr Rh As Ru Se
+Pa As Rn Y Se

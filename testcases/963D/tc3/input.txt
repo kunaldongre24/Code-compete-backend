@@ -1,2 +1,28 @@
-1 1 4 2
--+
+aabbaabbababbaa
+26
+2 abbaabba
+1 aabbaabbababba
+4 ab
+2 aabbaa
+1 bbaa
+2 bbababba
+4 abb
+1 aa
+2 aabbab
+3 aabb
+4 ba
+1 abbaba
+1 bbaabbab
+1 bab
+1 abbababb
+4 abba
+1 aab
+2 abbab
+1 bbaabbababbaa
+2 bbaabba
+4 bb
+2 baabbababb
+1 aabbaabbababb
+1 abbaabbabab
+7 a
+1 baabbab

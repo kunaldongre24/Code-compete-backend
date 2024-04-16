@@ -1,0 +1,11 @@
+5
+add 2
+add 1
+remove
+remove
+add 5
+add 3
+remove
+add 4
+remove
+remove

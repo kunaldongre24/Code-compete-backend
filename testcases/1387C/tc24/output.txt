@@ -1,0 +1,11 @@
+NO 3
+NO 4
+NO 4
+NO 9
+NO 11
+YES
+YES
+YES
+YES
+YES
+YES

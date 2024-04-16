@@ -1,0 +1,21 @@
+10 10
+aaa
+aaa
+babbb
+bbbaa
+bb
+abbbb
+bbabb
+bb
+b
+a
+2 baab
+2 b
+2 bbbba
+1 3 12
+2 aaa
+2 aabbb
+2 a
+1 1 16
+2 b
+1 10 12

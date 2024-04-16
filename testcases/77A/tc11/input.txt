@@ -1,0 +1,10 @@
+8
+Anka likes Chapay
+Dracul likes Snowy
+Snowy likes Cleo
+Cleo likes Anka
+Cleo likes Troll
+Hexadecimal likes Troll
+Troll likes Cleo
+Snowy likes Dracul
+325432666 254352394 547360304

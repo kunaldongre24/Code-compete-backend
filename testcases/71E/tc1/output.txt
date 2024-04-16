@@ -1,0 +1,4 @@
+YES
+Li+F+Mg+P->Y
+C+K+Mn->Sn
+Sc+Co+Zn->Pt

@@ -1,0 +1,10 @@
+9 10 5 4 3
+DcAaa caCBc
+caCBc B
+B b
+b cdddb
+cdddb aDBAb
+aDBAb B
+B aDBAb
+aDBAb cdddb
+cdddb aDCda

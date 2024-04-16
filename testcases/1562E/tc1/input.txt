@@ -1,5 +1,15 @@
-4
-1 1
-999999999 1000000000
-8 26
-1 999999999
+7
+5
+acbac
+8
+acabacba
+12
+aaaaaaaaaaaa
+10
+abacabadac
+8
+dcbaabcd
+3
+cba
+6
+sparky

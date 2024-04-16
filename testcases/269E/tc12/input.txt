@@ -1,0 +1,13 @@
+4 8
+L T 1 1
+L B 2 1
+R T 1 2
+R B 2 2
+L T 3 3
+B R 3 3
+R T 4 4
+T B 5 4
+T B 6 5
+T B 7 6
+T B 8 7
+B L 8 4

@@ -1,0 +1,2 @@
+WHITE
+player 11 7

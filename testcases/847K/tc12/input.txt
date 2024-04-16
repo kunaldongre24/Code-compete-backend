@@ -1,0 +1,6 @@
+5 3 2 1 1
+C CB
+CB C
+C d
+CB d
+CB C

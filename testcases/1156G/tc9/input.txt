@@ -1,0 +1,4 @@
+3
+d=a$b
+res=d^c
+ddd=c#b

@@ -1,0 +1,9 @@
+5
+a
+aa
+aaa
+aaaa
+b
+ba
+baa
+baaa

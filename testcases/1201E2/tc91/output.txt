@@ -1,0 +1,2 @@
+WHITE
+player 19 10

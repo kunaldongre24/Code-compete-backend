@@ -1,0 +1,9 @@
+8 1000000000
+bbaba
+bab
+baabb
+abbba
+a
+b
+bbbab
+aaab

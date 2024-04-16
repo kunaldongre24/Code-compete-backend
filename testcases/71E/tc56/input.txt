@@ -1,0 +1,3 @@
+16 6
+V Rh Nd Ce S Mn O N Cu Ni Ne Ne Y V Co Li
+Fr Tm Cf Es Cr Se

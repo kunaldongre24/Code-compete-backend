@@ -1,0 +1,22 @@
+abcdefffffffffffffff
+20
+1 acf
+2 cdef
+3 ef
+4 def
+5 adef
+6 acdef
+7 bdef
+8 abdf
+9 bcdf
+10 abf
+11 abf
+12 bcdf
+13 df
+14 df
+15 abcdf
+16 abcde
+17 abcde
+18 abcde
+19 abcde
+20 abcde

@@ -1,0 +1,11 @@
+.xo oxx xoo
+ooo .xo xxx
+oxo oox xoo
+           
+x.o xoo xxx
+xo. oxo oxx
+x.x xoo o.o
+           
+xoo xox oxx
+ooo !x! .xx
+xox x!! xoo

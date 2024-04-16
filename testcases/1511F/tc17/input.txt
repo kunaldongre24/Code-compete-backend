@@ -1,0 +1,9 @@
+8 1000000000
+a
+acbca
+abcab
+aabcb
+b
+cbb
+ba
+baaca

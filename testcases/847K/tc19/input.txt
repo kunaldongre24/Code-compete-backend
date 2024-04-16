@@ -1,0 +1,9 @@
+8 8 2 4 5
+aBBba C
+Cc CcBd
+d C
+dD dDba
+dDba c
+Cc d
+d dD
+dD dDba

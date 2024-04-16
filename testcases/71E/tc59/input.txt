@@ -1,0 +1,3 @@
+17 8
+Nb Tc O Si Zr Ti Tc Ce C Ar Sc Sb S Ag I Rh Li
+Se Sb I Mo Am Tl Fr Rn

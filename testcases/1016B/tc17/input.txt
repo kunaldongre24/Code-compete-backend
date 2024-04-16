@@ -1,0 +1,8 @@
+25 2 5
+truongminhtriyeutranmaile
+tr
+1 25
+2 24
+1 12
+12 25
+1 2

@@ -13,6 +13,8 @@ const { v4: uuidv4 } = require("uuid");
 const UserOTPVerification = require("../models/UserOTPVerification");
 const bcrypt = require("bcrypt");
 const path = require("path");
+const generateAvatarUrl = require("../helper/generateAvatarUrl");
+const { default: axios } = require("axios");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -36,6 +38,7 @@ const AuthController = {
         username: 1,
         name: 1,
         rating: 1,
+        svg: 1,
         createdOn: 1,
         role: 1,
         _id: 1,
@@ -81,7 +84,16 @@ const AuthController = {
   //   });
   //   res.send({ msg: "Users deleted" });
   // },
-
+  async generateAndSaveAvatar(req, res) {
+    const url = generateAvatarUrl("username");
+    console.log(url);
+    try {
+      const response = await axios.get(url);
+      res.send(response.data);
+    } catch (error) {
+      console.error("Error generating or saving avatar:", error);
+    }
+  },
   async UpdateUser(req, res) {
     const { name, _id } = req.body;
     if (name === undefined) {
@@ -125,6 +137,7 @@ const AuthController = {
   async signup(req, res) {
     try {
       var { password, name, username, email } = req.body;
+
       if (name.trim() === "") {
         return res.send({ userCreated: false, msg: "Name cannot be empty" });
       }
@@ -149,20 +162,34 @@ const AuthController = {
       const usernameRegex = /^[a-zA-Z0-9_]+$/;
       if (!usernameRegex.test(username)) {
         // Handle invalid characters in the username
-        res.status(400).json({ error: "Invalid characters in the username" });
+        res.status(400).json({ msg: "Invalid characters in the username" });
         return;
       }
       const newUser = await User.find({ username });
-      if (newUser.length) {
+      const existingEmail = await User.find({ email });
+      if (newUser.length > 0) {
         return res.send({ userCreated: false, msg: "Username already taken!" });
       }
+      if (existingEmail.length > 0) {
+        return res.send({
+          userCreated: false,
+          msg: "An account already exists with this email.",
+        });
+      }
+      const url = generateAvatarUrl(username);
+
+      const response = await axios.get(url);
+      const avatar = response.data;
+      console.log(avatar);
+      const svg = avatar.toString();
 
       User.register(
         new User({
-          username,
+          username: username.toLowerCase(),
           name,
-          email,
+          email: email.toLowerCase(),
           role: "user",
+          svg,
           createdOn: Date.now(),
         }),
         password,
@@ -430,7 +457,6 @@ const AuthController = {
         });
 
         await user.save();
-
         const newAccessToken = getRefreshToken({ _id: userId });
         res.cookie("jsession", newAccessToken, COOKIE_OPTIONS);
         res.status(200).json({ success: true, token: newAccessToken });
@@ -485,7 +511,7 @@ const AuthController = {
   async blockUser(req, res) {},
   async sendOtpVerificationEmail({ _id, email }, res) {
     try {
-      const currentUrl = "http://localhost:8000";
+      const currentUrl = "https://fly777.in";
       const uniqueString = uuidv4() + _id;
       const link = `${currentUrl}/api/v1/auth/verify/${_id}/${uniqueString}`;
       const mailOptions = {

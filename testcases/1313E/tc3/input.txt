@@ -1,2 +1,4 @@
-7
-1 2 1 2 1 2 1
+9 12
+abcabcabc
+xyzxyzxyz
+abcabcayzxyz

@@ -1,6 +1,21 @@
-5
-1000000000 1
-1000000000 2
-1000000000 3
-1000000000 4
-1000000000 5
+10 10 3
+bbb
+bd_
+_bc
+b_c
+dba
+dad
+_aa
+ad_
+acc
+_ca
+abd 4
+cdd 9
+ccc 8
+bbc 6
+bab 1
+dda 6
+cca 1
+dca 4
+cac 5
+bdb 10

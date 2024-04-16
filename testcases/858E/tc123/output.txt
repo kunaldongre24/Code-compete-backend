@@ -1,0 +1,7 @@
+6
+move 4 1
+move q25te0 4
+move 5 2
+move oclx1h 5
+move 7l3kg1 3
+move rdm6fu 6

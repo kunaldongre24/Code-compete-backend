@@ -1,0 +1,3 @@
+17 6
+Tc Li Zn Ne Tc Pd S Fe Tc S Co Cr Mn F Fe K Sc
+Au Fm Yb Fe Tm Bi

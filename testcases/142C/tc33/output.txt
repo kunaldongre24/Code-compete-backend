@@ -1,0 +1,9 @@
+3
+CCC
+.C.
+BC.
+BBB
+B..
+.A.
+.A.
+AAA

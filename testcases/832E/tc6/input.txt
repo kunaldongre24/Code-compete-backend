@@ -1,0 +1,10 @@
+2 2
+ec
+be
+6
+eb
+ce
+de
+dd
+ac
+be

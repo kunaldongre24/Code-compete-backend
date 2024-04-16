@@ -1,4 +1,2 @@
-YES
-qwerty
-qwerty
-qwerty
+1
+42 

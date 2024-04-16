@@ -1,0 +1,13 @@
+11
+Snowy likes Dracul
+Anka likes Dracul
+Chapay likes Snowy
+Hexadecimal likes Troll
+Anka likes Cleo
+Chapay likes Dracul
+Anka likes Chapay
+Snowy likes Troll
+Anka likes Hexadecimal
+Cleo likes Chapay
+Troll likes Cleo
+100 100 100

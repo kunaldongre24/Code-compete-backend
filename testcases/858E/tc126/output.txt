@@ -1,0 +1,4 @@
+3
+move 5 2
+move 1 5
+move hmpfsz 1

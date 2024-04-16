@@ -1,0 +1,6 @@
+1
+int f(int n)
+{
+if (n == 0) return 153/12+5;
+return 32767/n;
+}

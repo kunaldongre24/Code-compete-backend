@@ -1,7 +1,2 @@
-6
-1 1 1
-1 1 1
-1 1 1
-1 1 1
-1 1 1
-1 1 1
+52 10 7
+eTnmeHRmaTetSTsGqigLFYciMFLbwJHCScPRRIvxCFcevZVRmprk

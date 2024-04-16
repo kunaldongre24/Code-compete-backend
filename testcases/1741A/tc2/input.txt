@@ -1,0 +1,7 @@
+6
+S L
+L S
+M L
+L M
+S M
+M S

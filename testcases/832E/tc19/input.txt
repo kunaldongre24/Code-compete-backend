@@ -1,0 +1,20 @@
+3 4
+baac
+acec
+cecc
+15
+bdbc
+aeca
+eaab
+eeea
+eddb
+ddaa
+bcbc
+dcea
+edbc
+beeb
+bccb
+bbad
+ccea
+ecdd
+abbb

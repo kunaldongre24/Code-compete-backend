@@ -1,0 +1,10 @@
+3 7
+cedcded
+ebeaaaa
+cbecdab
+5
+dcbdbca
+dcbbdaa
+acbecae
+ebbabbd
+cceddce

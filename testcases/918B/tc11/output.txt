@@ -1,0 +1,2 @@
+block 192.168.10.12; #main
+proxy 192.167.10.12; #replica

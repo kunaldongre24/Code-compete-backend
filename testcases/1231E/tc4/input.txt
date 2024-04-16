@@ -1,0 +1,16 @@
+5
+2
+ab
+aa
+2
+aa
+aa
+2
+ab
+ba
+2
+bb
+ba
+3
+aab
+abb

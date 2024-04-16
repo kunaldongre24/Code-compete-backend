@@ -1,0 +1,4 @@
+Solution exists.
+Replace J1 with 5D and J2 with TH.
+Put the first square to (1, 9).
+Put the second square to (1, 12).

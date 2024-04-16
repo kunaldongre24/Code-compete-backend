@@ -1,0 +1,4 @@
+3
+move 4 0
+move 2 4
+move 0 2

@@ -1,16 +1,4 @@
-5
-3
-aab
-bcc
-4
-cabc
-abcb
-3
-abc
-tsr
-4
-aabd
-cccd
-5
-abcbd
-bcdda
+3 3
+3 5 6
+1 7 9
+4 8 2

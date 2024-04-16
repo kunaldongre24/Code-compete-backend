@@ -1,5 +1,8 @@
-qqqqqqqqqq qqqqqqqq
-3
-qqqqqqqq qqqqqqqqq
-qqqqqqqqq qqqqq
-qqqqq q
+10 7
+8 3
+1 8
+8 2
+8 10
+6 8
+4 8
+8 5

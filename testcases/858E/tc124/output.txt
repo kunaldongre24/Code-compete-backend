@@ -1,0 +1,6 @@
+5
+move 5 3
+move 1 5
+move wrrcmu 1
+move 3r4wqz 4
+move p4tuyt 6

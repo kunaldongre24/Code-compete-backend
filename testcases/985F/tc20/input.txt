@@ -1,0 +1,3 @@
+80 1
+aabbbbbaaabaaabbabaabaababbabbbbabbaaabababbabaaaaabbaaaabaabaabbaaaaabaaaabaaba
+1 41 40

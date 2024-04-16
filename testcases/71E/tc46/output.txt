@@ -1,0 +1,9 @@
+YES
+C->C
+K->K
+B+F+Na+P->Zr
+Zr->Zr
+Ne+Kr->Pd
+P+Sr->I
+Be+Al+Rh->Sm
+Ge+Ru->Os

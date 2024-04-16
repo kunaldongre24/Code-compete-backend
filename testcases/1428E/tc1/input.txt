@@ -1,4 +1,2 @@
-3
-AAA
-BABA
-AABBBABBBB
+3 6
+5 3 1

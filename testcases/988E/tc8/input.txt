@@ -1,6 +1,1 @@
-5
-abab
-bab
-ba
-ab
-a
+50267

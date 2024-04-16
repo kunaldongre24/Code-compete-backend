@@ -1,0 +1,3 @@
+YES
+He+B->N
+Li+Be->N

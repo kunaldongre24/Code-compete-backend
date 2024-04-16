@@ -1,2 +1,9 @@
-1
-1 999999999
+5 3 4
+_b_d
+__b_
+aaaa
+ab__
+_bcd
+abcd 3
+abba 2
+dbcd 5

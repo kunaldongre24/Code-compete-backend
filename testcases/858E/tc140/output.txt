@@ -1,0 +1,6 @@
+5
+move 5 3
+move 2 5
+move 6 2
+move dx2yu0 6
+move 7igwk9 4

@@ -1,0 +1,11 @@
+10
+CA
+BA
+CC
+AC
+CA
+CB
+AC
+BB
+AB
+CB

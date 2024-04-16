@@ -1,12 +1,10 @@
-? 1
-? 2
-R
-? 1
-? 2
-? 3
-R
-? 1
-? 2
-? 4
-R
-! 3
+Yes
+Yes
+Yes
+No
+No
+Yes
+Yes
+Yes
+Yes
+No

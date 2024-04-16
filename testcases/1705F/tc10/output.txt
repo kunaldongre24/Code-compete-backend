@@ -1,0 +1,5 @@
+4
+TTT 2
+FTF 0
+FFT 2
+TFT 3

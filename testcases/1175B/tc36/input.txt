@@ -1,0 +1,29 @@
+28
+add
+for 47
+add
+for 36
+add
+for 27
+add
+for 64
+add
+end
+for 52
+add
+end
+add
+end
+add
+end
+add
+end
+add
+for 10
+add
+for 15
+add
+end
+add
+end
+add

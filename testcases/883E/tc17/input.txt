@@ -1,0 +1,7 @@
+3
+*a*
+4
+aaa
+cac
+aab
+baa

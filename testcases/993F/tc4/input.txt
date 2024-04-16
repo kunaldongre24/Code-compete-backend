@@ -1,0 +1,3 @@
+4 3 1
+nand ..xx nand x..x nand x.x.
+nand .xx

@@ -1,0 +1,20 @@
+10 2 2
+N
+NN
+E
+EN
+N
+NE
+E
+EE
+E
+EN
+N
+EN
+N
+NN
+E
+EN
+N
+NN
+N

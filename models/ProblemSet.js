@@ -32,7 +32,7 @@ var ProblemSet = new mongoose.Schema({
   samples: [
     {
       input: { type: String, required: true },
-      output: { type: String, required: true },
+      output: { type: String },
     },
   ],
   testcases_count: {

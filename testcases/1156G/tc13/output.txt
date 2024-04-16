@@ -1,0 +1,3 @@
+2
+aaab=p2^p2
+res=aaab^p0

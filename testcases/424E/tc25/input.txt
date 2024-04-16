@@ -1,0 +1,7 @@
+6
+BRR
+BBG
+BGR
+GBR
+GBB
+RBG

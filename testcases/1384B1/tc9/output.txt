@@ -1,14 +1,1 @@
-abcdefghij
-bcdefghijk
-bcdefghijl
-abcdefg
-acdefgh
-acdefgi
-adefghj
-abcde
-abcdf
-acdeg
-abcdefgh
-abcdefgi
-abcdef
-abcdeg
+Yes

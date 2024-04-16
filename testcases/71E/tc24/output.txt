@@ -1,0 +1,5 @@
+YES
+H+H->He
+H+H+H+H+H->B
+H+H+H+H+H->B
+H+H+H+H+H->B

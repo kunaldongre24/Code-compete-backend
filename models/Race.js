@@ -1,12 +1,6 @@
 const mongoose = require("mongoose"); // Erase if already required
 
 var Race = new mongoose.Schema({
-  problemSets: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProblemSet",
-    },
-  ],
   admin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -16,7 +10,22 @@ var Race = new mongoose.Schema({
     ref: "Room",
     required: true,
   },
-  tpp: { type: Number, required: true },
+
+  members: {
+    type: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        isSpectator: {
+          type: Boolean,
+          required: true,
+        },
+      },
+    ],
+    required: true,
+  },
   maxRating: { type: Number, required: true },
   minRating: {
     type: Number,

@@ -1,0 +1,6 @@
+YES
+N+Na->Ar
+N+S->V
+Fe+Fe->Te
+C+O+Sc+Sc+Co->Bi
+Ca+Ca+V+V->Rn

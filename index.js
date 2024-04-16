@@ -10,7 +10,6 @@ const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const session = require("express-session");
 const jwt = require("jsonwebtoken");
-
 const {
   addUser,
   getUser,
@@ -20,20 +19,25 @@ const {
   handleMute,
   handleKickUser,
   updateSpectate,
+  getUserById,
 } = require("./helper/users.js");
 const {
-  updateTpp,
   updateRounds,
   updateMinRating,
   updateMaxRating,
 } = require("./helper/rooms.js");
-const Room = require("./models/Room.js");
-
+const {
+  updateRaceUserProblemsetMap,
+  findRaceUserProblemsetMap,
+} = require("./helper/race.js");
+const Race = require("./models/Race.js");
+const ResolveInternalRaces = require("./utils/ResolveIntervalRaces");
 const server = require("http").createServer(app);
 const origin = [
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3002",
+  "https://iccp-live.web.app",
 ];
 require("./config/database.js");
 require("./strategy/LocalStrategy");
@@ -51,14 +55,10 @@ io.use((socket, next) => {
 
   jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
     if (err) {
-      console.log(err);
+      console.error(err);
       return next(new Error("Authentication error: Invalid token"));
     }
     socket.userId = decoded._id;
-    const room = await Room.findOne({ admin: decoded._id }); // Assuming you have a Room model
-    if (room) {
-      socket.adminRoom = room.roomId;
-    }
     next();
   });
 });
@@ -66,111 +66,126 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   socket.on("login", async ({ userId, room }, callback) => {
     const { user, error } = await addUser(socket.id, userId, room);
-    if (error) return callback(error);
+    if (error) return callback && callback(error); // Check if callback is defined
     if (user) {
       socket.roomId = room;
-      socket.join(user.roomId);
+      socket.join(user.roomId.toString());
       socket.join(userId);
-      socket.in(room).emit("notification", {
+      io.in(user.roomId.toString()).emit("notification", {
         type: 1,
         description: `${user.userId.username} entered the room`,
       });
+      const users = await getUsers(user.roomId);
+      io.in(user.roomId.toString()).emit("users", users);
     }
-    const users = await getUsers(room);
-    io.in(room).emit("users", users);
-    callback();
+    if (callback) callback(); // Check if callback is defined
+  });
+  socket.on("ping", () => {
+    io.emit("pong");
+  });
+  socket.on("setInRace", async ({ id }, callback) => {
+    const race = await Race.findOne({ _id: id });
+    if (!race) {
+      return callback("Not found!");
+    }
+    socket.join(id.toString());
+  });
+  socket.on("spectateUser", async ({ id, raceId }, callback) => {
+    const user = await getUserById(socket.userId);
+    if (!(user && user.isSpectator)) {
+      return callback("Not allowed!");
+    }
+    socket.join("spectate" + id);
+    const raceUserProblemsetMap = await findRaceUserProblemsetMap(id, raceId);
+    const code = raceUserProblemsetMap
+      ? raceUserProblemsetMap.code
+      : "#include<iostream>\nusing namespace std;\nint main(){\n\n\treturn 0;\n}";
+    io.in("spectate" + socket.userId).emit("setSpectateUser", {
+      userId: socket.userId,
+      code,
+    });
+  });
+  socket.on("leaveSpectate", (id) => {
+    socket.leave("spectate" + id);
+  });
+  socket.on("updateCode", (x) => {
+    const { code, raceId, problemId } = x;
+    updateRaceUserProblemsetMap(code, socket.userId, raceId, problemId);
+    io.in("spectate" + socket.userId).emit("setSpectateUser", {
+      userId: socket.userId,
+      code,
+    });
+  });
+  socket.on("updatePos", (x) => {
+    const { code, pos, raceId, problemId } = x;
+    updateRaceUserProblemsetMap(code, pos, socket.userId, raceId, problemId);
+    io.in("spectate" + socket.userId).emit("setSpectateUser", {
+      userId: socket.userId,
+      code,
+      pos,
+    });
   });
   socket.on("updateStatus", async (status, callback) => {
     const users = await updateStatus(socket.id, status);
-    io.in(users[0].roomId).emit("users", users);
+    io.in(users[0].roomId.toString()).emit("users", users);
     callback();
   });
   socket.on("updateSpectate", async (status, callback) => {
     const users = await updateSpectate(socket.id, status);
-    io.in(users[0].roomId).emit("notification", {
+    io.in(users[0].roomId.toString()).emit("notification", {
       type: 2,
       description: `${
         users.filter((x) => x.socketId === socket.id)[0].userId.username
       } ${status ? "is now spectating." : "has joined the race."}`,
     });
-    io.in(users[0].roomId).emit("users", users);
+    io.in(users[0].roomId.toString()).emit("users", users);
     callback();
   });
   socket.on("handleMute", async ({ userId, status }) => {
-    if (socket.adminRoom && socket.adminRoom === socket.roomId) {
-      const user = await handleMute(userId, status);
-      if (user) {
-        io.in(userId).emit("notification", {
-          type: !status,
-          description: `You have been ${status ? "muted" : "unmuted"}!`,
-        });
-        const users = await getUsers(user.roomId);
-        io.in(users[0].roomId).emit("users", users);
-      }
+    const user = await handleMute(userId, status, socket.userId);
+    if (user) {
+      const users = await getUsers(user.roomId);
+      io.in(user.roomId.toString()).emit("users", users);
+      io.in(userId).emit("notification", {
+        type: !status,
+        description: `You have been ${status ? "muted" : "unmuted"}!`,
+      });
     }
   });
 
   socket.on("kickUser", async (userId) => {
-    if (socket.adminRoom && socket.adminRoom === socket.roomId) {
-      const user = await handleKickUser(userId);
-      if (user) {
-        io.in(user.roomId).emit("notification", {
-          type: 0,
-          description: `${user.userId.username} has been kicked!`,
-        });
-        const users = await getUsers(user.roomId);
-        io.in(users[0].roomId).emit("users", users);
-      }
+    const user = await handleKickUser(userId, socket.userId);
+    if (user) {
+      io.in(user.roomId.toString()).emit("notification", {
+        type: 0,
+        description: `${user.userId.username} has been kicked!`,
+      });
+      const users = await getUsers(user.roomId);
+      io.in(users[0].roomId.toString()).emit("users", users);
     }
   });
 
-  socket.on("updateTpp", async ({ val, roomId }, callback) => {
-    if (socket.adminRoom && socket.adminRoom === socket.roomId) {
-      const room = await updateTpp(roomId, val);
-      io.in(room.roomId).emit("room", room);
-      io.in(room.roomId).emit("notification", {
-        type: 2,
-        description: `Tpp changed to ${val}.`,
-      });
-    }
-    callback();
-  });
-  socket.on("updateRounds", async ({ val, roomId }, callback) => {
-    if (socket.adminRoom && socket.adminRoom === socket.roomId) {
-      const room = await updateRounds(roomId, val);
-      io.in(room.roomId).emit("room", room);
-      io.in(room.roomId).emit("notification", {
-        type: 2,
-        description: `No. of rounds changed to ${val}.`,
-      });
-    }
-    callback();
-  });
   socket.on("updateMinRating", async ({ val, roomId }, callback) => {
-    if (socket.adminRoom && socket.adminRoom === socket.roomId) {
-      const room = await updateMinRating(roomId, val);
-      io.in(room.roomId).emit("room", room);
-      io.in(room.roomId).emit("notification", {
-        type: 2,
-        description: `Min Rating changed to ${val}.`,
-      });
-    }
+    const room = await updateMinRating(roomId, val, socket.userId);
+    io.in(room._id.toString()).emit("room", room);
+    io.in(room._id.toString()).emit("notification", {
+      type: 2,
+      description: `Min Rating changed to ${val}.`,
+    });
     callback();
   });
   socket.on("updateMaxRating", async ({ val, roomId }, callback) => {
-    if (socket.adminRoom && socket.adminRoom === socket.roomId) {
-      const room = await updateMaxRating(roomId, val);
-      io.in(room.roomId).emit("room", room);
-      io.in(room.roomId).emit("notification", {
-        type: 2,
-        description: `Max Rating changed to ${val}.`,
-      });
-    }
+    const room = await updateMaxRating(roomId, val, socket.userId);
+    io.in(room._id.toString()).emit("room", room);
+    io.in(room._id.toString()).emit("notification", {
+      type: 2,
+      description: `Max Rating changed to ${val}.`,
+    });
     callback();
   });
   socket.on("sendMessage", async (message, callback) => {
     const user = await getUser(socket.id);
-    io.in(user.roomId).emit("message", {
+    io.in(user.roomId.toString()).emit("message", {
       user: user.userId.username,
       text: message,
     });
@@ -181,12 +196,12 @@ io.on("connection", (socket) => {
     console.log("User disconnected");
     const user = await deleteUser(socket.id);
     if (user) {
-      io.in(user.roomId).emit("notification", {
+      io.in(user.roomId.toString()).emit("notification", {
         type: 0,
         description: `${user.userId.username} left the room`,
       });
       const users = await getUsers(user.roomId);
-      io.in(user.roomId).emit("users", users);
+      io.in(user.roomId.toString()).emit("users", users);
     }
   });
 });
@@ -208,13 +223,14 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
+      secure: true,
       httpOnly: true,
       sameSite: "None",
       maxAge: 60000,
     },
   })
 );
-
+ResolveInternalRaces(io);
 app.use(passport.initialize());
 app.use(passport.session());
 app.disable("etag");

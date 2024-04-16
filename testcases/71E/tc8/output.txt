@@ -1,0 +1,4 @@
+YES
+Cl+Ar->Br
+Ti+V->Rh
+Ni+Cu->La

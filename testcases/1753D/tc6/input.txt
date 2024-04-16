@@ -1,0 +1,7 @@
+5 5
+11 5
+LR##U
+#LR#D
+U#LR.
+DLR#U
+LR#.D

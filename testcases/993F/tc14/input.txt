@@ -1,0 +1,3 @@
+2 2 50
+and xx or xx
+nand xx or xx nor xx nor xx and xx and xx nand xx nand xx or xx nor xx or xx and xx and xx nand xx or xx nand xx and xx and xx nor xx or xx nand xx and xx nor xx or xx and xx or xx nand xx nor xx or xx nor xx or xx nor xx and xx and xx or xx nor xx or xx nor xx nor xx nor xx nand xx nand xx or xx or xx nand xx nor xx nand xx nand xx and xx or xx

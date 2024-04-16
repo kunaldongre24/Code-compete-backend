@@ -1,0 +1,5 @@
+4
+move 4 2
+move 1 4
+move xc98l2 1
+move 410jiy 3

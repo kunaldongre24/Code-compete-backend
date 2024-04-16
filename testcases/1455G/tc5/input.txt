@@ -1,0 +1,13 @@
+12 10
+set 10 5
+if 2
+set 0 3
+set 4 2
+set 2 4
+set 8 7
+set 6 2
+end
+set 2 2
+set 2 2
+set 3 2
+set 6 1

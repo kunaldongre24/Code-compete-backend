@@ -1,0 +1,12 @@
+6 3
+ecd
+eea
+abb
+bbb
+eed
+aeb
+4
+ced
+bbb
+edb
+abe

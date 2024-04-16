@@ -1,0 +1,7 @@
+BLACK
+jury 54 49
+player 53 54
+jury 53 51
+player 52 52
+jury 54 49
+player 51 50

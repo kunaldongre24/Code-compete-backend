@@ -1,0 +1,3 @@
+17 11
+Mg As Sc Se Ni Cu Ti Sr Mo Sn Se Fe Sn Se Fe Y Pd
+Cr Cu Ca Hf Fr Tm K In Tc La Am

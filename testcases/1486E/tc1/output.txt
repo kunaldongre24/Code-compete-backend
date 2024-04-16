@@ -1,6 +1,1 @@
-YES
-YES
-YES
-NO
-NO
-YES
+0 98 49 25 114 

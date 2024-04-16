@@ -1,0 +1,3 @@
+17 6
+Ti Cu Ca O Be F He Sc Al Sc Cu Zn Li S V Mg N
+K Ra N Ag Na Bk

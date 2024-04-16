@@ -1,0 +1,3 @@
+16 5
+Sr Kr S S Rh Ar Cu Sc O Be Ca Ga B Be Tc Ne
+Th Tc Fr Ir Ag

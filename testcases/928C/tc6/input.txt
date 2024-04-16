@@ -1,0 +1,21 @@
+5
+abbzzz 646068
+0
+
+zabza 468048
+2
+bb 902619
+zabza 550912
+
+zabza 217401
+2
+abbzzz 646068
+bb 902619
+
+zabza 550912
+1
+zabza 217401
+
+bb 902619
+1
+abbzzz 646068

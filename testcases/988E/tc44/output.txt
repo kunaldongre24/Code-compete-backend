@@ -1,4 +1,1 @@
-YES
-a
-ba
-bbab
+0

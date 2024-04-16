@@ -1,0 +1,10 @@
+5 4
+eebe
+bbad
+aabc
+aeac
+eeac
+3
+eeba
+cebe
+caab

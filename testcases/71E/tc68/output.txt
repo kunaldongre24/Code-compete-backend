@@ -1,0 +1,9 @@
+YES
+Li+C->F
+Na->Na
+Si->Si
+Ar->Ar
+Ne+S->Fe
+Al+Sc->Se
+Al+P+Ni->Ba
+O+Cl+Sc+Ti+V->Pa

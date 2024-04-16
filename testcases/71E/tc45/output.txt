@@ -1,0 +1,8 @@
+YES
+Cr->Cr
+H+Ge->As
+Ne+Pd->Ba
+Co+Ag->W
+Ga+Ag->Pt
+Ga+In->Hg
+He+Be+Cr+As+Se->Bk

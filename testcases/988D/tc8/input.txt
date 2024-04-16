@@ -1,6 +1,2 @@
-5
-abab
-bab
-ba
-ab
-a
+2
+1 2

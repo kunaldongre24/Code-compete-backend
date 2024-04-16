@@ -1,2 +1,11 @@
-1
-1000 1000000000
+5 5 3
+caa
+abb
+cbb
+aac
+cbc
+cbc 5
+aac 4
+abb 2
+cbb 3
+caa 1

@@ -1,4 +1,4 @@
-Bob
-Tie
-Alice
-Alice
+7
+6
+1000
+5

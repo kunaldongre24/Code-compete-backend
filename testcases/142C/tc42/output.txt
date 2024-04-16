@@ -1,0 +1,7 @@
+5
+E..DDD
+EEECD.
+ECCCD.
+BBBCA.
+.B..A.
+.B.AAA

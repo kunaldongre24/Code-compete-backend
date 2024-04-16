@@ -8,6 +8,7 @@ const checkUser = require("../middleware/checkUser");
 
 router.get("/getUser/:id", AuthController.getUserById);
 router.get("/me", verifyUser, AuthController.getMyInfo);
+router.get("/getAvatar", AuthController.generateAndSaveAvatar);
 router.get(
   "/getUserByUsername/:username",
   verifyUser,

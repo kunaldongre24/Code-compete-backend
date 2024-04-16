@@ -1,0 +1,3 @@
+2
+move qb4crj 1
+move qy2kmc 2

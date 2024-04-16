@@ -1,0 +1,20 @@
+7 12
+Pasha
+Lesha
+Vanya
+Taras
+Nikita
+Sergey
+Andrey
+Pasha Taras
+Pasha Nikita
+Pasha Andrey
+Pasha Sergey
+Lesha Taras
+Lesha Nikita
+Lesha Andrey
+Lesha Sergey
+Vanya Taras
+Vanya Nikita
+Vanya Andrey
+Vanya Sergey

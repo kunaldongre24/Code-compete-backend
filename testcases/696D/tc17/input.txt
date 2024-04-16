@@ -1,0 +1,5 @@
+3 9874389277
+64 75 63
+tcttttaggatagtgtagtatgcggtcataccgtttacatccgcgggagttgagaatcggtcggaggcgtaaggcatcg
+cctctct
+ctattaacaatgtgccaacgtctatgccttgagccactggatccggaccccacgcgcgatccgctccgagacgtcggatatccttggcggtacgtgaggtggattcgcggcagt

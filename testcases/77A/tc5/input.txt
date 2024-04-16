@@ -1,0 +1,10 @@
+8
+Snowy likes Anka
+Hexadecimal likes Snowy
+Troll likes Dracul
+Hexadecimal likes Troll
+Snowy likes Troll
+Anka likes Snowy
+Snowy likes Chapay
+Anka likes Chapay
+70 70 70

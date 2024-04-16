@@ -1,4 +1,4 @@
-D
-LR
-LRULR
-DDDDDD
+YES
+1 1
+4 4
+1 1

@@ -1,3 +1,11 @@
-94 49
-bgadgfegbbdgeecgcgagfadceefdbdabedfcfbggdcdgdfcadccddbeccbeedbbedegbgdaeabeagbbacbbbfcadceaded
-bgagebdeegdfcadccddbcbeedbbdgbgdaeaeabbacbbfadade
+10 10
+48 33 96 67 67 59 35 41 14 86
+48 33 78 77 90 59 35 15 14 86
+48 33 96 77 81 59 35 15 14 86
+77 33 96 77 67 59 35 22 14 86
+90 33 96 77 67 59 35 15 9 86
+48 75 96 77 13 59 35 15 14 86
+48 33 96 77 96 61 35 15 14 86
+48 33 67 77 67 59 35 66 14 86
+48 33 96 77 14 59 35 15 19 86
+48 33 96 77 61 59 35 2 14 86

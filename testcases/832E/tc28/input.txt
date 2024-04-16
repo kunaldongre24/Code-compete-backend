@@ -1,0 +1,7 @@
+4 3
+ddd
+aec
+bea
+aba
+1
+bac

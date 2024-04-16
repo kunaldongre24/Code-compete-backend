@@ -1,0 +1,6 @@
+1
+ababacabababa
+3
+ababa
+ac
+bacabababa

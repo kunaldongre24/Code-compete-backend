@@ -1,0 +1,3 @@
+64 1
+aabbaabababbaababababbabbabaaabbbbbaaaababbaaabbbaabbaaaabbaaaba
+1 33 32

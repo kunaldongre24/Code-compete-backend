@@ -1,0 +1,3 @@
+17 8
+Sc C Li Mg Ar Al Al C Na Tc Mo Cl O Sn S Ar Sc
+Sc Rh Cu Al Pt C Lu Cs

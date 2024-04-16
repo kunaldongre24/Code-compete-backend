@@ -1,0 +1,11 @@
+10
+8 CA
+1 AB
+1 CA
+7 CA
+8 BC
+3 CA
+9 AC
+7 CA
+7 AB
+6 AC

@@ -1,0 +1,5 @@
+7
+aaaabba
+bbaaaab
+aabbbbb
+bbbbbbb

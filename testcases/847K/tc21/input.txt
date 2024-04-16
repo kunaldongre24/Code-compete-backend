@@ -1,0 +1,11 @@
+10 3 2 6 2
+bCbA a
+aDA Bba
+bCbA aDA
+Bba caa
+bCbA Bba
+caa aDA
+aDA bCbA
+bCbA dBba
+dBba bCbA
+dBba a

@@ -1,0 +1,4 @@
+3
+move 3 1
+move s0bdnf 3
+move y9144q 4

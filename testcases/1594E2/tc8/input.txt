@@ -1,0 +1,11 @@
+5
+9
+31 yellow
+30 green
+26 yellow
+13 red
+2 red
+22 white
+12 red
+6 orange
+29 blue

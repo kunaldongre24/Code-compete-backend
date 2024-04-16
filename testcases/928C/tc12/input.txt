@@ -1,0 +1,19 @@
+5
+cf 1
+2
+db 1
+db 2
+
+db 2
+1
+old 1
+
+db 1
+1
+old 2
+
+old 1
+0
+
+old 2
+0

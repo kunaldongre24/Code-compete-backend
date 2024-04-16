@@ -1,0 +1,5 @@
+4 10 6 2 7
+bbCc c
+d Bdccd
+Bdccd c
+c Bdccd

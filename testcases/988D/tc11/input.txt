@@ -1,5 +1,2 @@
-4
-a
-ba
-abacabac
-b
+2
+-4 -2

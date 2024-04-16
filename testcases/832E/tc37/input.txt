@@ -1,0 +1,12 @@
+5 5
+bbbbb
+abbbb
+aabbb
+aaabb
+aaaab
+5
+decbc
+eaaad
+cebda
+dcdae
+aeeeb

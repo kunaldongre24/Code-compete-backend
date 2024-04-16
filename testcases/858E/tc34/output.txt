@@ -1,0 +1,4 @@
+3
+move zhrmyb 1
+move 3iprc0 2
+move 0la3gu 4

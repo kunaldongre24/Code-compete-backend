@@ -1,0 +1,7 @@
+YES
+Ne+S->Fe
+Fe+Tc->Tm
+Li+S+Mn+Fe->Yb
+F+Cr+Pd->Au
+K+Sc+Tc->Bi
+Co+Zn+Tc->Fm

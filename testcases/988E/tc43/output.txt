@@ -1,4 +1,1 @@
-YES
-ab
-ababc
-abababc
+28

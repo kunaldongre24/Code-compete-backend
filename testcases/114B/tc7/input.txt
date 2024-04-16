@@ -1,0 +1,14 @@
+7 6
+Alena
+Olya
+Vanya
+Brus
+John
+Alice
+Mariana
+Alena John
+Alena Alice
+Olya John
+Olya Alice
+Vanya John
+Vanya Alice

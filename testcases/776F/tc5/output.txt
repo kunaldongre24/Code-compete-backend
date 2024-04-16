@@ -1,11 +1,1 @@
-q s
-b s
-j s
-j g
-f g
-m g
-m c
-m a
-d a
-z a
-o a
+2 3 1 2

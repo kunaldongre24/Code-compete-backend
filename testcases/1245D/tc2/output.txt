@@ -1,11 +1,6 @@
-YES
-PR
-YES
-RR
-NO
-YES
-PPR
-NO
-NO
-YES
-R
+27
+1
+2 
+2
+1 2
+2 3

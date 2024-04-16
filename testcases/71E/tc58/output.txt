@@ -1,0 +1,9 @@
+YES
+V->V
+Cu->Cu
+N+O+Ca->Br
+Be+Al+Sc+Ge->Yb
+As+Y->Hf
+Zn+Pr->Ac
+Mo+Te->Pu
+Pd+Sb->Bk

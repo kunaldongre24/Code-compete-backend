@@ -1,0 +1,12 @@
+4 3
+bec
+bec
+ece
+bad
+6
+bbd
+ccc
+dcd
+dee
+dab
+eee

@@ -1,6 +1,2 @@
-5
-a
-aba
-abacaba
-ba
-aba
+6
+3 5 4 7 10 12

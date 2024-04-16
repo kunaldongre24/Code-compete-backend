@@ -1,0 +1,8 @@
+YES
+Li+O->Na
+F+P->Cr
+N+V->Zn
+S+Zn->Pd
+Ni+Ni->Ba
+Ne+V+Co->Nd
+Ne+Mn+Cu->Gd

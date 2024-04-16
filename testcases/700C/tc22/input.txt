@@ -1,2 +1,13 @@
-100
-bbababbabaabbbabbababbababbababbababbababbababbbbabbababbabbbbababbababbababbababbababbabaabababbaba
+11 11
+7 8
+1 5 4
+5 8 21
+8 9 1
+9 10 14
+10 11 20
+11 5 12
+11 6 11
+6 2 11
+6 4 2
+10 7 8
+1 3 4

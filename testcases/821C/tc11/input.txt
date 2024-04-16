@@ -1,0 +1,13 @@
+6
+add 3
+add 4
+add 5
+add 1
+add 6
+remove
+add 2
+remove
+remove
+remove
+remove
+remove

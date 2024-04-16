@@ -1,16 +1,1 @@
-abcdefg
-acdefgh
-acdefgi
-abcdefgh
-abcefghi
-abdfghij
-abdfghik
-abcdefg
-abcdefh
-abcdefg
-abcdegh
-abcdehi
-abcdehj
-abcdefg
-abcdefh
-bcdefgi
+Yes

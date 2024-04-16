@@ -1,0 +1,6 @@
+YES
+He+Be+N+Cl->Zn
+N+Ar+K+Ge->Os
+Sc+Zn+Zn->Tl
+Kr+Pd->Pb
+Al+Ca+Ni+Cu->Th

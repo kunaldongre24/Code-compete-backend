@@ -1,0 +1,8 @@
+YES
+O+F->Cl
+Sc->Sc
+Be+K->V
+Fe->Fe
+Ne+Ca->Zn
+Na+S+Cr+Cr->Re
+Ca+Ti+V+Cu->Pu

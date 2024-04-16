@@ -1,0 +1,8 @@
+YES
+aaabbb
+aaabbb
+aaabbb
+..aabb
+..aabb
+..aabb
+..aabb

@@ -1,0 +1,9 @@
+YES
+S+Ar->Se
+C+Si+Ti->Mo
+Sb->Sb
+I->I
+Zr+Nb->Tl
+Tc+Tc->Rn
+O+Sc+Ce->Fr
+Li+Rh+Ag->Am

@@ -1,0 +1,5 @@
+4 3
+RRR
+GGG
+BBB
+BBB

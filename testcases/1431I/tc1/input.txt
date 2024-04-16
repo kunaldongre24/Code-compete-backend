@@ -1,0 +1,8 @@
+3 5 4
+abacc
+ccbba
+ccabc
+abacc
+acbbc
+ababa
+acbbc

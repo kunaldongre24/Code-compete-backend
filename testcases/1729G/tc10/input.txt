@@ -1,0 +1,9 @@
+4
+abacaabacabacababacabacabaa
+abacaba
+aabacabadabacabababacabadababaca
+abacaba
+abacabadabacabaeabacabadabacaba
+abacaba
+ababacabadabacabaeabacabadabacabaeabacaabaca
+abacaba

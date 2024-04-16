@@ -1,0 +1,6 @@
+5
+move 4 1
+move 2 4
+move setddt 2
+move bz16cb 3
+move 5sn77g 5

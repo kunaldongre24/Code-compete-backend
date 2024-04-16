@@ -1,4 +1,2 @@
-YES
-aab
-aaab
-aaaab
+3
+7 6 5

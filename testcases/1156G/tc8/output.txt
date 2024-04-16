@@ -1,0 +1,6 @@
+5
+aaac=a$b
+aaae=aaac$aaac
+aaad=aaac#aaac
+aaaf=aaae^aaad
+res=aaaf&aaaf

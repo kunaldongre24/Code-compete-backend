@@ -1,0 +1,14 @@
+YES
+He->He
+Na->Na
+P->P
+Ar->Ar
+K->K
+Ca->Ca
+Cu->Cu
+Kr->Kr
+Sr->Sr
+In->In
+Br+Rb->Hf
+Se+In->Bi
+Cr+Zn+Ru->Cf

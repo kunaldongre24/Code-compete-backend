@@ -1,0 +1,23 @@
+YES
+O O
+O O
+OOO
+NO
+YES
+OOOOO X
+  O O  
+X O O X
+  O    
+OOO X O
+O O   O
+O OOOOO
+YES
+OOOOOOOOO O
+        O O
+O OOO OOO O
+O O O O O O
+O O O O O O
+O   O   O O
+O OOO OOO O
+O O O O O O
+OOO OOO OOO

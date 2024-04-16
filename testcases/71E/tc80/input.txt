@@ -1,0 +1,3 @@
+17 8
+Ge Sc Se Fe Ge Mn Ca Rh Ca Br Ru F Cr Zr P Ar H
+Tc Cm Fm Gd Se Ti Mn La

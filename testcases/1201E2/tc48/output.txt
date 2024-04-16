@@ -1,0 +1,7 @@
+BLACK
+jury 5 503
+player 5 501
+jury 6 501
+player 3 502
+jury 5 499
+player 4 500

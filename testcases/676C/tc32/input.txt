@@ -1,1 +1,2 @@
-5 31
+10 0
+baabbbbaba

@@ -1,9 +1,32 @@
 4
-3 4 7
-5 1 2
-5 5 8
-5 1 2 4 3
-4 100 1000
-1 1 1 1
-5 9 13
-2 5 5 1 1
+6
+a := h
+b := aha
+c = a + b
+c = c + c
+e = c + c
+d = a + c
+15
+x := haha
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+x = x + x
+1
+haha := hah
+5
+haahh := aaaha
+ahhhh = haahh + haahh
+haahh = haahh + haahh
+ahhhh = ahhhh + haahh
+ahhaa = haahh + ahhhh

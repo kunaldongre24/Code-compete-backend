@@ -1,0 +1,5 @@
+YES
+B+C+N+Na+Cu->Ce
+Cu+Br->Gd
+Al+Zn+Nb->Po
+V+Zn+Se->Fr

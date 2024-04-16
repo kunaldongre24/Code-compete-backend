@@ -1,0 +1,5 @@
+bfb
+3
+1 f
+3 acdef
+2 cdefab

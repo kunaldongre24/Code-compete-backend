@@ -1,0 +1,10 @@
+YES
+*b
+YES
+*co*
+NO
+YES
+a*
+YES
+a*
+NO

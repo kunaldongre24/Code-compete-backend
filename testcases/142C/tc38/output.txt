@@ -1,0 +1,5 @@
+4
+.DDDCCC.
+..DB.CA.
+..DB.CA.
+..BBBAAA

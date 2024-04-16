@@ -1,2 +1,5 @@
-15 9
-cccaabababaccbc
+5 4 5
+1 2
+2 3
+3 4
+4 1

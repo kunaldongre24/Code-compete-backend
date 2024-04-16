@@ -1,4 +1,5 @@
-D
-LR
-LRULR
-DDDDDD
+9
+4
+7
+44
+99

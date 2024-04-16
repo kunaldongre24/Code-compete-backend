@@ -1,0 +1,6 @@
+bc
+4
+ca
+ba
+bb
+cc

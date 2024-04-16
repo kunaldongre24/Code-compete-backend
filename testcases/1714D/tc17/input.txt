@@ -1,0 +1,7 @@
+1
+bacbbcdef
+4
+bac
+cbbcdef
+bbc
+def

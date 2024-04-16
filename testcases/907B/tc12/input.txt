@@ -1,0 +1,12 @@
+ooo xxx .x.
+xxo oox ooo
+.o. oox xxx
+
+xox oxx xxo
+xxx oxx oxx
+oxx ooo ooo
+
+.oo xoo xo.
+xxo oox ooo
+xox xxx xxo
+5 1

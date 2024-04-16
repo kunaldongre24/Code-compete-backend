@@ -1,52 +1,90 @@
 const Room = require("../models/Room");
-
-const updateTpp = async (roomId, val) => {
+const updateTpp = async (roomId, val, adminId) => {
   try {
-    const room = await Room.findOneAndUpdate(
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      return {};
+    }
+
+    if (room.admin.toString() !== adminId.toString()) {
+      return {};
+    }
+
+    const updatedRoom = await Room.findOneAndUpdate(
       { roomId },
       { tpp: val },
       { new: true }
     );
-    return room;
+    return updatedRoom;
   } catch (error) {
     console.error(error);
     return {};
   }
 };
-const updateRounds = async (roomId, val) => {
+
+const updateRounds = async (roomId, val, adminId) => {
   try {
-    const room = await Room.findOneAndUpdate(
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      return {};
+    }
+
+    if (room.admin.toString() !== adminId.toString()) {
+      return {};
+    }
+
+    const updatedRoom = await Room.findOneAndUpdate(
       { roomId },
       { rounds: val },
       { new: true }
     );
-    return room;
+    return updatedRoom;
   } catch (error) {
     console.error(error);
     return {};
   }
 };
-const updateMinRating = async (roomId, val) => {
+
+const updateMinRating = async (roomId, val, adminId) => {
   try {
-    const room = await Room.findOneAndUpdate(
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      return {};
+    }
+
+    if (room.admin.toString() !== adminId.toString()) {
+      return {};
+    }
+
+    const updatedRoom = await Room.findOneAndUpdate(
       { roomId },
       { minRating: val },
       { new: true }
     );
-    return room;
+    return updatedRoom;
   } catch (error) {
     console.error(error);
     return {};
   }
 };
-const updateMaxRating = async (roomId, val) => {
+
+const updateMaxRating = async (roomId, val, adminId) => {
   try {
-    const room = await Room.findOneAndUpdate(
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      return {};
+    }
+
+    if (room.admin.toString() !== adminId.toString()) {
+      return {};
+    }
+
+    const updatedRoom = await Room.findOneAndUpdate(
       { roomId },
       { maxRating: val },
       { new: true }
     );
-    return room;
+    return updatedRoom;
   } catch (error) {
     console.error(error);
     return {};

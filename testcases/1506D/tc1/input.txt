@@ -1,7 +1,11 @@
+5
 6
-codeforces
-aezakmi
-abacaba
-convexhull
-swflldjgpaxs
-myneeocktxpqjpz
+1 6 1 1 4 4
+2
+1 2
+2
+1 1
+5
+4 5 4 5 4
+6
+2 3 2 1 3 1

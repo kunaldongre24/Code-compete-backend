@@ -1,0 +1,13 @@
+15
+a b c d e f g h i j k l m n o
+10
+15 n m c h i d g k j a o e f b l
+15 o l j f e d m h g n k a i c b
+15 i a c e b m o l g f j d n k h
+15 k a h l m f g j b o d i n e c
+15 h c b i f m g d e j o k a n l
+15 n i k a l h e g c f m o d j b
+15 a h j b c m e g k l f n o d i
+15 g d f c o i e b j l k n h a m
+15 m o e k l i c b n d h f j a g
+15 i g l c n d b h e j a o k m f

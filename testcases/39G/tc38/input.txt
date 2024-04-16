@@ -1,0 +1,5 @@
+32767
+int f(int n)
+{
+if (n < 5) return 0-1;if (f(n/2)*f(n-1) < 0) return f(n+28);return 10;
+}

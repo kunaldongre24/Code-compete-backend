@@ -1,2 +1,1 @@
-15
-aabbsorrybbabbb
+100 5000 30

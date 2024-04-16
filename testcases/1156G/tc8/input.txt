@@ -1,0 +1,10 @@
+9
+c=a$b
+e=c#c
+f=c$c
+h=a$b
+x=h$h
+y=h#h
+z=x^y
+g=f^e
+res=z&g

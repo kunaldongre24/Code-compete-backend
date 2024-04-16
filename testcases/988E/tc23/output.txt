@@ -1,3 +1,1 @@
-YES
-ab
-aab
+0

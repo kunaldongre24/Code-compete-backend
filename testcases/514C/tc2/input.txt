@@ -1,1 +1,7 @@
-4545
+1 5
+acbacbacb
+cbacbacb
+acbacbac
+aacbacbacb
+acbacbacbb
+acbaabacb

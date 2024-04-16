@@ -1,2 +1,2 @@
-AB|CDEF
-XYZRT
+4
+1 5 6 8

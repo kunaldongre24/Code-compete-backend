@@ -1,0 +1,3 @@
+2
+move mbt097 1
+move orwsz0 2

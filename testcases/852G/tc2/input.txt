@@ -1,0 +1,25 @@
+22 2
+aaaab
+aaabb
+aabab
+aabbb
+abaab
+ababb
+abbab
+abbbb
+aaab
+aabb
+abab
+abbb
+aab
+abb
+ab
+cccd
+ccdd
+cdcd
+cddd
+ccd
+cdd
+cd
+a???b
+c??d

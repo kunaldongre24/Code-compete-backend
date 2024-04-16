@@ -1,0 +1,5 @@
+4
+move 3 2
+move 1 3
+move 4 1
+move mod9zl 4

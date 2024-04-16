@@ -1,0 +1,10 @@
+9
+c111=a&b
+d=b^a
+e=c111#d
+d=d
+f=f
+f=c111$d
+g=e$f
+h=e#f
+res=g^h

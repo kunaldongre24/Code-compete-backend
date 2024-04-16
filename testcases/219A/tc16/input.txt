@@ -1,2 +1,2 @@
-1
-aabaab
+2
+aabbbbccccccdddddddd

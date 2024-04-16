@@ -1,0 +1,3 @@
+16 11
+Ca Kr Cl Ar V F Tc Sr Li Zn Cd P N In Ca Mn
+Li Fr Tb Be Os S Ni Ga Cd Ne As

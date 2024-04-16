@@ -1,0 +1,9 @@
+8 10000
+cc
+bcbac
+c
+bbbca
+bab
+bcb
+aab
+acbc

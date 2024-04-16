@@ -1,0 +1,7 @@
+6
+move 5 1
+move 3 5
+move 6qb4ia 3
+move 2 4
+move w9h0pv 2
+move q92z4i 6

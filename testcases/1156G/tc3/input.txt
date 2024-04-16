@@ -1,0 +1,7 @@
+6
+res=res
+b=a
+c=b
+d=c
+res=d
+res=res

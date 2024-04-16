@@ -1,0 +1,6 @@
+5
+res=a
+b=c&d
+e=res&a
+x=y
+res=c$x

@@ -1,0 +1,6 @@
+YES
+As->As
+Se->Se
+Li+Kr->Y
+Na+Zn+Rh->Rn
+F+Sr+Ru->Pa

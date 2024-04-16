@@ -1,0 +1,3 @@
+16 7
+V P Zn Ni S Mn O N Cu Ni Ne Ne F V Co Li
+Ba Cr Gd Nd Na Zn Pd

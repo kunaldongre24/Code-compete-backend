@@ -1,15 +1,2 @@
-7
-abacaba
-abc
-cccba
-acb
-dbsic
-bac
-abracadabra
-abc
-dddddddddddd
-cba
-bbc
-abc
-ac
-abc
+5
+5 6 7 8 9

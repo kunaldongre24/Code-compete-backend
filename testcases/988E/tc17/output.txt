@@ -1,4 +1,1 @@
-YES
-aab
-aaab
-aaaab
+11

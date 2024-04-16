@@ -1,0 +1,2 @@
+280
+int f(int n){if (n < 1025) return n*5+12/6-n/3*15-7;return f(n/2)-f(n-7)*f(n-7)-1024;}

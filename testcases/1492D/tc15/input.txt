@@ -1,3 +1,1 @@
-90 38
-dbcddbdcddbacaacacbcabbdacdddddacdbacaaccddccbdcddcbcdaabcdcaabdcaaaadabcdacaadbdadccbacac
-bdcacacbbcddbacaccddccacdaaabadaccacac
+4 6 7

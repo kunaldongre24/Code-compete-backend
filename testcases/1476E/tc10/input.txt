@@ -1,2 +1,21 @@
-1
-1000000000 1
+10 10 2
+cd
+dd
+ab
+aa
+ac
+c_
+ba
+ca
+dc
+__
+da 8
+da 4
+dd 4
+ac 1
+aa 10
+ca 2
+bc 1
+ac 1
+ac 9
+ac 4

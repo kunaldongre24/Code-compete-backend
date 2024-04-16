@@ -1,0 +1,3 @@
+16 8
+Br Al Ga Zn Rh Ne V Zn Se H Br Mg Se Tc Mn Ag
+Si Fm Po Rn Gd Mo N Sb

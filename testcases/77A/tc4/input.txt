@@ -1,0 +1,6 @@
+4
+Anka likes Cleo
+Snowy likes Cleo
+Anka likes Hexadecimal
+Cleo likes Snowy
+1 1 1

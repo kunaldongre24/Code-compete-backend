@@ -1,0 +1,4 @@
+1 1 1
+4 Monday Tuesday Friday Sunday
+1
+1 1

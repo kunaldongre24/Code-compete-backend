@@ -1,0 +1,13 @@
+12 4 1 2 8
+DA b
+DA dC
+dC b
+b DA
+b dC
+DA b
+dC b
+b dC
+dC DA
+DA dC
+DA b
+b dC

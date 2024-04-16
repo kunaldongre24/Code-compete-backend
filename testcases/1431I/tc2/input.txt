@@ -1,0 +1,11 @@
+6 4 4
+daac
+bcba
+acad
+cbdc
+aaaa
+bcbb
+dcdd
+acba
+bbbb
+dbcd

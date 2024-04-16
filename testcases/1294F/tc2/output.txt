@@ -1,22 +1,2 @@
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-NO
-Yes
-983 991 997 
+4
+4 1 5

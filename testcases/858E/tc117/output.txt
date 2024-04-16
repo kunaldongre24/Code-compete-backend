@@ -1,0 +1,4 @@
+3
+move 4 1
+move 3 4
+move hex0ur 3

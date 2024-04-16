@@ -1,0 +1,22 @@
+21
+r m
+r g
+r w
+r y
+r h
+r o
+r q
+r j
+r v
+r l
+r n
+r f
+e a
+e i
+e u
+e z
+e b
+e x
+e t
+s c
+p d

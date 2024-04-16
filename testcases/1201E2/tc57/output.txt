@@ -1,0 +1,4 @@
+WHITE
+player 503 501
+jury 501 502
+player 501 502

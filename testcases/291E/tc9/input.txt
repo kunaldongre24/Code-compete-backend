@@ -1,0 +1,7 @@
+6
+4 baab
+6 acab
+1 aaab
+2 acabb
+4 aca
+bbaab

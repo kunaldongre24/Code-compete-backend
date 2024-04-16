@@ -1,0 +1,7 @@
+YES
+Li+Be->N
+He+F->Na
+N+Mg->K
+O+S+V->Ag
+Cu+Cu+Zn->Ra
+Al+Ca+Sc+Sc+Ti->Bk

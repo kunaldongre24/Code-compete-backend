@@ -1,0 +1,4 @@
+? 1 67
+? 1 34
+? 35 67
+! zxabbabaabbaababbabaababbaabbabaabbaababbaabbabaababbabaabbaababbav

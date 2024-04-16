@@ -1,0 +1,9 @@
+8 1000000
+ba
+baab
+ab
+babaa
+a
+b
+aaa
+abb

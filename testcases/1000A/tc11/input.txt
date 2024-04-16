@@ -1,0 +1,11 @@
+5
+XXXL
+XXL
+XL
+L
+M
+XXXS
+XXS
+XS
+S
+M

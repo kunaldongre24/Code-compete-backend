@@ -1,0 +1,4 @@
+3
+move 4 2
+move 3 4
+move 2y4agr 3

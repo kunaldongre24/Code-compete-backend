@@ -1,0 +1,7 @@
+6
+a=b
+b=c
+c=a
+res=res&a
+res=res#b
+res=res^c

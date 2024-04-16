@@ -1,5 +1,6 @@
-1
-2
-9
-10
-26
+aaaa
+baccacd
+aabdac
+aabacad
+aaaaaaaa
+abadb

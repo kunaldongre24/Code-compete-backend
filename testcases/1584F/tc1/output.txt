@@ -1,3 +1,8 @@
-YES
-NO
-YES
+1
+A
+0
+
+3
+ace
+3
+coc

@@ -1,0 +1,6 @@
+WHITE
+player 503 4
+jury 498 4
+player 501 5
+jury 499 2
+player 500 3

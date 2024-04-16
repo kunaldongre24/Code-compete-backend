@@ -1,0 +1,7 @@
+BLACK
+jury 496 502
+player 500 500
+jury 497 500
+player 498 501
+jury 498 502
+player 499 499

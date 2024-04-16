@@ -1,0 +1,10 @@
+9
+AND 2 3
+IN 1
+OR 4 5
+IN 0
+AND 6 7
+IN 1
+OR 8 9
+IN 0
+IN 0

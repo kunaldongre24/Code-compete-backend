@@ -1,4 +1,2 @@
-qqaaqqaaqqaaqqaaqqaaqqaax
-bbccbbccbbccbbccbbccbbccx
-yqqaaqqaaqqaaqqaaqqaaqqaa
-ybbccbbccbbccbbccbbccbbcc
+1
+2

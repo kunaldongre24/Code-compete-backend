@@ -1,0 +1,3 @@
+2
+aaac=a$b
+res=aaac^c

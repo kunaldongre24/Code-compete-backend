@@ -1,0 +1,11 @@
+6 5
+dccab
+cbecd
+dcada
+ceebb
+ebedc
+acaad
+3
+deabe
+aecae
+cdbac

@@ -1,0 +1,21 @@
+20 14
+acommonprefixagoodword
+acommonprefixanothergoodword
+areallybadword
+bcommonprefixagoodword
+bcommonprefixanothergoodword
+breallybadword
+ccommonprefixagoodword
+ccommonprefixanothergoodword
+creallybadword
+dcommonprefixagoodword
+dcommonprefixanothergoodword
+dreallybadword
+ecommonprefixagoodword
+ecommonprefixanothergoodword
+ereallybadword
+fcommonprefixagoodword
+fcommonprefixanothergoodword
+freallybadword
+gcommonprefixagoodword
+gcommonprefixanothergoodword

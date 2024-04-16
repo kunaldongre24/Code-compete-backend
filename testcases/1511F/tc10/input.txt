@@ -1,0 +1,9 @@
+8 10000
+bb
+bbb
+baa
+bbaaa
+bbabb
+baabb
+ab
+b

@@ -1,0 +1,3 @@
+24 1
+ccacbbabcacabababaacaacc
+1 13 12

@@ -1,0 +1,10 @@
+2 3
+bbc
+edd
+6
+dac
+add
+ece
+aca
+cec
+dea

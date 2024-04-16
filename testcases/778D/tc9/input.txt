@@ -1,0 +1,7 @@
+3 2
+LR
+LR
+LR
+LR
+UU
+DD

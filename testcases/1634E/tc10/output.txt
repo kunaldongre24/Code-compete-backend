@@ -1,0 +1,10 @@
+YES
+RL
+RL
+RL
+RLRL
+LRRL
+RL
+LR
+LR
+LRRL

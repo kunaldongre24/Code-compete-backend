@@ -1,0 +1,3 @@
+16 9
+B Zn Mn Li Li B Na Mg Sc Ne Mn Cr V N Ne Cr
+B V Cd Sc Al Fm B Cl C

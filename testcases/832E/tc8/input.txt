@@ -1,0 +1,20 @@
+4 1
+e
+b
+c
+e
+14
+d
+d
+c
+a
+a
+c
+d
+b
+d
+e
+e
+e
+c
+d

@@ -1,0 +1,7 @@
+YES
+H->H
+H->H
+H->H
+H+H->He
+H+H+H+H->Be
+H+H+H+H+H+H+H+H->O

@@ -1,0 +1,4 @@
+3
+move 2tx68t 1
+move bt50pa 2
+move bxo0pe 3

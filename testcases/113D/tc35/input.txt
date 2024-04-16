@@ -1,1 +1,8 @@
-lioslialapetrpetrainitisinitesliosliala initesinitislioslialapetrpetrainitisinitetra
+4 3 3 2
+1 2
+2 3
+4 3
+0.6321
+0.1541
+0.8633
+0.4309

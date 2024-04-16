@@ -1,0 +1,3 @@
+7 3
+H He Be O S Ge Gd
+Ir Cr Fe

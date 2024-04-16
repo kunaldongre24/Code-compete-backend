@@ -1,0 +1,9 @@
+4 3
+LRU
+LRD
+LRU
+LRD
+ULR
+DLR
+LRU
+LRD

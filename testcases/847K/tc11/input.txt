@@ -1,0 +1,4 @@
+3 2 1 5 1
+BCA cBBBd
+cBBBd CdC
+CdC bbdAb

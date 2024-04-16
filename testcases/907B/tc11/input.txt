@@ -1,0 +1,12 @@
+xox xxx xoo
+xoo xxx oxo
+xoo oox xoo
+
+oxo oox xox
+oxo xox xox
+oox xoo oox
+
+o.o xox oox
+oox xxo xxo
+xox xxx oxo
+3 4

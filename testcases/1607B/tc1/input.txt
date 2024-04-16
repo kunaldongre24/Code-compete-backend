@@ -1,11 +1,10 @@
-5
-abcdefghijklmnopqrstuvwxyz
-hello
-abcdefghijklmnopqrstuvwxyz
-i
-abcdefghijklmnopqrstuvwxyz
-codeforces
-qwertyuiopasdfghjklzxcvbnm
-qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
-qwertyuiopasdfghjklzxcvbnm
-abacaba
+9
+0 1
+0 2
+10 10
+10 99
+177 13
+10000000000 987654321
+-433494437 87178291199
+1 0
+-1 1

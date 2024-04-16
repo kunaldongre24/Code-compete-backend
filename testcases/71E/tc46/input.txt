@@ -1,0 +1,3 @@
+16 8
+Sr Ge Be Kr P Zr Al P Na Ne F B Ru Rh C K
+Zr C Sm Zr K Os Pd I

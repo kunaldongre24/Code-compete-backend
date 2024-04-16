@@ -1,0 +1,3 @@
+15 6
+Ne Cl Ar Co Li S Nb Pd S V H Nb Ag Pd Ca
+Sm Ho Xe U Tb Ge

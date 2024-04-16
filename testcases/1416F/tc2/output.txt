@@ -1,0 +1,44 @@
+YES
+1 1 1 1 1 
+3 1 2 1 1 
+1 2 1 1 1 
+2 1 2 2 1 
+1 2 1 1 2 
+D D R L D 
+U D U U U 
+D U D D U 
+U R L U U 
+R L U R L 
+YES
+1 1 2 1 1 
+1 1 1 3 1 
+1 2 1 1 2 
+2 1 2 2 1 
+1 2 1 1 2 
+R L D D D 
+D R L U D 
+U U U D U 
+U R L U D 
+R L U U U 
+YES
+1 1 1 1 1 
+2 1 1 2 2 
+1 2 1 2 1 
+1 1 1 1 2 
+2 2 1 1 1 
+R L L D D 
+U U R L U 
+R L R L U 
+D U U R L 
+U R R L L 
+YES
+1 1 2 1 1 
+1 1 1 1 1 
+1 1 2 2 1 
+1 2 1 2 2 
+1 1 2 1 1 
+R D D D D 
+U U R L L 
+R L U U D 
+U U R L U 
+U R L U U 

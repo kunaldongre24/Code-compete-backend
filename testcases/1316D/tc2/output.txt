@@ -1,4 +1,4 @@
 VALID
 RRD
-DXD
-RRU
+UXU
+URU

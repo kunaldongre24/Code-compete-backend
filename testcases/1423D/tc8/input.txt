@@ -1,0 +1,7 @@
+3 3
+1 1 10
+M S S
+S L L
+S S P
+S E N N N N N N N N
+1 0 0

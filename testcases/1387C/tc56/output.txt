@@ -1,0 +1,7 @@
+NO 4
+NO 4
+YES
+NO 6
+NO 12
+YES
+NO 23

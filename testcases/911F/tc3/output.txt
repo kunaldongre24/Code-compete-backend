@@ -1,5 +1,2 @@
-odd
-odd
-even
-odd
-even
+1
+1 2 1

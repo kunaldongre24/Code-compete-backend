@@ -1,0 +1,7 @@
+4 4
+abaceababaeacaba
+4
+abac
+baea
+caba
+eaba

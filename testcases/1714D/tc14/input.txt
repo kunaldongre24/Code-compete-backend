@@ -1,0 +1,8 @@
+1
+abcdefgabcde
+5
+abcde
+defa
+bcdeg
+abcdef
+defg

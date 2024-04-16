@@ -1,0 +1,3 @@
+17 8
+Na Al O Si Ne Ti Al Ni C Ar Sc Sc S Cl V P Li
+Si Ba Pa Na F Ar Fe Se

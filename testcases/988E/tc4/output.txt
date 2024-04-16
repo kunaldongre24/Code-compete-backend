@@ -1,2 +1,1 @@
-YES
-wronganswer
+2

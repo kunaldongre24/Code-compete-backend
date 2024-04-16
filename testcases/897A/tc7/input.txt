@@ -1,0 +1,15 @@
+94 13
+bcaaaaaaccacddcdaacbdaabbcbaddbccbccbbbddbadddcccbddadddaadbdababadaacdcdbcdadabdcdcbcbcbcbbcd
+52 77 d d
+21 92 d b
+45 48 c b
+20 25 d a
+57 88 d b
+3 91 b d
+64 73 a a
+5 83 b d
+2 69 c c
+28 89 a b
+49 67 c b
+41 62 a c
+49 87 b c

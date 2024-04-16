@@ -1,0 +1,10 @@
+4 4
+dede
+ecec
+bede
+beed
+4
+aaaa
+bebb
+bcbe
+bebe

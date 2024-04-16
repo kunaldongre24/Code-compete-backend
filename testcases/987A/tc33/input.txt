@@ -1,0 +1,5 @@
+4
+orange
+blue
+purple
+red

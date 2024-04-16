@@ -1,0 +1,8 @@
+7
+a=b&c
+w=r#e
+x=b^c
+z=a&b
+t=w^x
+z=x&b
+res=x$w

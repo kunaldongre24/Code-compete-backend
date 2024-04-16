@@ -1,0 +1,15 @@
+7
+add 4
+add 6
+add 1
+add 5
+add 7
+remove
+add 2
+remove
+add 3
+remove
+remove
+remove
+remove
+remove

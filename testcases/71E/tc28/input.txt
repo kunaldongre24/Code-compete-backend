@@ -1,0 +1,3 @@
+17 17
+Ne Na Mg B C N O F P Al Si He Li H Be S Cl
+H Mg Be B Na Si P C N Cl O Al He Li F Ne S

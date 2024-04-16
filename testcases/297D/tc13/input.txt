@@ -1,0 +1,6 @@
+3 3 2
+NN
+ENE
+EN
+ENN
+NE

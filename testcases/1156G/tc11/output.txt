@@ -1,0 +1,8 @@
+7
+aaac=a&b
+aaad=b^a
+aaae=aaac#aaad
+aaaf=aaac$aaad
+aaag=aaae$aaaf
+aaah=aaae#aaaf
+res=aaag^aaah

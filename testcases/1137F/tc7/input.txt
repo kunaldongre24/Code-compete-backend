@@ -1,0 +1,30 @@
+10 20
+4 5
+9 10
+2 3
+4 9
+4 8
+1 2
+2 4
+5 6
+6 7
+when 2
+when 1
+when 10
+compare 9 2
+when 9
+compare 6 10
+compare 7 10
+compare 5 1
+compare 3 6
+when 4
+when 2
+when 5
+compare 7 2
+compare 1 6
+compare 9 6
+compare 8 3
+when 2
+when 9
+compare 8 3
+compare 7 10

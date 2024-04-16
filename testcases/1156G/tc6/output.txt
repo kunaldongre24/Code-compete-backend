@@ -1,0 +1,4 @@
+3
+aaad=res&b
+aaae=aaad#c
+res=aaae^b

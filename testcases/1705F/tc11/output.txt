@@ -1,0 +1,6 @@
+5
+TTT 1
+FTF 1
+FFT 1
+TFT 2
+TFF 3

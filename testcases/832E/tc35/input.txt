@@ -1,0 +1,9 @@
+4 3
+eae
+eaa
+eaa
+aee
+3
+aba
+aaa
+bba

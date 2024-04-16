@@ -1,0 +1,16 @@
+5 10
+Taras
+Nikita
+Sergey
+Andrey
+Romka
+Taras Romka
+Taras Nikita
+Taras Sergey
+Taras Andrey
+Romka Nikita
+Romka Sergey
+Romka Andrey
+Nikita Sergey
+Nikita Andrey
+Sergey Andrey

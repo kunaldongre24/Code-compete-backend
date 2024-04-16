@@ -1,4 +1,6 @@
-b
-aabbbabaa
-abba
-abbaaa
+5
+2
+1
+4
+0
+4

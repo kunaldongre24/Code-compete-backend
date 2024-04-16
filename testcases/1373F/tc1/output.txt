@@ -1,3 +1,5 @@
-DA
-NET
-NET
+YES
+YES
+NO
+YES
+YES

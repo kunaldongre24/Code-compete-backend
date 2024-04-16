@@ -1,10 +1,2 @@
-Yes
-abacaba
-Yes
-abacaba
-Yes
-abazabacaba
-Yes
-abacabazaba
-No
-No
+14
+16

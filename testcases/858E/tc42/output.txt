@@ -1,0 +1,5 @@
+4
+move 1 2
+move 3 1
+move 3a5ad1 3
+move nj94jx 4

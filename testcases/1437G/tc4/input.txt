@@ -1,0 +1,13 @@
+6 6
+aab
+cbc
+aab
+ccc
+b
+ca
+1 1 9
+2 c
+2 b
+1 2 8
+2 aac
+1 1 9

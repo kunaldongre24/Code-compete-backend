@@ -1,0 +1,2 @@
+type: 0 L: 5 R: 5 possible_n: 5
+used 5 queries

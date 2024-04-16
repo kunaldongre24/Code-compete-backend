@@ -1,0 +1,19 @@
+18
+HBox pack
+VBox vbox
+Widget widget(10,10)
+pack.pack(widget)
+HBox hbox
+hbox.pack(widget)
+HBox set
+HBox se
+HBox s
+VBox border
+VBox spacing
+set.set_border(3)
+set.set_spacing(3)
+se.set_spacing(5)
+s.set_border(6)
+border.set_border(7)
+spacing.set_spacing(9)
+vbox.pack(pack)

@@ -1,0 +1,3 @@
+16 6
+Rh Pd N N Ar Y S S Sn Br Zn P Sn Ne Sr Mn
+Cm At S Fr Re Ra

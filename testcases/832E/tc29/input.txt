@@ -1,0 +1,10 @@
+6 7
+eeeaaba
+bbddeed
+eddaabe
+eaeeadd
+daccded
+cbedbad
+2
+aadbbea
+bbbcabb

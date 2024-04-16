@@ -1,0 +1,23 @@
+22 85 1 36 1
+cdAd cBbCa
+cBbCa abBBc
+abBBc dddb
+dddb BBDA
+BBDA abBBc
+abBBc ADCad
+aDaC cdAd
+cdAd D
+D acCbD
+Ad DB
+DB C
+ACb ca
+ca ACb
+ACb D
+D BBDA
+BBDA d
+d C
+C A
+A B
+B Ad
+Ad cDD
+cDD ACb

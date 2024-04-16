@@ -1,0 +1,17 @@
+16
+CA
+BA
+CC
+AC
+CA
+CB
+AC
+BB
+AB
+CB
+BA
+CA
+CA
+AA
+AA
+CB

@@ -1,0 +1,12 @@
+.oo x.o xoo
+.o. xxx .x.
+..o x.o xxx
+
+..o .oo .xx
+.x. xox o.o
+.xo o.o .x.
+
+.o. xo. xxx
+.xo o.. .xo
+..o ..o xox
+1 8

@@ -1,0 +1,19 @@
+18
+5 AC
+1 AC
+1 AC
+4 BA
+1 BC
+7 CA
+6 AC
+8 CB
+5 AB
+7 CA
+7 BA
+9 AC
+9 CA
+7 CB
+1 CA
+3 CA
+4 BA
+3 CB

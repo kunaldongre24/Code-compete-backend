@@ -1,0 +1,21 @@
+5
+ggggggggg 202537
+4
+gggggggg 868552
+gggg 234633
+gggg 402994
+gggggggg 86863
+
+gggg 402994
+0
+
+gggggggg 868552
+1
+gggg 234633
+
+gggg 234633
+1
+gggg 402994
+
+gggggggg 86863
+0

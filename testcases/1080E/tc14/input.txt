@@ -1,0 +1,6 @@
+5 5
+cccac
+bbcac
+bbaba
+cbccb
+aabac

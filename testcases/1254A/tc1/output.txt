@@ -1,0 +1,16 @@
+aaabb
+cccbb
+ccccc
+aaaa
+bbba
+bbcc
+dddc
+eeee
+ffff
+aaabb
+bbbbb
+bcccc
+dddcc
+ddddd
+abcdefghijklmnopqrstuvwxyzABCDE
+9876543210ZYXWVUTSRQPONMLKJIHGF

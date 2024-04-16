@@ -7,7 +7,8 @@ var RoomUserMap = new mongoose.Schema({
     required: true,
   },
   roomId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Room",
     required: true,
   },
   socketId: {

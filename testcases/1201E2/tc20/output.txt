@@ -1,0 +1,19 @@
+BLACK
+jury 38 59
+player 39 60
+jury 39 57
+player 40 58
+jury 40 55
+player 41 56
+jury 41 53
+player 43 57
+jury 43 54
+player 44 55
+jury 44 56
+player 45 53
+jury 45 54
+player 47 52
+jury 46 52
+player 49 51
+jury 48 51
+player 51 50
