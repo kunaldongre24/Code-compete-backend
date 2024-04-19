@@ -121,13 +121,11 @@ const CompilerController = {
         response: codeOutput,
       });
     } catch (err) {
-      console.log(err);
       if (fs.existsSync(filepath)) {
         fs.unlinkSync(filepath);
       }
       const response = { status: 0, response: [] };
       if (err.stderr) {
-        console.log(err);
         const lines = err.stderr.split("\n").map((line) => {
           const match = line.match(/(\d+):(\d+): (.+)/);
           if (match) {
@@ -206,13 +204,13 @@ const CompilerController = {
           .sort({ solveTimeMs: 1 })
           .select("solveTimeMs solved userId _id")
           .populate("userId");
+        const io = req.app.get("socket");
         if (members.filter((member) => !member.solved).length === 0) {
           await Race.findByIdAndUpdate(raceId, {
             finished: true,
           });
           io.to(raceId.toString()).emit("problemFinished");
         }
-        const io = req.app.get("socket");
         io.in(raceId.toString()).emit("leaderboard", members);
         return res.json({ status: 1, msg: "All test cases passed!", code });
       } else {
