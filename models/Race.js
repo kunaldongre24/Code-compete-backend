@@ -31,6 +31,11 @@ var Race = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  problemSetId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "ProblemSet",
+    required: true,
+  },
   isFinished: {
     type: Boolean,
     default: false,

@@ -72,6 +72,7 @@ const RaceController = {
         members,
         minRating,
         maxRating,
+        problemSetId: problemSets[0]._id,
       });
       const race = await newRace.save();
       const newRaceProblemSetMap = new RaceProblemSetMap({
@@ -213,7 +214,10 @@ const RaceController = {
       if (!room) {
         return res.send({ status: 0, msg: "Room not found!" });
       }
-      const races = await Race.find({ roomId: room._id });
+      const races = await Race.find({ roomId: room._id }).populate({
+        path: "problemSetId",
+        select: "_id rating",
+      });
       return res.send({ status: 1, races });
     } catch (err) {
       console.error(err);

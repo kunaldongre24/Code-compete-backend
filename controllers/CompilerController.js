@@ -6,6 +6,7 @@ const ProblemSet = require("../models/ProblemSet");
 const { convert } = require("html-to-text");
 const RaceUserProblemsetMap = require("../models/RaceUserProblemsetMap");
 const Race = require("../models/Race");
+const RaceProblemSetMap = require("../models/RaceProblemSetMap");
 
 const outputPath = path.join(__dirname, "../static/outputs");
 const MAX_STDERR_LENGTH = 1000;
@@ -194,9 +195,10 @@ const CompilerController = {
             raceId,
             problemSetId,
             userId,
+            solved: false,
           },
           { solved: true, solveTimeMs: solvingTime },
-          { new: true, upsert: true }
+          { new: true }
         );
         const members = await RaceUserProblemsetMap.find({
           raceId,
@@ -207,8 +209,9 @@ const CompilerController = {
         const io = req.app.get("socket");
         if (members.filter((member) => !member.solved).length === 0) {
           await Race.findByIdAndUpdate(raceId, {
-            finished: true,
+            isFinished: true,
           });
+
           io.to(raceId.toString()).emit("problemFinished");
         }
         io.in(raceId.toString()).emit("leaderboard", members);
